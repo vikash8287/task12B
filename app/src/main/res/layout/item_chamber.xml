@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingVertical="8dp"
+    android:background="?android:attr/selectableItemBackground">
+
+    <!-- Profile Picture Button -->
+    <ImageButton
+        android:id="@+id/btnChamberProfile"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/ic_couplechat"
+        android:backgroundTint="#7A7AFF"
+        android:contentDescription="@string/chamberly"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+
+    <TextView
+        android:id="@+id/textTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        app:layout_constraintStart_toEndOf="@id/btnChamberProfile"
+        app:layout_constraintTop_toTopOf="@id/btnChamberProfile"
+        android:ellipsize="end"
+        android:maxLines="1" />
+
+    <!-- Last Message Preview -->
+    <TextView
+        android:id="@+id/tvLastMessage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:textSize="14sp"
+        android:textColor="#757575"
+        app:layout_constraintStart_toEndOf="@id/btnChamberProfile"
+        app:layout_constraintTop_toBottomOf="@id/textTitle"
+        android:ellipsize="end"
+        android:maxLines="1" />
+
+    <!--
+    <TextView
+        android:id="@+id/tvNotificationBadge"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@drawable/notification_badge"
+        android:text="2"
+        android:textSize="12sp"
+        android:layout_marginEnd="16dp"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:minWidth="24dp"
+        android:minHeight="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+        -->
+
+</androidx.constraintlayout.widget.ConstraintLayout>

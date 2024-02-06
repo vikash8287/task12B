@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:id="@+id/home_page"
+    android:layout_height="match_parent"
+    android:background="@android:color/white">
+
+    <!-- Profile Section -->
+    <LinearLayout
+        android:paddingStart="10dp"
+        android:id="@+id/profileSection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="84dp"
+        android:orientation="horizontal"
+        android:paddingTop="24dp">
+
+        <ImageButton
+            android:id="@+id/profilePic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:paddingTop="1dp"
+            android:paddingStart="5dp"
+            android:paddingEnd="3dp"
+            android:contentDescription="@string/chamberly"
+            android:src="@drawable/profile_pic"
+            tools:ignore="TouchTargetSizeCheck" />
+
+        <TextView
+            android:id="@+id/usernameTextView"
+            android:layout_width="257dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:paddingTop="9dp"
+            android:text="@string/username"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="#2E2E5B"
+            android:textSize="21sp" />
+
+
+    </LinearLayout>
+
+    <!-- Dolphin Image -->
+    <ImageView
+        android:id="@+id/dolphinImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/profileSection"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="48dp"
+        android:src="@drawable/dp" />
+
+    <!-- Chamberly Text -->
+    <ImageView
+        android:id="@+id/chamberlyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/dolphinImage"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:src="@drawable/chamberly" />
+
+    <!-- Create a Chamber Button -->
+    <Button
+        android:id="@+id/createChamberButton"
+        android:layout_width="297dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/chamberlyText"
+        android:layout_marginTop="64dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:textColor="@color/white"
+        android:text="@string/create_a_chamber"
+        android:background="@drawable/bg_button_placeholder" />
+
+    <!-- Find a Chamber Button -->
+    <Button
+        android:id="@+id/findChamberButton"
+        android:layout_width="297dp"
+        android:textColor="@color/white"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/createChamberButton"
+        android:layout_marginTop="16dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:text="@string/find_a_chamber"
+        android:background="@drawable/bg_button_placeholder" />
+
+    <!-- Follow us on Instagram -->
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/findChamberButton"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:layout_marginTop="125dp">
+
+        <ImageButton
+            android:id="@+id/instagramIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:paddingTop="15dp"
+            android:src="@drawable/insta"
+            tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
+        <Button
+            android:id="@+id/followUs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@null"
+            android:paddingLeft="3dp"
+            android:textAllCaps="false"
+            android:textColor="#2E2E5B"
+            android:layout_marginTop="3.5dp"
+            android:text="@string/follow_us_on_instagram" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bottomButtonBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="16dp">
+
+        <!-- Home Button (Functional) -->
+        <ImageButton
+            android:id="@+id/homeButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@null"
+            android:paddingEnd="16dp"
+            android:layout_marginEnd="68.5dp"
+
+            android:paddingStart="16dp"
+            android:contentDescription="@string/chamberly"
+            android:src="@drawable/home" />
+
+        <!-- Placeholder Button (Non-functional) -->
+        <ImageButton
+            android:id="@+id/myChambersButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@null"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:contentDescription="@string/chamberly"
+            android:enabled="false"
+            android:src="@drawable/mychambers" />
+    </LinearLayout>
+
+</RelativeLayout>

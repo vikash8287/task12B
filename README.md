@@ -1,2 +1,1 @@
-# ChamberlyAndroid
-Chamberly Android Application Codebase
+# Chamberly

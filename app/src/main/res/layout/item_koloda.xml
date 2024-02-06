@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="85dp"
+    android:layout_gravity="center">
+
+    <!-- CardView as the main card container -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="350dp"
+        android:layout_height="400dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="30dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="3dp"
+        app:cardMaxElevation="6dp"
+        app:cardUseCompatPadding="true"
+        app:cardBackgroundColor="@android:color/white">
+
+        <!-- Content of the card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="@drawable/rounded_button"
+            android:padding="0dp">
+
+            <!-- TextView for the title -->
+            <TextView
+                android:id="@+id/textTitle"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="4"
+                android:gravity="center"
+                android:textSize="20sp"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:text="@string/title" />
+
+            <!-- LinearLayout for the bottom part with icon and text -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <!-- ImageView for the chat icon -->
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/chat"
+                    android:padding="8dp"
+                    android:contentDescription="@string/chat_icon" />
+
+                <!-- TextView for the number of chatters -->
+                <TextView
+                    android:id="@+id/num_chatter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/_1_2"
+                    android:textStyle="bold"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Overlay for the swipe right action -->
+    <TextView
+        android:id="@+id/rightSwipeOverlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:gravity="center_vertical|start"
+        android:text="@string/joinchamber"
+        android:textSize="18sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:background="@drawable/right_overlay"
+        android:padding="4dp"
+        android:minHeight="26dp"
+        android:minWidth="26dp"
+        android:layout_margin="8dp"
+        android:paddingStart="24dp"
+        android:visibility="invisible" />
+
+    <!-- Overlay for the swipe left action -->
+    <TextView
+        android:id="@+id/leftSwipeOverlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:gravity="center_vertical|end"
+        android:text="@string/skip_the_chamber"
+        android:textSize="18sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:padding="4dp"
+        android:minHeight="26dp"
+        android:minWidth="26dp"
+        android:layout_margin="8dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:background="@drawable/left_overlay"
+        android:visibility="invisible" />
+</FrameLayout>
