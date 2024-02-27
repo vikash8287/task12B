@@ -78,13 +78,26 @@
         android:text="@string/create_a_chamber"
         android:background="@drawable/bg_button_placeholder" />
 
+    <Button
+        android:id="@+id/createTopicButton"
+        android:layout_width="297dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/createChamberButton"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:textColor="@color/white"
+        android:text="@string/create_a_topic"
+        android:background="@drawable/bg_button_placeholder" />
+
     <!-- Find a Chamber Button -->
     <Button
         android:id="@+id/findChamberButton"
         android:layout_width="297dp"
         android:textColor="@color/white"
         android:layout_height="wrap_content"
-        android:layout_below="@id/createChamberButton"
+        android:layout_below="@id/createTopicButton"
         android:layout_marginTop="16dp"
         android:layout_centerHorizontal="true"
         android:layout_marginLeft="16dp"
@@ -92,15 +105,28 @@
         android:text="@string/find_a_chamber"
         android:background="@drawable/bg_button_placeholder" />
 
+    <Button
+        android:id="@+id/findTopicButton"
+        android:layout_width="297dp"
+        android:textColor="@color/white"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/findChamberButton"
+        android:layout_marginTop="16dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:text="@string/find_a_topic"
+        android:background="@drawable/bg_button_placeholder" />
+
     <!-- Follow us on Instagram -->
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/findChamberButton"
+        android:layout_below="@id/findTopicButton"
         android:layout_centerHorizontal="true"
-        android:orientation="horizontal"
-        android:layout_marginTop="125dp">
+        android:layout_marginTop="30dp"
+        android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/instagramIcon"
@@ -116,12 +142,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:layout_marginTop="3.5dp"
             android:background="@null"
             android:paddingLeft="3dp"
+            android:text="@string/follow_us_on_instagram"
             android:textAllCaps="false"
-            android:textColor="#2E2E5B"
-            android:layout_marginTop="3.5dp"
-            android:text="@string/follow_us_on_instagram" />
+            android:textColor="#2E2E5B" />
     </LinearLayout>
 
     <LinearLayout

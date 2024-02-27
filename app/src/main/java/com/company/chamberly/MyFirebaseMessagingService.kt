@@ -9,11 +9,14 @@ import android.content.Intent
 import android.media.RingtoneManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.company.chamberly.activities.ChatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+
+
 private const   val channelName = "My Notification Channel"
 private const val channelId = "channel_id"
 class MyFirebaseMessagingService : FirebaseMessagingService() {
@@ -50,8 +53,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val body = remoteMessage.data["body"]
         val groupChatId = remoteMessage.data["groupChatId"]
         val groupTitle  = remoteMessage.data["groupTitle"]
-        val authorUid  = remoteMessage.data["authorUID"]
-        val authorName = remoteMessage.data["authorName"]
+        val authorUid  = remoteMessage.data["AuthorUID"]
+        val authorName = remoteMessage.data["AuthorName"]
         // You can customize the notification's behavior here
         //  if(ChatActivity().isFinishing || ChatActivity().isDestroyed){
         if(!isAppInForeground()) {
@@ -67,8 +70,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val intent = Intent(this, ChatActivity::class.java)
         intent.putExtra("groupChatId", groupChatId)
         intent.putExtra("groupTitle", groupTitle)
-        intent.putExtra("authorName",authorName)
-        intent.putExtra("authorUID",authorUid)
+        intent.putExtra("AuthorName",authorName)
+        intent.putExtra("AuthorUID",authorUid)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(this, 0, intent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
@@ -76,7 +79,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(androidx.core.R.drawable.notification_bg)
+            .setSmallIcon(R.drawable.notification_badge)
             .setContentTitle(title)
             .setContentText(messageBody)
             .setAutoCancel(true)

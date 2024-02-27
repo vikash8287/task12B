@@ -1,9 +1,10 @@
-package com.company.chamberly
+package com.company.chamberly.activities
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
@@ -12,6 +13,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.company.chamberly.ChambersRecyclerViewAdapter
+import com.company.chamberly.models.Chamber
+import com.company.chamberly.models.Message
+import com.company.chamberly.R
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.ktx.auth
@@ -33,15 +38,15 @@ class ActiveChambersActivity : AppCompatActivity() {
         val homeButton = findViewById<ImageButton>(R.id.homeButton)
 
         val emptyStateView = findViewById<RelativeLayout>(R.id.emptyStateView)
-        val addchamber = findViewById<ImageButton>(R.id.btnAddChamber)
+        val addChamber = findViewById<ImageButton>(R.id.btnAddChamber)
 
 
         val recyclerView = findViewById<RecyclerView>(R.id.rvChambers)
         val adapter = ChambersRecyclerViewAdapter { chamber ->
             // Handle click, navigate to ChatActivity
             val intent = Intent(this, ChatActivity::class.java).apply {
-                putExtra("groupChatId", chamber.groupChatId)
-                putExtra("groupTitle", chamber.groupTitle)
+                putExtra("GroupChatId", chamber.groupChatId)
+                putExtra("GroupTitle", chamber.groupTitle)
                 // Add other necessary data
             }
             startActivity(intent)
@@ -70,8 +75,8 @@ class ActiveChambersActivity : AppCompatActivity() {
             showProfileOptionsPopup()
         }
 
-        addchamber.setOnClickListener{
-            goToCreateActivity()
+        addChamber.setOnClickListener{
+            goToCreateChamberActivity()
         }
 
 
@@ -82,7 +87,7 @@ class ActiveChambersActivity : AppCompatActivity() {
         }
 
         btnCreateChamber.setOnClickListener {
-            goToCreateActivity()
+            goToCreateChamberActivity()
         }
 
     }
@@ -115,8 +120,9 @@ class ActiveChambersActivity : AppCompatActivity() {
 
         Tasks.whenAllSuccess<DataSnapshot>(lastMessageTasks)
             .addOnSuccessListener { lastMessages ->
+                Log.d("MESSAGES", lastMessages.size.toString())
                 lastMessages.forEachIndexed { index, dataSnapshot ->
-                    val lastMessage = dataSnapshot.children.firstOrNull()?.getValue(Message::class.java)
+                    val lastMessage = try { dataSnapshot.children.firstOrNull()?.getValue(Message::class.java) } catch(_: Exception) { Message(message_content = "No messages") }
                     chambers[index].lastMessage = lastMessage?.message_content ?: "No messages"
                 }
                 callback(chambers)
@@ -127,11 +133,6 @@ class ActiveChambersActivity : AppCompatActivity() {
         return database.reference.child(chamber.groupChatId)
             .child("messages").orderByKey().limitToLast(1).get()
     }
-
-
-
-
-
 
     private fun showProfileOptionsPopup() {
         val options = arrayOf("Delete Account", "Show Privacy Policy")
@@ -157,7 +158,7 @@ class ActiveChambersActivity : AppCompatActivity() {
 
             user.delete().addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val sharedPreferences = getSharedPreferences("userDetails", Context.MODE_PRIVATE)
+                    val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
                     with(sharedPreferences.edit()) {
                         clear()
                         apply()
@@ -186,8 +187,8 @@ class ActiveChambersActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun goToCreateActivity() {
-        val intent = Intent(this, CreateActivity::class.java)
+    private fun goToCreateChamberActivity() {
+        val intent = Intent(this, CreateChamberActivity::class.java)
         startActivity(intent)
     }
 

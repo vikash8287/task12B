@@ -1,4 +1,4 @@
-package com.company.chamberly
+package com.company.chamberly.activities
 
 import android.content.Context
 import android.content.Intent
@@ -9,6 +9,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import com.company.chamberly.models.Chamber
+import com.company.chamberly.R
+import com.company.chamberly.models.chamberToMap
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FieldValue
@@ -16,7 +19,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
-class CreateActivity : ComponentActivity() {
+class CreateChamberActivity : ComponentActivity() {
     private lateinit var onBackPressedCallback: OnBackPressedCallback
     private val auth = Firebase.auth
     private val database = Firebase.firestore
@@ -25,7 +28,7 @@ class CreateActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_create)
+        setContentView(R.layout.activity_create_chamber)
 
         val currentUser = auth.currentUser
 
@@ -46,10 +49,10 @@ class CreateActivity : ComponentActivity() {
             if (title.isEmpty()){
                 editText.error = "Please enter a title"
             } else {
-                //Toast.makeText(this, authorName, Toast.LENGTH_SHORT).show()
+                //Toast.makeText(this, AuthorName, Toast.LENGTH_SHORT).show()
                 val chamber = Chamber(
-                    authorName = authorName ?: "",
-                    authorUID = authorUID ?: "",
+                    AuthorName = authorName ?: "",
+                    AuthorUID = authorUID ?: "",
                     groupTitle = title
                 )
 
@@ -57,14 +60,14 @@ class CreateActivity : ComponentActivity() {
                 val documentRef = collectionRef.document() // generate a random document ID
                 chamber.groupChatId = documentRef.id // set the document ID to the random ID
 
-                documentRef.set(chamber)
+                documentRef.set(chamberToMap(chamber = chamber))
                     .addOnSuccessListener {
                         // Save additional data to Realtime Database
                         val realtimeDb = FirebaseDatabase.getInstance()
                         val chamberDataRef = realtimeDb.getReference(chamber.groupChatId)
 
                         // Set "Host" data
-                        chamberDataRef.child("Host").setValue(chamber.authorUID)
+                        chamberDataRef.child("host").setValue(chamber.AuthorUID)
 
                         // Set empty "messages" child key
                         chamberDataRef.child("messages").push().setValue("")
@@ -78,9 +81,9 @@ class CreateActivity : ComponentActivity() {
                             .update("members", FieldValue.arrayUnion(authorUID))
 
                         // Set "Title" data
-                        chamberDataRef.child("Title").setValue(chamber.groupTitle)
+                        chamberDataRef.child("title").setValue(chamber.groupTitle)
 
-                        val userRef = firestore.collection("Users").document(authorUID!!)
+                        val userRef = firestore.collection("users").document(authorUID!!)
                         userRef.update("chambers", FieldValue.arrayUnion(chamber.groupChatId))
                             .addOnSuccessListener {
                                 // Handle success
@@ -90,17 +93,17 @@ class CreateActivity : ComponentActivity() {
                             }
 
                         // Set "Users" data
-                        val usersRef = chamberDataRef.child("Users")
+                        val usersRef = chamberDataRef.child("users")
                         val membersRef = usersRef.child("members")
-                        val hostRef = membersRef.child(chamber.authorUID)
+                        val hostRef = membersRef.child(chamber.AuthorUID)
                         hostRef.setValue(authorName).addOnSuccessListener {
-                            val intent = Intent(this@CreateActivity, ChatActivity::class.java)
+                            val intent = Intent(this@CreateChamberActivity, ChatActivity::class.java)
                             //TODO : pass chamber object to ChatActivity
                             //intent.putExtra("chamber", chamber)
-                            intent.putExtra("groupChatId", chamber.groupChatId)
-                            intent.putExtra("groupTitle", chamber.groupTitle)
-                            intent.putExtra("authorName",chamber.authorName)
-                            intent.putExtra("authorUID",chamber.authorUID)
+                            intent.putExtra("GroupChatId", chamber.groupChatId)
+                            intent.putExtra("GroupTitle", chamber.groupTitle)
+                            intent.putExtra("AuthorName",chamber.AuthorName)
+                            intent.putExtra("AuthorUID",chamber.AuthorUID)
                             startActivity(intent)
                             finish()
                         }
@@ -114,7 +117,7 @@ class CreateActivity : ComponentActivity() {
 
         onBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val intent = Intent(this@CreateActivity, MainActivity::class.java)
+                val intent = Intent(this@CreateChamberActivity, MainActivity::class.java)
                 startActivity(intent)
             }
         }

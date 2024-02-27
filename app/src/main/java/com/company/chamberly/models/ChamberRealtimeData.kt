@@ -1,4 +1,4 @@
-package com.company.chamberly
+package com.company.chamberly.models
 
 data class ChamberRealtimeData(
     val host: String = "", // Chamber creator's UID

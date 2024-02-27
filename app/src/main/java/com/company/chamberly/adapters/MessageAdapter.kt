@@ -1,11 +1,14 @@
-package com.company.chamberly
+package com.company.chamberly.adapters
 
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.compose.ui.text.style.TextAlign
 import androidx.recyclerview.widget.RecyclerView
+import com.company.chamberly.models.Message
+import com.company.chamberly.R
 
 class MessageAdapter(private val uid: String) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -18,7 +21,8 @@ class MessageAdapter(private val uid: String) :
 
     companion object {
         private const val VIEW_TYPE_ME = 1
-        private const val VIEW_TYPE_OTHER = 2
+        private const val VIEW_TYPE_SYSTEM = 2
+        private const val VIEW_TYPE_OTHER = 3
     }
 
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -38,12 +42,20 @@ class MessageAdapter(private val uid: String) :
     inner class MessageViewHolderMe(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val textMessage: TextView = itemView.findViewById(R.id.text_gchat_message_me)
     }
+
+    inner class MessageViewHolderSystem(itemView: View): RecyclerView.ViewHolder(itemView) {
+        val message: TextView = itemView.findViewById(R.id.text_system_message)
+    }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
             VIEW_TYPE_ME -> {
                 val itemView = inflater.inflate(R.layout.item_chat_me, parent, false)
                 MessageViewHolderMe(itemView)
+            }
+            VIEW_TYPE_SYSTEM -> {
+                val itemView = inflater.inflate(R.layout.item_system_message, parent, false)
+                MessageViewHolderSystem(itemView)
             }
             VIEW_TYPE_OTHER -> {
                 val itemView = inflater.inflate(R.layout.item_chat_other, parent, false)
@@ -71,6 +83,9 @@ class MessageAdapter(private val uid: String) :
                     true
                 }
             }
+            is MessageViewHolderSystem -> {
+                holder.message.text = message.message_content
+            }
         }
     }
 
@@ -88,6 +103,8 @@ class MessageAdapter(private val uid: String) :
         val message = messages[position]
         return if (message.UID == uid) {
             VIEW_TYPE_ME
+        } else if (message.message_type == "custom" || message.message_type == "system" || message.message_type == "photo") {
+            VIEW_TYPE_SYSTEM
         } else {
             VIEW_TYPE_OTHER
         }

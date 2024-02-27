@@ -1,5 +1,7 @@
-package com.company.chamberly
+package com.company.chamberly.activities
 
+import android.app.Dialog
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -11,17 +13,42 @@ import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
+import com.company.chamberly.R
+import com.google.android.gms.tasks.OnSuccessListener
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.InstallState
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.android.play.core.ktx.isFlexibleUpdateAllowed
+import com.google.android.play.core.ktx.isImmediateUpdateAllowed
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.concurrent.Executor
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 // TODO: Add cache file for sign in
 class WelcomeActivity : AppCompatActivity() {
@@ -29,11 +56,23 @@ class WelcomeActivity : AppCompatActivity() {
     private val database = Firebase.firestore
     private var token: String? = ""
 
+    private lateinit var appUpdateManager: AppUpdateManager
+    private val updateType = AppUpdateType.IMMEDIATE
+    private val updateRequestCode = 200
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val sharedPreferences = getSharedPreferences("userDetails", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
         val hasLoggedIn = sharedPreferences.getBoolean("hasLoggedIn", false)
+
+        appUpdateManager = AppUpdateManagerFactory.create(this)
+
+        if (updateType == AppUpdateType.FLEXIBLE) {
+            appUpdateManager.registerListener(installStateUpdatedListener)
+        }
+
+        checkForAppUpdates()
 
         if (hasLoggedIn && Firebase.auth.currentUser != null) {
             goToMainActivity()
@@ -68,6 +107,7 @@ class WelcomeActivity : AppCompatActivity() {
                         if (task.isSuccessful) {
                             val user = auth.currentUser
                             sharedPreferences.edit().putBoolean("hasLoggedIn", true).apply()
+                            sharedPreferences.edit().putString("uid", user!!.uid).apply()
                             Toast.makeText(this, "Welcome!${user?.uid}", Toast.LENGTH_SHORT).show()
                         } else {
                             Toast.makeText(
@@ -81,8 +121,13 @@ class WelcomeActivity : AppCompatActivity() {
 
 
             val addButton = findViewById<Button>(R.id.btnCreateAccount)
+            val etEmail = findViewById<EditText>(R.id.etEmail)
             addButton.setOnClickListener {
+                addButton.isEnabled = false
+                etEmail.isEnabled = false
                 check()
+                addButton.isEnabled = true
+                etEmail.isEnabled = true
             }
 
 
@@ -126,6 +171,30 @@ class WelcomeActivity : AppCompatActivity() {
         }
     }
 
+    private fun checkForAppUpdates() {
+        appUpdateManager
+            .appUpdateInfo
+            .addOnSuccessListener { info ->
+                val isUpdateAvailable = info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                val isUpdateAllowed = when (updateType) {
+                    AppUpdateType.FLEXIBLE -> info.isFlexibleUpdateAllowed
+                    AppUpdateType.IMMEDIATE -> info.isImmediateUpdateAllowed
+                    else -> false
+                }
+                if (isUpdateAvailable && isUpdateAllowed) {
+                    Log.i("AppUpdate","New version is available: ${info.availableVersionCode()}")
+                    appUpdateManager.startUpdateFlowForResult(
+                        info,
+                        this,
+                        AppUpdateOptions.defaultOptions(updateType),
+                        updateRequestCode
+                    )
+                } else {
+                    Log.d("AppUpdate","No update available")
+                }
+            }
+    }
+
 
     //TODO: Check if user exist in database
     private fun userExist(uid: String, callback: (Boolean) -> Unit) {
@@ -167,7 +236,7 @@ class WelcomeActivity : AppCompatActivity() {
         if (user != null) {
             val displayName = editText.text.toString()
             // Save displayName to SharedPreferences
-            val sharedPreferences = getSharedPreferences("userDetails", Context.MODE_PRIVATE)
+            val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
             val editor = sharedPreferences.edit()
             editor.putString("uid", user.uid)
             editor.putString("displayName", displayName)
@@ -186,6 +255,8 @@ class WelcomeActivity : AppCompatActivity() {
                             if (fcmToken != null) {
                                 if (fcmToken.isNotBlank() && fcmToken.isNotBlank()) {
                                     token = fcmToken
+                                    editor.putString("notificationKey", fcmToken)
+                                    editor.apply()
                                 }
                             }
                         }
@@ -207,6 +278,7 @@ class WelcomeActivity : AppCompatActivity() {
                                     "Display_Name" to displayName,
                                     "Email" to "${user.uid}@chamberly.net",
                                     "platform" to "android",
+                                    "isModerator" to false,
                                     "timestamp" to FieldValue.serverTimestamp(),
                                     "FCMTOKEN" to token
                                 )
@@ -214,15 +286,9 @@ class WelcomeActivity : AppCompatActivity() {
                                     .set(account)
                                     .addOnSuccessListener {
                                         Log.d("TAG", "DocumentSnapshot successfully written!")
-
-                                        // Save displayName to SharedPreferences
-                                        val sharedPreferences =
-                                            getSharedPreferences("cache", Context.MODE_PRIVATE)
-                                        val editor = sharedPreferences.edit()
                                         editor.putString("uid", user.uid)
                                         editor.putString("displayName", displayName)
                                         editor.apply()
-
                                         // Go to MainActivity
                                         val intent = Intent(this, MainActivity::class.java)
                                         startActivity(intent)
@@ -258,17 +324,63 @@ class WelcomeActivity : AppCompatActivity() {
 
     //asynchronous operation
     fun getFcmToken(callback: (String?) -> Unit) {
-        FirebaseMessaging.getInstance().token.addOnSuccessListener { fcmToken ->
-            if (fcmToken != null) {
-                Log.i("tokenFCM", fcmToken)
-                callback(fcmToken)
+        FirebaseMessaging.getInstance().token.addOnSuccessListener { result ->
+            if (result != null) {
+                Log.i("tokenFCM", result)
+                callback(result)
             } else {
                 Log.i("tokenFCM", "Token is null")
                 callback(null)
             }
-        }.addOnFailureListener {
-            Log.e("tokenFCM", "Error fetching token", it)
+        }.addOnFailureListener { exception ->
+            Log.e("tokenFCM", "Error fetching token", exception)
             callback(null)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (updateType == AppUpdateType.IMMEDIATE) {
+            appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+                if (info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                    appUpdateManager.startUpdateFlowForResult(
+                        info,
+                        this,
+                        AppUpdateOptions.defaultOptions(updateType),
+                        updateRequestCode
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (updateType == AppUpdateType.FLEXIBLE) {
+            appUpdateManager.unregisterListener(installStateUpdatedListener)
+        }
+    }
+
+    private val installStateUpdatedListener = InstallStateUpdatedListener { state ->
+        if (state.installStatus() == InstallStatus.DOWNLOADED) {
+            Toast.makeText(
+                applicationContext,
+                "Update downloaded.",
+                Toast.LENGTH_LONG
+            ).show()
+            lifecycleScope.launch {
+                delay(5.seconds)
+                appUpdateManager.completeUpdate()
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode == updateRequestCode) {
+            if (resultCode != RESULT_OK) {
+                Log.w("AppUpdate", "Error occured while updating.")
+            }
         }
     }
 }

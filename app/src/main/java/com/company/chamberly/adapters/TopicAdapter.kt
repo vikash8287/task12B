@@ -1,18 +1,19 @@
-package com.company.chamberly
+package com.company.chamberly.adapters
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
+import com.company.chamberly.R
+import com.company.chamberly.models.Topic
 
-class ChamberAdapter : BaseAdapter() {
+class TopicAdapter: BaseAdapter() {
 
-    val dataList = mutableListOf<Chamber>()
-
+    val dataList = mutableListOf<Topic>()
     override fun getCount(): Int = dataList.size
 
-    override fun getItem(position: Int): Chamber = dataList[position]
+    override fun getItem(position: Int): Topic = dataList[position]
 
     override fun getItemId(position: Int): Long = position.toLong()
 
@@ -22,8 +23,8 @@ class ChamberAdapter : BaseAdapter() {
         val rightSwipeOverlay: TextView = view.findViewById(R.id.rightSwipeOverlay)
         val leftSwipeOverlay: TextView = view.findViewById(R.id.leftSwipeOverlay)
 
-        val chamber = getItem(position)
-        textTitle.text = chamber.groupTitle
+        val topic = getItem(position)
+        textTitle.text = topic.TopicTitle
 
         rightSwipeOverlay.visibility = View.INVISIBLE
         leftSwipeOverlay.visibility = View.INVISIBLE
@@ -31,15 +32,14 @@ class ChamberAdapter : BaseAdapter() {
         return view
     }
 
-    fun setData(chamber: Chamber) {
-        dataList.add(chamber)
+    fun setData(topic: Topic) {
+        dataList.add(topic)
         notifyDataSetChanged()
     }
 
-    fun updateChambers(newChambers: List<Chamber>) {
+    fun updateTopics(newTopics: List<Topic>) {
         dataList.clear()
-        dataList.addAll(newChambers)
+        dataList.addAll(newTopics)
         notifyDataSetChanged()
     }
 }
-

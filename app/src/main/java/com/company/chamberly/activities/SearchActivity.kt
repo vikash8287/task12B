@@ -1,15 +1,22 @@
-package com.company.chamberly
+package com.company.chamberly.activities
 
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
+import android.opengl.Visibility
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import com.company.chamberly.models.Chamber
+import com.company.chamberly.models.Message
+import com.company.chamberly.R
+import com.company.chamberly.adapters.ChamberAdapter
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
@@ -127,6 +134,7 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
             .addOnFailureListener { exception ->
                 Log.e("firebase", "Error getting data", exception)
                 callback(false)
+                callback(false)
             }
     }
 
@@ -134,7 +142,7 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
         //TODO: load lastTimestamp from cache
         val query: Query = if (lastTimestamp == null) {
             firestore.collection("GroupChatIds")
-                .whereEqualTo("locked", false)
+                .whereEqualTo("isLocked", false)
                 .whereEqualTo("publishedPool", true)
                 .orderBy("timestamp", Query.Direction.ASCENDING)
                 .limit(4)
@@ -142,7 +150,7 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
             // fetch next 4 chambers
             Log.e(TAG, "New FetchChambers: last document is at $lastTimestamp")
             firestore.collection("GroupChatIds")
-                .whereEqualTo("locked", false)
+                .whereEqualTo("isLocked", false)
                 .whereEqualTo("publishedPool", true)
                 .orderBy("timestamp", Query.Direction.ASCENDING)
                 .startAfter(lastTimestamp)
@@ -158,7 +166,7 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
                 Log.e(TAG, "fetchChambers: ${querySnapshot.documents.size}")
                 for (documentSnapshot in querySnapshot) {
                     val chamber = documentSnapshot.toObject(Chamber::class.java)
-                    // set publishedpool as false to locked this chamber
+                    // set published pool as false to locked this chamber
                     firestore.collection("GroupChatIds").document(chamber.groupChatId)
                         .update("publishedPool", false)
                     isVacant(chamber) { isVacant ->
@@ -175,6 +183,21 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
                 val lastDocument = querySnapshot.documents.lastOrNull()
                 //TODO: save into cache
                 lastTimestamp = lastDocument?.get("timestamp")
+                if (adapter.count == 0) {
+                    val kolodaView = findViewById<com.yalantis.library.Koloda>(R.id.koloda)
+                    val buttonsView = findViewById<LinearLayout>(R.id.buttonsLayout)
+                    val emptyStateView = findViewById<RelativeLayout>(R.id.emptyStateView)
+                    kolodaView.visibility = View.GONE
+                    buttonsView.visibility = View.GONE
+                    emptyStateView.visibility = View.VISIBLE
+                } else {
+                    val kolodaView = findViewById<com.yalantis.library.Koloda>(R.id.koloda)
+                    val buttonsView = findViewById<LinearLayout>(R.id.buttonsLayout)
+                    val emptyStateView = findViewById<RelativeLayout>(R.id.emptyStateView)
+                    kolodaView.visibility = View.VISIBLE
+                    buttonsView.visibility = View.VISIBLE
+                    emptyStateView.visibility = View.GONE
+                }
             }
             .addOnFailureListener { exception ->
                 Log.e("SearchActivity", "Error fetching chambers: $exception")
@@ -270,28 +293,29 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
             .addOnSuccessListener {
                 // Add user to members
                 if (authorUID != null) {
-                    chamberDataRef.child("Users").child("members").child(authorUID).setValue(authorName)
+                    chamberDataRef.child("users").child("members").child(authorUID).setValue(authorName)
                         .addOnSuccessListener {
                             // Lock the chamber
                             firestore.collection("GroupChatIds").document(chamber.groupChatId).update("locked" , true)
                                 .addOnSuccessListener{
                                     // Start ChatActivity
                                     val intent = Intent(this@SearchActivity, ChatActivity::class.java)
-                                    intent.putExtra("groupChatId", chamber.groupChatId)
-                                    intent.putExtra("groupTitle", chamber.groupTitle)
-                                    intent.putExtra("authorName",chamber.authorName)
-                                    intent.putExtra("authorUID",chamber.authorUID)
+                                    intent.putExtra("GroupChatId", chamber.groupChatId)
+                                    intent.putExtra("GroupTitle", chamber.groupTitle)
+                                    intent.putExtra("AuthorName",chamber.AuthorName)
+                                    intent.putExtra("AuthorUID",chamber.AuthorUID)
                                     startActivity(intent)
                                     finish()
 
                                     // Update user document with the new chamber ID in Firestore
-                                    val userRef = firestore.collection("Users").document(authorUID)
+                                    val userRef = firestore.collection("users").document(authorUID)
                                     userRef.update("chambers",  FieldValue.arrayUnion(chamber.groupChatId))
                                         .addOnSuccessListener {
                                             // Successfully updated user's chamber list
                                         }
                                         .addOnFailureListener { e ->
                                             // Handle error in updating the chamber list
+                                            Log.d("SEARCHACTIVITY", "JOINING FAILED message: $e")
                                         }
                                 }
                         }
