@@ -19,11 +19,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Chamberly"
         tools:targetApi="tiramisu">
-        <activity
-            android:name=".activities.ActiveChambersActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            android:exported="false" />
-
         <service
             android:name=".MyFirebaseMessagingService"
             android:exported="false">
@@ -31,6 +26,10 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <activity
+            android:name=".activities.ActiveChambersActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:exported="false" />
 
         <activity
             android:name=".activities.SearchActivity"
@@ -44,8 +43,8 @@
             android:theme="@style/AppTheme" />
         <activity
             android:name=".activities.ChatActivity"
-            android:exported="false"
             android:label="@string/title_activity_chat"
+            android:parentActivityName=".activities.MainActivity"
             android:theme="@style/Theme.Chamberly" />
         <activity
             android:name=".activities.CreateChamberActivity"

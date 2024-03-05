@@ -32,6 +32,7 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,6 +59,26 @@ class MainActivity : ComponentActivity() {
         attachTopicRequestListeners()
         setContentView(R.layout.activity_main)
         checkNotificationPermission()
+
+        val messaging = FirebaseMessaging.getInstance()
+
+        messaging.token.addOnCompleteListener { task ->
+            if(!task.isSuccessful) {
+                Log.w("FCMTOKEN", "FCMTOKEN fetch failed", task.exception)
+                return@addOnCompleteListener
+            }
+
+            val token = task.result
+
+            Log.d("FCMTOKEN", "SUCCESS $token")
+        }
+        messaging.isAutoInitEnabled = true
+
+        val groupChatId = intent.getStringExtra("GroupChatId") ?: "" // Default to empty string if null
+        val groupTitle = intent.getStringExtra("GroupTitle") ?: ""
+        val authorName = intent.getStringExtra("AuthorName") ?: ""
+        val authorUID = intent.getStringExtra("AuthorUID") ?: auth.currentUser!!.uid
+        checkAndGoToChatActivity(groupChatId, groupTitle, authorName, authorUID)
 
         val createChamberButton = findViewById<Button>(R.id.createChamberButton)
         val createTopicButton = findViewById<Button>(R.id.createTopicButton)
@@ -120,6 +141,18 @@ class MainActivity : ComponentActivity() {
             }
         }
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
+    }
+
+    private fun checkAndGoToChatActivity(groupChatId: String, groupTitle: String, authorName: String, authorUID: String) {
+        Log.d("DATA", "$groupTitle::$groupTitle:$groupChatId")
+        if (groupChatId.isNotBlank()) {
+            val intent = Intent(this, ChatActivity::class.java)
+            intent.putExtra("GroupChatId", groupChatId)
+            intent.putExtra("GroupTitle", groupTitle)
+            intent.putExtra("AuthorName", authorName)
+            intent.putExtra("AuthorUID", authorUID)
+        }
+
     }
 
     private fun showProfileOptionsPopup() {

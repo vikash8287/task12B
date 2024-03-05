@@ -63,13 +63,13 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/tvTermsConditions"
         android:layout_marginStart="4dp"
-        android:layout_marginTop="346dp"
         android:background="@drawable/rounded_button"
         android:text="@string/create_account"
         android:textAllCaps="false"
         android:textColor="#ffffff"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvTermsConditions" />
+        app:layout_constraintTop_toBottomOf="@id/tvTermsConditions"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

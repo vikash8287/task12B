@@ -4,8 +4,11 @@ import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.Manifest
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
@@ -20,7 +23,9 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
@@ -84,6 +89,17 @@ class WelcomeActivity : AppCompatActivity() {
             // Check if the user is logged in
             //token = getFcmToken{}
             val messaging = FirebaseMessaging.getInstance()
+
+            messaging.token.addOnCompleteListener { task ->
+                if(!task.isSuccessful) {
+                    Log.w("FCMTOKEN", "FCMTOKEN fetch failed", task.exception)
+                    return@addOnCompleteListener
+                }
+
+                val token = task.result
+
+                Log.d("FCMTOKEN", "SUCCESS $token")
+            }
             messaging.isAutoInitEnabled = true
             if (currentUser != null) {
                 userExist(currentUser.uid) { exists ->

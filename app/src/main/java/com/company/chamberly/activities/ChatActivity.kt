@@ -18,6 +18,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.company.chamberly.OkHttpHandler
 import com.company.chamberly.models.Message
 import com.company.chamberly.R
 import com.company.chamberly.adapters.MessageAdapter
@@ -32,6 +33,8 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
+import com.google.firebase.messaging.ktx.remoteMessage
 import com.google.gson.Gson
 import okhttp3.Call
 import okhttp3.Callback
@@ -52,16 +55,15 @@ class ChatActivity : ComponentActivity(){
     private lateinit var cacheFile : File   // cache file
     private lateinit var recyclerView: RecyclerView
     private lateinit var messageAdapter: MessageAdapter
-    //private lateinit var chamber: Chamber
     private lateinit var groupChatId: String
     private lateinit var groupTitle :String
     private lateinit var authorName :String
     private lateinit var authorUID : String
-    private lateinit var onBackPressedCallback: OnBackPressedCallback
     private var messages = mutableListOf<Message>() // message list
     private val auth = Firebase.auth                // get current user
     private val database = Firebase.database        // realtime database
     private val firestore = Firebase.firestore      // firestore
+    private var hasLeftChat: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,7 +77,7 @@ class ChatActivity : ComponentActivity(){
         groupChatId = intent.getStringExtra("GroupChatId") ?: "" // Default to empty string if null
         groupTitle = intent.getStringExtra("GroupTitle") ?: ""
         authorName = intent.getStringExtra("AuthorName") ?: ""
-        authorUID = intent.getStringExtra("AuthorUID") ?: ""
+        authorUID = intent.getStringExtra("AuthorUID") ?: auth.currentUser!!.uid
 
         recyclerView = findViewById(R.id.recyclerViewMessages)         // get recycler view
         recyclerView.adapter = messageAdapter
@@ -196,6 +198,7 @@ class ChatActivity : ComponentActivity(){
                     editText.setText("")
                     messages.add(message)
                     Log.i("beforeSend","addMessage")
+                    sendNotificationToInActiveMembers()
                     // TODO add into cache
                     recyclerView.smoothScrollToPosition(messageAdapter.itemCount - 1)
                     Log.i("beforeSend","scroll")
@@ -224,18 +227,14 @@ class ChatActivity : ComponentActivity(){
                 }
             })
 
-        onBackPressedCallback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                exitChat(groupChatId)
-            }
-        }
-        this@ChatActivity.onBackPressedDispatcher.addCallback(onBackPressedCallback)
+        addNotificationKeyListener()
     }
 
 
 
     private fun exitChat(groupChatId: String) {
         val userUID = FirebaseAuth.getInstance().currentUser?.uid
+        hasLeftChat = true
 
         // Send a system message indicating that the user is leaving
         sendExitSystemMessage(groupChatId, userUID)
@@ -257,11 +256,31 @@ class ChatActivity : ComponentActivity(){
             }
     }
 
+    override fun onPause() {
+        addNotificationKey()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        addNotificationKey()
+        super.onDestroy()
+    }
+
+    override fun onResume() {
+        removeNotificationKey()
+        super.onResume()
+    }
+
+    override fun onRestart() {
+        removeNotificationKey()
+        super.onRestart()
+    }
+
     // Function to send a system message about user exit
     private fun sendExitSystemMessage(groupChatId: String, userUID: String?) {
         val shaderPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
         val userName = shaderPreferences.getString("displayName", "")
-        val exitMessage = Message(userUID ?: "", "$userName has exited the chat.", "system",
+        val exitMessage = Message(userUID ?: "", "$userName has exited the chat.", "custom",
                 userName ?: "",
             )
         database.getReference(groupChatId).child("messages").push().setValue(messageToMap(exitMessage))
@@ -323,11 +342,80 @@ class ChatActivity : ComponentActivity(){
         }
     }
 
+    private fun addNotificationKeyListener() {
+        val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+        val notificationKey = sharedPreferences.getString("notificationKey", "") ?: ""
+        val userRef = database
+            .reference
+            .child(groupChatId)
+            .child("users")
+            .child("members")
+            .child(auth.currentUser!!.uid)
+        userRef.child("notificationKey").setValue(null)
+        userRef.child("notificationKey").onDisconnect().setValue(notificationKey)
+
+        userRef.addValueEventListener(object: ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val user = snapshot.value
+                if(user == null) {
+                    Log.d("HERE", "REMOVED LISTENER")
+                    userRef.child("notificationKey").onDisconnect().cancel()
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+
+        })
+    }
 
 
-    override fun onDestroy() {
-        onBackPressedCallback.remove()
-        super.onDestroy()
+    private fun addNotificationKey() {
+        val userRef = database.reference.child(groupChatId).child("users").child("members").child(auth.currentUser!!.uid)
+        userRef.get().addOnSuccessListener {
+            if(it.exists()) {
+                userRef
+                    .child("notificationKey")
+                    .setValue(getSharedPreferences("cache", Context.MODE_PRIVATE).getString("notificationKey", ""))
+            }
+        }
+    }
+
+    private fun removeNotificationKey() {
+        val userRef = database.reference.child(groupChatId).child("users").child("members").child(auth.currentUser!!.uid)
+        userRef.get().addOnSuccessListener {
+            if(it.exists()) {
+                userRef
+                    .child("notificationKey")
+                    .removeValue()
+            }
+        }
+    }
+    private fun sendNotificationToInActiveMembers() {
+        Log.d("NOTIFICATIONS", "SENDING NOTIFICATIONS")
+        val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+        val currentNotifKey = sharedPreferences.getString("notificationKey", "") ?: ""
+        val notificationPayload = JSONObject()
+        val membersRef = database.reference.child(groupChatId).child("users").child("members")
+        membersRef.get().addOnSuccessListener { membersSnapshot ->
+            for(snapshot in membersSnapshot.children) {
+                val token: String? = snapshot.child("notificationKey").value as String?
+                Log.d("NOTID", token.toString())
+                if(!token.isNullOrEmpty() && token != currentNotifKey) {
+                    try {
+                        notificationPayload.put("title", getSharedPreferences("cache", Context.MODE_PRIVATE).getString("displayName", "ANONYMOUS"))
+                        notificationPayload.put("body", "sent you a message")
+                        notificationPayload.put("groupChatId", groupChatId)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    OkHttpHandler(notificationPayload, token).execute()
+                }
+            }
+        }
+
     }
 
     private fun showSelfDialog(message: Message){

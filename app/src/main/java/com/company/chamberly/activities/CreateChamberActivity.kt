@@ -96,7 +96,7 @@ class CreateChamberActivity : ComponentActivity() {
                         val usersRef = chamberDataRef.child("users")
                         val membersRef = usersRef.child("members")
                         val hostRef = membersRef.child(chamber.AuthorUID)
-                        hostRef.setValue(authorName).addOnSuccessListener {
+                        hostRef.child("name").setValue(authorName).addOnSuccessListener {
                             val intent = Intent(this@CreateChamberActivity, ChatActivity::class.java)
                             //TODO : pass chamber object to ChatActivity
                             //intent.putExtra("chamber", chamber)

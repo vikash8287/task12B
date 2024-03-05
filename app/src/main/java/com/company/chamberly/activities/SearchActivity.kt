@@ -161,15 +161,25 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
     }
 
     private fun fetchChambersRecursively(query: Query) {
+        val kolodaView = findViewById<com.yalantis.library.Koloda>(R.id.koloda)
+        val buttonsView = findViewById<LinearLayout>(R.id.buttonsLayout)
+        val emptyStateView = findViewById<RelativeLayout>(R.id.emptyStateView)
+        kolodaView.visibility = View.GONE
+        buttonsView.visibility = View.GONE
+        emptyStateView.visibility = View.VISIBLE
         query.get()
             .addOnSuccessListener { querySnapshot ->
                 Log.e(TAG, "fetchChambers: ${querySnapshot.documents.size}")
                 for (documentSnapshot in querySnapshot) {
                     val chamber = documentSnapshot.toObject(Chamber::class.java)
+                    kolodaView.visibility = View.VISIBLE
+                    buttonsView.visibility = View.VISIBLE
+                    emptyStateView.visibility = View.GONE
                     // set published pool as false to locked this chamber
                     firestore.collection("GroupChatIds").document(chamber.groupChatId)
                         .update("publishedPool", false)
                     isVacant(chamber) { isVacant ->
+                        Log.d("SEARCH", isVacant.toString())
                         if (isVacant) {
                             adapter.setData(chamber)
                         }
@@ -183,21 +193,6 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
                 val lastDocument = querySnapshot.documents.lastOrNull()
                 //TODO: save into cache
                 lastTimestamp = lastDocument?.get("timestamp")
-                if (adapter.count == 0) {
-                    val kolodaView = findViewById<com.yalantis.library.Koloda>(R.id.koloda)
-                    val buttonsView = findViewById<LinearLayout>(R.id.buttonsLayout)
-                    val emptyStateView = findViewById<RelativeLayout>(R.id.emptyStateView)
-                    kolodaView.visibility = View.GONE
-                    buttonsView.visibility = View.GONE
-                    emptyStateView.visibility = View.VISIBLE
-                } else {
-                    val kolodaView = findViewById<com.yalantis.library.Koloda>(R.id.koloda)
-                    val buttonsView = findViewById<LinearLayout>(R.id.buttonsLayout)
-                    val emptyStateView = findViewById<RelativeLayout>(R.id.emptyStateView)
-                    kolodaView.visibility = View.VISIBLE
-                    buttonsView.visibility = View.VISIBLE
-                    emptyStateView.visibility = View.GONE
-                }
             }
             .addOnFailureListener { exception ->
                 Log.e("SearchActivity", "Error fetching chambers: $exception")
@@ -293,7 +288,7 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
             .addOnSuccessListener {
                 // Add user to members
                 if (authorUID != null) {
-                    chamberDataRef.child("users").child("members").child(authorUID).setValue(authorName)
+                    chamberDataRef.child("users").child("members").child(authorUID).child("name").setValue(authorName)
                         .addOnSuccessListener {
                             // Lock the chamber
                             firestore.collection("GroupChatIds").document(chamber.groupChatId).update("locked" , true)
