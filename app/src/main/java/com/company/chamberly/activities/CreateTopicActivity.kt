@@ -72,6 +72,7 @@ class CreateTopicActivity : ComponentActivity() {
                         val userRef = usersRef.child(topic.AuthorUID)
                         userRef.child("isReserved").setValue(false)
                         userRef.child("isSubbed").setValue(false)
+                        userRef.child("restricted").setValue(false)
                         userRef.child("notificationKey").setValue(notificationKey)
                         userRef.child("penalty").setValue(0)
                         userRef.child("timestamp").setValue(System.currentTimeMillis() / 1000)

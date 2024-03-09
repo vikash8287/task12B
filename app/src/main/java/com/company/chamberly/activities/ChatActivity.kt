@@ -284,6 +284,7 @@ class ChatActivity : ComponentActivity(){
                 userName ?: "",
             )
         database.getReference(groupChatId).child("messages").push().setValue(messageToMap(exitMessage))
+        reportUser(message = null, reason = "Android Analytics", selfReport = false)
     }
 
     // copy message
@@ -303,23 +304,23 @@ class ChatActivity : ComponentActivity(){
     }
 
     // report user
-    private  fun reportUser(message: Message, reason: String){
+    private  fun reportUser(message: Message?, reason: String, selfReport: Boolean = true){
         // Todo: get chamber info early
 
         val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
         val uid = sharedPreferences.getString("uid", auth.currentUser?.uid)
 
-
         val report = hashMapOf(
-            "against" to message.UID,
+            "against" to (message?.UID ?: uid),
             "by" to uid,
             "groupChatId" to groupChatId,
             "realHost" to "",
+            "messages" to emptyList<Message>(),
             "reason" to reason,
             "reportDate" to FieldValue.serverTimestamp(),
-            "realHost" to authorName,
-            "ticketTaken" to false
-            //"Title" to ?
+            "ticketTaken" to false,
+            "selfReport" to selfReport,
+            "title" to "",
         )
         firestore.collection("Reports").add(report)
             .addOnSuccessListener {

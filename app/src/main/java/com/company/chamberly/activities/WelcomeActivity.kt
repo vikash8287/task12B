@@ -335,6 +335,13 @@ class WelcomeActivity : AppCompatActivity() {
                 .addOnFailureListener {
                     Toast.makeText(this, "Error checking displayName", Toast.LENGTH_SHORT).show()
                 }
+            val restrictionsRef = database.collection("Restrictions")
+            restrictionsRef
+                .document(user.uid)
+                .set(mapOf(
+                    "UID" to user.uid,
+                    "restrictedUntil" to FieldValue.serverTimestamp()
+                ))
         }
     }
 

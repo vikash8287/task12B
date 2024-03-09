@@ -24,9 +24,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
 import com.company.chamberly.adapters.TopicRequestRecyclerViewAdapter
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
@@ -38,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import okhttp3.internal.notify
+import java.sql.Time
 
 class MainActivity : ComponentActivity() {
     private lateinit var onBackPressedCallback: OnBackPressedCallback
@@ -46,6 +50,8 @@ class MainActivity : ComponentActivity() {
     private val firestore = Firebase.firestore
     private var isShowingJoinDialog: Boolean = false
     private lateinit var topicReqeustsAdapter: TopicRequestRecyclerViewAdapter
+    private var isUserRestricted: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
@@ -56,7 +62,7 @@ class MainActivity : ComponentActivity() {
             redirectToWelcomeActivity()
             return
         }
-        attachTopicRequestListeners()
+        checkRestrictions()
         setContentView(R.layout.activity_main)
         checkNotificationPermission()
 
@@ -249,6 +255,39 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun checkRestrictions() {
+        val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+        val uid = sharedPreferences.getString("uid", "") ?: auth.currentUser!!.uid
+        val restrictionsRef = firestore.collection("Restrictions").document(uid)
+        Log.d("TEMP", uid)
+        restrictionsRef.get().addOnSuccessListener { documentSnapshot ->
+            val data = documentSnapshot.data
+            if (data != null) {
+                val restrictedUntil = data["restrictedUntil"] as Timestamp? // Assuming it's stored as a Long
+
+                if(restrictedUntil != null) {
+                    val serverTimestampRef = FirebaseDatabase.getInstance().getReference(".info/serverTimeOffset")
+                    Log.d("TEMP", serverTimestampRef.toString())
+                    serverTimestampRef.addListenerForSingleValueEvent(object: ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val offset = snapshot.getValue(Long::class.java) ?: 0
+                            val serverTimeMillis = System.currentTimeMillis() + offset
+
+                            isUserRestricted = serverTimeMillis < restrictedUntil.toDate().time
+                            attachTopicRequestListeners()
+                            Log.d("RESTRICTIONS", isUserRestricted.toString())
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            //Need not implement for now
+                        }
+                    })
+                }
+            }
+            // Now you can use the value of isRestricted as needed
+        }
+    }
+
     private fun attachTopicRequestListeners() {
         val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
         val savedTopics = sharedPreferences.getString("topics", "")!!.split(",").toMutableList()
@@ -261,7 +300,9 @@ class MainActivity : ComponentActivity() {
             val topicRef = realtimeDb.reference.child(topic)
             val userRef = topicRef
                 .child("users")
-                .child(auth.currentUser!!.uid)
+                .child(sharedPreferences.getString("uid", "") ?: "")
+
+            userRef.child("restricted").setValue(isUserRestricted)
 
             Log.d("TOPICS", auth.currentUser?.uid + "----")
             userRef
