@@ -1,51 +1,76 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="5dp"
-    android:orientation="vertical">
+    android:padding="8dp"
+    android:orientation="vertical"
+    android:gravity="center"
+    style="@style/Dialog"
+    android:background="@drawable/dialog_background">
 
     <TextView
         android:id="@+id/textReportTitle"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Reporting DisplayName"
-        android:textAppearance="?android:textAppearanceMedium" />
+        android:textAppearance="?android:textAppearanceMedium"
+        android:textColor="#000" />
 
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Choose the reason for this report"
-        android:textAppearance="?android:textAppearanceMedium" />
+        android:textAppearance="?android:textAppearanceMedium"
+        android:textColor="#000"/>
 
 
     <Button
         android:id="@+id/buttonHarassment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Harassment or bullying" />
+        android:layout_marginVertical="4dp"
+        android:layout_marginHorizontal="8dp"
+        android:text="Harassment or bullying"
+        android:textColor="#FFF"
+        android:background="@drawable/rounded_button"/>
 
     <Button
         android:id="@+id/buttonInappropriateBehavior"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Inappropriate Behaviour" />
+        android:layout_marginVertical="4dp"
+        android:layout_marginHorizontal="8dp"
+        android:text="Inappropriate Behaviour"
+        android:textColor="#FFF"
+        android:background="@drawable/rounded_button" />
 
     <Button
         android:id="@+id/buttonUnsupportiveBehavior"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Unsupportive behaviour" />
+        android:layout_marginVertical="4dp"
+        android:layout_marginHorizontal="8dp"
+        android:text="Unsupportive behaviour"
+        android:textColor="#FFF"
+        android:background="@drawable/rounded_button" />
 
     <Button
         android:id="@+id/buttonSpamming"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Spamming" />
+        android:layout_marginVertical="4dp"
+        android:layout_marginHorizontal="8dp"
+        android:text="Spamming"
+        android:textColor="#FFF"
+        android:background="@drawable/rounded_button"/>
 
     <Button
         android:id="@+id/buttonAnnoying"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Annoying" />
+        android:layout_marginVertical="4dp"
+        android:layout_marginHorizontal="8dp"
+        android:text="Annoying"
+        android:textColor="#FFF"
+        android:background="@drawable/rounded_button"/>
 
 </LinearLayout>

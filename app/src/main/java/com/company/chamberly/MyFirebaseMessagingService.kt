@@ -4,17 +4,23 @@ import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import com.company.chamberly.activities.ChatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-private const   val channelName = "My Notification Channel"
+import okhttp3.internal.notify
+
+
+private const val channelName = "My Notification Channel"
 private const val channelId = "channel_id"
 class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
@@ -28,7 +34,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             // Define a reference to the Cloud Firestore
             val firestore = Firebase.firestore
             val userRef = firestore.collection("Accounts").document(userId)
-
+            val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+            editor.putString("notificationKey", token)
+            editor.apply()
             // Update the FCM token for the current user
             userRef.update("FCMTOKEN", token)
                 .addOnSuccessListener {
@@ -50,13 +59,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val body = remoteMessage.data["body"]
         val groupChatId = remoteMessage.data["groupChatId"]
         val groupTitle  = remoteMessage.data["groupTitle"]
-        val authorUid  = remoteMessage.data["authorUID"]
-        val authorName = remoteMessage.data["authorName"]
+        val authorUid  = remoteMessage.data["AuthorUID"]
+        val authorName = remoteMessage.data["AuthorName"]
         // You can customize the notification's behavior here
         //  if(ChatActivity().isFinishing || ChatActivity().isDestroyed){
-        if(!isAppInForeground()) {
-            sendNotification(title, body, groupChatId, groupTitle, authorUid, authorName)
-        }
+        sendNotification(title, body, groupChatId, groupTitle, authorUid, authorName)
     }
     private fun isAppInForeground():Boolean{
         val appProcessInfo = ActivityManager.RunningAppProcessInfo()
@@ -64,25 +71,23 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         return (appProcessInfo.importance== ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)
     }
     private fun sendNotification(title: String?, messageBody: String?,groupChatId:String?,groupTitle:String?,authorUid:String?,authorName:String?) {
+        Log.d("DATA", "$title:$messageBody:$groupTitle:$groupChatId")
+        val requestCode = System.currentTimeMillis().toInt()
         val intent = Intent(this, ChatActivity::class.java)
-        intent.putExtra("groupChatId", groupChatId)
-        intent.putExtra("groupTitle", groupTitle)
-        intent.putExtra("authorName",authorName)
-        intent.putExtra("authorUID",authorUid)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
-
+        intent.putExtra("GroupChatId", groupChatId)
+        intent.putExtra("GroupTitle", groupTitle)
+        intent.putExtra("AuthorName",authorName)
+        intent.putExtra("AuthorUID",authorUid)
+        val pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT)
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(androidx.core.R.drawable.notification_bg)
+            .setSmallIcon(R.drawable.notification_badge)
             .setContentTitle(title)
             .setContentText(messageBody)
-            .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
-
+            .setAutoCancel(true)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -95,8 +100,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             )
             notificationManager.createNotificationChannel(channel)
         }
-
-        notificationManager.notify(0, notificationBuilder.build())
+        notificationManager.notify(requestCode, notificationBuilder.build())
     }
 
 }

@@ -9,15 +9,15 @@
     android:clipToPadding="false">
 
     <ImageButton
-    android:id="@+id/backButton"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_alignParentStart="true"
-    android:layout_marginTop="6dp"
-    android:background="?attr/selectableItemBackgroundBorderless"
-    android:contentDescription="@string/app_name"
-    android:padding="16dp"
-    android:src="@drawable/ic_back" />
+        android:id="@+id/backButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="6dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/app_name"
+        android:padding="16dp"
+        android:src="@drawable/ic_back" />
 
     <TextView
         android:id="@+id/textView"
@@ -29,8 +29,6 @@
         android:text="@string/swipe_right_to_start_chatting1"
         android:textColor="#2E2E5B"
         android:textSize="20sp" />
-
-
 
     <com.yalantis.library.Koloda
         android:id="@+id/koloda"
@@ -99,7 +97,7 @@
             android:layout_marginTop="30dp"
             android:textSize="18sp"
             android:layout_centerHorizontal="true"
-            android:text="@string/no_chambers_found"
+            android:text="@string/no_topics_found"
             android:gravity="center" />
     </RelativeLayout>
 

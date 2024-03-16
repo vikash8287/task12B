@@ -107,6 +107,19 @@
         android:text="@string/create_a_chamber"
         android:background="@drawable/bg_button_placeholder" />
 
+    <Button
+        android:id="@+id/btnCreateTopic"
+        android:layout_width="297dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/btnCreateChamber"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:textColor="@color/white"
+        android:text="@string/create_a_topic"
+        android:background="@drawable/bg_button_placeholder" />
+
     </RelativeLayout>
 
 

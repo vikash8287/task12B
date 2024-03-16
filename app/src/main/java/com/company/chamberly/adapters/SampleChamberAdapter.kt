@@ -1,10 +1,12 @@
-package com.company.chamberly
+package com.company.chamberly.adapters
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.company.chamberly.R
+import com.company.chamberly.models.Chamber
 
 class SampleChamberAdapter(private val chambers: List<Chamber>) : RecyclerView.Adapter<SampleChamberAdapter.ViewHolder>() {
 

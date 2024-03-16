@@ -1,22 +1,33 @@
-package com.company.chamberly
+package com.company.chamberly.activities
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.RelativeLayout
+import android.widget.TableRow
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.company.chamberly.ChambersRecyclerViewAdapter
+import com.company.chamberly.models.Chamber
+import com.company.chamberly.models.Message
+import com.company.chamberly.R
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.ktx.database
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -33,15 +44,15 @@ class ActiveChambersActivity : AppCompatActivity() {
         val homeButton = findViewById<ImageButton>(R.id.homeButton)
 
         val emptyStateView = findViewById<RelativeLayout>(R.id.emptyStateView)
-        val addchamber = findViewById<ImageButton>(R.id.btnAddChamber)
+        val addChamber = findViewById<ImageButton>(R.id.btnAddChamber)
 
 
         val recyclerView = findViewById<RecyclerView>(R.id.rvChambers)
         val adapter = ChambersRecyclerViewAdapter { chamber ->
             // Handle click, navigate to ChatActivity
             val intent = Intent(this, ChatActivity::class.java).apply {
-                putExtra("groupChatId", chamber.groupChatId)
-                putExtra("groupTitle", chamber.groupTitle)
+                putExtra("GroupChatId", chamber.groupChatId)
+                putExtra("GroupTitle", chamber.groupTitle)
                 // Add other necessary data
             }
             startActivity(intent)
@@ -70,23 +81,26 @@ class ActiveChambersActivity : AppCompatActivity() {
             showProfileOptionsPopup()
         }
 
-        addchamber.setOnClickListener{
-            goToCreateActivity()
+        addChamber.setOnClickListener{
+            goToCreateChamberActivity()
         }
 
 
         val btnFindChamber = findViewById<Button>(R.id.btnFindChamber)
         val btnCreateChamber = findViewById<Button>(R.id.btnCreateChamber)
+        val btnCreateTopic = findViewById<Button>(R.id.btnCreateTopic)
         btnFindChamber.setOnClickListener {
             goToSearchActivity()
         }
 
         btnCreateChamber.setOnClickListener {
-            goToCreateActivity()
+            goToCreateChamberActivity()
+        }
+        btnCreateTopic.setOnClickListener {
+            goToCreateTopicActivity()
         }
 
     }
-
 
     private fun fetchChambers(callback: (List<Chamber>) -> Unit) {
         val userId = auth.currentUser?.uid
@@ -115,8 +129,9 @@ class ActiveChambersActivity : AppCompatActivity() {
 
         Tasks.whenAllSuccess<DataSnapshot>(lastMessageTasks)
             .addOnSuccessListener { lastMessages ->
+                Log.d("MESSAGES", lastMessages.size.toString())
                 lastMessages.forEachIndexed { index, dataSnapshot ->
-                    val lastMessage = dataSnapshot.children.firstOrNull()?.getValue(Message::class.java)
+                    val lastMessage = try { dataSnapshot.children.firstOrNull()?.getValue(Message::class.java) } catch(_: Exception) { Message(message_content = "No messages") }
                     chambers[index].lastMessage = lastMessage?.message_content ?: "No messages"
                 }
                 callback(chambers)
@@ -128,18 +143,14 @@ class ActiveChambersActivity : AppCompatActivity() {
             .child("messages").orderByKey().limitToLast(1).get()
     }
 
-
-
-
-
-
     private fun showProfileOptionsPopup() {
-        val options = arrayOf("Delete Account", "Show Privacy Policy")
+        val options = arrayOf("Delete Account", "Show Privacy Policy", "Submit feedback")
         val builder = AlertDialog.Builder(this)
-        builder.setItems(options) { _, which ->
+        builder.setItems(options) { dialog, which ->
             when (which) {
                 0 -> deleteAccount() // Delete account option
                 1 -> showPrivacyPolicy() // Show privacy policy option
+                2 -> submitFeedback(dialog) // Show feedback dialog
             }
         }
         builder.show()
@@ -157,7 +168,7 @@ class ActiveChambersActivity : AppCompatActivity() {
 
             user.delete().addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val sharedPreferences = getSharedPreferences("userDetails", Context.MODE_PRIVATE)
+                    val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
                     with(sharedPreferences.edit()) {
                         clear()
                         apply()
@@ -170,6 +181,40 @@ class ActiveChambersActivity : AppCompatActivity() {
             }
         } else {
             Toast.makeText(this, "No user is signed in", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun submitFeedback(dialog: DialogInterface) {
+        dialog.dismiss()
+        val feedbackDialog = Dialog(this, R.style.Dialog)
+        feedbackDialog.setContentView(R.layout.dialog_feedback)
+        feedbackDialog.show()
+        val submitButton = feedbackDialog.findViewById<Button>(R.id.submitFeedbackButton)
+        val dismissButton = feedbackDialog.findViewById<Button>(R.id.dismissFeedbackDialogButton)
+        val editText = feedbackDialog.findViewById<EditText>(R.id.feedback_text)
+        val feedbackSuccessText = feedbackDialog.findViewById<TextView>(R.id.feedback_success_text)
+        val buttonsLayout = feedbackDialog.findViewById<TableRow>(R.id.buttons_layout)
+        dismissButton?.setOnClickListener {
+            feedbackDialog.hide()
+        }
+
+        submitButton?.setOnClickListener {
+            Log.d("FEEDBACK", "SUBMIT PRESSED")
+            val feedbackText = "Android: ${editText.text}"
+            val feedbackRef = firestore.collection("Feedback").document()
+            val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+            val uid = sharedPreferences.getString("uid", "") ?: auth.currentUser!!.uid
+            val displayName = sharedPreferences.getString("displayName", "") ?: ""
+            feedbackRef.set(mapOf(
+                "byName" to displayName,
+                "byUID" to uid,
+                "feedbackData" to feedbackText,
+                "timestamp" to FieldValue.serverTimestamp()
+            )).addOnSuccessListener {
+                editText.visibility = View.GONE
+                feedbackSuccessText.visibility = View.VISIBLE
+                submitButton.visibility = View.GONE
+            }
         }
     }
 
@@ -186,8 +231,13 @@ class ActiveChambersActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun goToCreateActivity() {
-        val intent = Intent(this, CreateActivity::class.java)
+    private fun goToCreateChamberActivity() {
+        val intent = Intent(this, CreateChamberActivity::class.java)
+        startActivity(intent)
+    }
+
+    private fun goToCreateTopicActivity() {
+        val intent = Intent(this, CreateTopicActivity::class.java)
         startActivity(intent)
     }
 

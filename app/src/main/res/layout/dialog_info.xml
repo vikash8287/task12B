@@ -1,19 +1,107 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="14dp"
+    android:layout_centerHorizontal="true"
+    android:background="@drawable/dialog_background"
     android:orientation="vertical">
+    <TextView
+        android:id="@+id/leave_chamber_heading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/leave_chamber_heading"
+        android:textAlignment="center"
+        android:textSize="28sp"
+        android:layout_marginTop="8dp"
+        android:textColor="#000" />
+
+    <TextView
+        android:id="@+id/leave_chamber_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/leave_chamber_message"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:layout_marginVertical="8dp"
+        android:textColor="#000" />
 
     <Button
-        android:id="@+id/btn_delete_chamber"
+        android:id="@+id/btn_done_venting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/rounded_button"
+        android:layout_gravity="center_horizontal"
+        android:background="#00FFFFFF"
         android:padding="16dp"
-        android:text="@string/delete_chamber"
-        android:textColor="#ffffff"
+        android:text="@string/done_venting"
+        android:textColor="#7A7AFF"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="normal"
+        android:layout_marginVertical="8dp"
+        />
 
+    <Button
+        android:id="@+id/btn_wrong_match"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="#00FFFFFF"
+        android:padding="16dp"
+        android:text="@string/wrong_match"
+        android:textColor="#7A7AFF"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        android:layout_marginVertical="8dp" />
+
+    <Button
+        android:id="@+id/btn_hurry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="#00FFFFFF"
+        android:padding="16dp"
+        android:text="@string/in_a_hurry"
+        android:textColor="#7A7AFF"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        android:layout_marginVertical="8dp" />
+
+    <Button
+        android:id="@+id/btn_just_checking"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="#00FFFFFF"
+        android:padding="16dp"
+        android:text="@string/just_checking"
+        android:textColor="#7A7AFF"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        android:layout_marginVertical="8dp" />
+
+    <Button
+        android:id="@+id/btn_no_activity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="#00FFFFFF"
+        android:padding="16dp"
+        android:text="@string/no_activity"
+        android:textColor="#7A7AFF"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        android:layout_marginVertical="8dp" />
+
+    <Button
+        android:id="@+id/btn_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="#00FFFFFF"
+        android:padding="16dp"
+        android:text="@string/cancel"
+        android:textColor="#7A7AFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginVertical="8dp" />
 
 </LinearLayout>
