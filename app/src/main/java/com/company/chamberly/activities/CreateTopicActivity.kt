@@ -5,18 +5,17 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.InputFilter
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import com.company.chamberly.models.Topic
 import com.company.chamberly.R
 import com.company.chamberly.models.topicToMap
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -24,15 +23,23 @@ class CreateTopicActivity : ComponentActivity() {
 
     private val auth = Firebase.auth
     private val database = Firebase.firestore
+    private val realtimeDb = FirebaseDatabase.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_topic)
+        val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+        val topicsList = sharedPreferences.getString("topics", "")?.split(",") ?: emptyList()
 
         val currentUser = auth.currentUser
 
         val editText = findViewById<EditText>(R.id.topic_title)
         val createButton = findViewById<Button>(R.id.create_button)
+
+        Log.d("TOPICS", topicsList.toString())
+        if(topicsList.size > 25) {
+            showTooManyTopicsDialog(topicsList, editText, createButton)
+        }
 
         val maxLength = 50
         val filterArray = arrayOf<InputFilter>(InputFilter.LengthFilter(maxLength))
@@ -41,7 +48,6 @@ class CreateTopicActivity : ComponentActivity() {
 
         createButton.setOnClickListener {
             createButton.isEnabled = false
-            val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
             val currentUserUID = sharedPreferences.getString("uid", currentUser?.uid)
             val currentUserName = sharedPreferences.getString("displayName", "NONE")
             val topicTitle = editText.text.toString()
@@ -62,7 +68,6 @@ class CreateTopicActivity : ComponentActivity() {
 
                 documentRef.set(topicToMap(topic = topic))
                     .addOnSuccessListener {
-                        val realtimeDb = FirebaseDatabase.getInstance()
                         val topicDataRef = realtimeDb.getReference(topic.TopicID)
                         topicDataRef.child("AuthorUID").setValue(topic.AuthorUID)
                         topicDataRef.child("AuthorName").setValue(topic.AuthorName)
@@ -96,6 +101,35 @@ class CreateTopicActivity : ComponentActivity() {
                         createButton.isEnabled = false
                     }
             }
+        }
+    }
+
+
+    private fun showTooManyTopicsDialog(
+        topicsList: List<String>,
+        editText: EditText,
+        createButton: Button
+    ) {
+        createButton.isEnabled = false
+        editText.isEnabled = false
+        val tooManyTopicsView = findViewById<LinearLayout>(R.id.too_many_topics_layout)
+        val clearButton = tooManyTopicsView.findViewById<Button>(R.id.clear_all_topics_button)
+        tooManyTopicsView.visibility = View.VISIBLE
+
+        clearButton.setOnClickListener {
+            val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+            editor.remove("topics")
+            editor.apply()
+            for(topic in topicsList) {
+                if(topic.isBlank()) {
+                    continue
+                }
+                val topicRef = realtimeDb.getReference(topic)
+                topicRef.child("users").removeValue()
+            }
+            createButton.isEnabled = true
+            editText.isEnabled = true
         }
     }
 }

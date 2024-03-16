@@ -49,12 +49,12 @@
         <activity
             android:name=".activities.CreateChamberActivity"
             android:exported="false"
-            android:label="@string/title_activity_create"
+            android:label="@string/title_activity_create_chamber"
             android:theme="@style/Theme.Chamberly" />
         <activity
             android:name=".activities.CreateTopicActivity"
             android:exported="false"
-            android:label="@string/title_activity_create"
+            android:label="@string/title_activity_create_topic"
             android:theme="@style/Theme.Chamberly" />
         <activity
             android:name=".activities.TopicJoinRequestActivity"

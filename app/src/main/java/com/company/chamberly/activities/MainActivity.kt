@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.app.NotificationManager
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -11,9 +12,10 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.view.View.OnClickListener
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.TableRow
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -24,24 +26,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
 import com.company.chamberly.adapters.TopicRequestRecyclerViewAdapter
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import okhttp3.internal.notify
-import java.sql.Time
 
 class MainActivity : ComponentActivity() {
     private lateinit var onBackPressedCallback: OnBackPressedCallback
@@ -49,7 +42,7 @@ class MainActivity : ComponentActivity() {
     private val realtimeDb = Firebase.database
     private val firestore = Firebase.firestore
     private var isShowingJoinDialog: Boolean = false
-    private lateinit var topicReqeustsAdapter: TopicRequestRecyclerViewAdapter
+    private lateinit var topicRequestsAdapter: TopicRequestRecyclerViewAdapter
     private var isUserRestricted: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,30 +111,27 @@ class MainActivity : ComponentActivity() {
 
 
         createChamberButton.setOnClickListener {
-            val intent = intent
-            intent.setClass(this, CreateChamberActivity::class.java)
+            val intent = Intent(this, CreateChamberActivity::class.java)
             startActivity(intent)
         }
         createTopicButton.setOnClickListener {
-            val intent = intent
-            intent.setClass(this, CreateTopicActivity::class.java)
+            val intent = Intent(this, CreateTopicActivity::class.java)
             startActivity(intent)
         }
         val searchButton = findViewById<Button>(R.id.findChamberButton)
         searchButton.setOnClickListener {
-            val intent = intent
-            intent.setClass(this, SearchActivity::class.java)
+            val intent = Intent(this, SearchActivity::class.java)
             startActivity(intent)
         }
         val findTopicButton = findViewById<Button>(R.id.findTopicButton)
         findTopicButton.setOnClickListener {
-            val intent = intent
-            intent.setClass(this, SearchTopicActivity::class.java)
+            val intent = Intent(this, SearchTopicActivity::class.java)
             startActivity(intent)
         }
 
         onBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                Log.d("BACK", "backpressed in main")
                 auth.signOut()
                 finish()
             }
@@ -150,7 +140,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun checkAndGoToChatActivity(groupChatId: String, groupTitle: String, authorName: String, authorUID: String) {
-        Log.d("DATA", "$groupTitle::$groupTitle:$groupChatId")
+        Log.d("DATA", "$groupTitle::$groupTitle::$groupChatId")
         if (groupChatId.isNotBlank()) {
             val intent = Intent(this, ChatActivity::class.java)
             intent.putExtra("GroupChatId", groupChatId)
@@ -162,12 +152,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showProfileOptionsPopup() {
-        val options = arrayOf("Delete Account", "Show Privacy Policy")
+        val options = arrayOf("Delete Account", "Show Privacy Policy", "Submit feedback")
         val builder = AlertDialog.Builder(this)
         builder.setItems(options) { dialog, which ->
             when (which) {
                 0 -> deleteAccount() // Delete account option
                 1 -> showPrivacyPolicy() // Show privacy policy option
+                2 -> submitFeedback(dialog) // Show feedback dialog
             }
         }
         builder.show()
@@ -202,11 +193,47 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun submitFeedback(dialog: DialogInterface) {
+        dialog.dismiss()
+        val feedbackDialog = Dialog(this, R.style.Dialog)
+        feedbackDialog.setContentView(R.layout.dialog_feedback)
+        feedbackDialog.show()
+        val submitButton = feedbackDialog.findViewById<Button>(R.id.submitFeedbackButton)
+        val dismissButton = feedbackDialog.findViewById<Button>(R.id.dismissFeedbackDialogButton)
+        val editText = feedbackDialog.findViewById<EditText>(R.id.feedback_text)
+        val feedbackSuccessText = feedbackDialog.findViewById<TextView>(R.id.feedback_success_text)
+        val buttonsLayout = feedbackDialog.findViewById<TableRow>(R.id.buttons_layout)
+        dismissButton?.setOnClickListener {
+            feedbackDialog.hide()
+        }
+
+        submitButton?.setOnClickListener {
+            Log.d("FEEDBACK", "SUBMIT PRESSED")
+            val feedbackText = "Android: ${editText.text}"
+            val feedbackRef = firestore.collection("Feedback").document()
+            val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+            val uid = sharedPreferences.getString("uid", "") ?: auth.currentUser!!.uid
+            val displayName = sharedPreferences.getString("displayName", "") ?: ""
+            feedbackRef.set(mapOf(
+                "byName" to displayName,
+                "byUID" to uid,
+                "feedbackData" to feedbackText,
+                "timestamp" to FieldValue.serverTimestamp()
+            )).addOnSuccessListener {
+                editText.visibility = View.GONE
+                feedbackSuccessText.visibility = View.VISIBLE
+                submitButton.visibility = View.GONE
+            }
+        }
+    }
+
     override fun onDestroy() {
+        Log.d("MAIN", "DESTROY")
         if (::onBackPressedCallback.isInitialized) {
             onBackPressedCallback.remove()
         }
         super.onDestroy()
+
     }
 
     private fun isNotificationPermissionGranted(): Boolean {
@@ -258,33 +285,25 @@ class MainActivity : ComponentActivity() {
     private fun checkRestrictions() {
         val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
         val uid = sharedPreferences.getString("uid", "") ?: auth.currentUser!!.uid
-        val restrictionsRef = firestore.collection("Restrictions").document(uid)
-        Log.d("TEMP", uid)
-        restrictionsRef.get().addOnSuccessListener { documentSnapshot ->
-            val data = documentSnapshot.data
-            if (data != null) {
-                val restrictedUntil = data["restrictedUntil"] as Timestamp? // Assuming it's stored as a Long
-
-                if(restrictedUntil != null) {
-                    val serverTimestampRef = FirebaseDatabase.getInstance().getReference(".info/serverTimeOffset")
-                    Log.d("TEMP", serverTimestampRef.toString())
-                    serverTimestampRef.addListenerForSingleValueEvent(object: ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            val offset = snapshot.getValue(Long::class.java) ?: 0
-                            val serverTimeMillis = System.currentTimeMillis() + offset
-
-                            isUserRestricted = serverTimeMillis < restrictedUntil.toDate().time
-                            attachTopicRequestListeners()
-                            Log.d("RESTRICTIONS", isUserRestricted.toString())
+        val userRef = firestore.collection("Accounts").document(uid)
+        userRef.update(mapOf(Pair("timestamp", FieldValue.serverTimestamp())))
+        userRef.addSnapshotListener { snapshot, error ->
+            if(snapshot != null && snapshot.exists()) {
+                val currentTime = snapshot.getTimestamp("timestamp")
+                val restrictionRef = firestore.collection("Restrictions").document(uid)
+                restrictionRef.addSnapshotListener { value, error ->
+                    if(value != null && value.exists()) {
+                        val restrictedUntil = value.getTimestamp("restrictedUntil")
+                        isUserRestricted = if(restrictedUntil != null && currentTime != null) {
+                            restrictedUntil > currentTime
+                        } else {
+                            false
                         }
-
-                        override fun onCancelled(error: DatabaseError) {
-                            //Need not implement for now
-                        }
-                    })
+                        Log.d("TIMESTAMP", isUserRestricted.toString())
+                        attachTopicRequestListeners()
+                    }
                 }
             }
-            // Now you can use the value of isRestricted as needed
         }
     }
 
@@ -293,7 +312,6 @@ class MainActivity : ComponentActivity() {
         val savedTopics = sharedPreferences.getString("topics", "")!!.split(",").toMutableList()
         val editor = sharedPreferences.edit()
         for (topic: String in savedTopics) {
-            Log.d("TOPCIS", topic)
             if (topic.isBlank()) {
                 continue
             }
@@ -304,7 +322,6 @@ class MainActivity : ComponentActivity() {
 
             userRef.child("restricted").setValue(isUserRestricted)
 
-            Log.d("TOPICS", auth.currentUser?.uid + "----")
             userRef
                 .child("isReserved")
                 .addValueEventListener(object : ValueEventListener {
@@ -327,13 +344,14 @@ class MainActivity : ComponentActivity() {
                     override fun onCancelled(error: DatabaseError) {
                         TODO("Not yet implemented")
                     }
-
                 })
         }
-
     }
 
     fun showTopicJoinDialog(topic: String) {
+        if(topic.isBlank()) {
+            return
+        }
         val dialog = Dialog(this, R.style.Dialog)
         dialog.setContentView(R.layout.topic_join_dialog)
         dialog.setCancelable(false)
@@ -344,10 +362,10 @@ class MainActivity : ComponentActivity() {
         val recyclerView = dialog.findViewById<RecyclerView>(R.id.topic_requests)
         val editor = sharedPreferences.edit()
         if (isShowingJoinDialog) {
-            topicReqeustsAdapter.addItem(topic)
+            topicRequestsAdapter.addItem(topic)
         } else {
             recyclerView.layoutManager = LinearLayoutManager(this)
-            topicReqeustsAdapter = TopicRequestRecyclerViewAdapter(
+            topicRequestsAdapter = TopicRequestRecyclerViewAdapter(
                 listOf(topic),
                 acceptRequest = { topicId, topicTitle, reserverID, reservedBy ->
                     val topicRef = realtimeDb.reference.child(topicId)
@@ -409,7 +427,6 @@ class MainActivity : ComponentActivity() {
                                             intent.putExtra("AuthorName", userName)
                                             intent.putExtra("AuthorUID", currUserUID)
                                             startActivity(intent)
-                                            finish()
                                         }
                                 }
                             }
@@ -419,8 +436,8 @@ class MainActivity : ComponentActivity() {
                             }
 
                         })
-                    topicReqeustsAdapter.removeItem("$topicId::$topicTitle::$reserverID")
-                    if(topicReqeustsAdapter.itemCount == 0) {
+                    topicRequestsAdapter.removeItem("$topicId::$topicTitle::$reserverID")
+                    if(topicRequestsAdapter.itemCount == 0) {
                         dialog.dismiss()
                         isShowingJoinDialog = false
                     }
@@ -428,14 +445,14 @@ class MainActivity : ComponentActivity() {
                 denyRequest = { topicId, topicTitle, reserverID ->
                     realtimeDb.reference.child(topicId).child("users").child(auth.currentUser!!.uid).child("isReserved").setValue(false)
                     realtimeDb.reference.child(topicId).child("users").child(auth.currentUser!!.uid).child("reservedBy").removeValue()
-                    topicReqeustsAdapter.removeItem("$topicId::$topicTitle::$reserverID")
-                    if(topicReqeustsAdapter.itemCount == 0) {
+                    topicRequestsAdapter.removeItem("$topicId::$topicTitle::$reserverID")
+                    if(topicRequestsAdapter.itemCount == 0) {
                         dialog.dismiss()
                         isShowingJoinDialog = false
                     }
                 }
             )
-            recyclerView.adapter = topicReqeustsAdapter
+            recyclerView.adapter = topicRequestsAdapter
             dialog.show()
             isShowingJoinDialog = true
         }

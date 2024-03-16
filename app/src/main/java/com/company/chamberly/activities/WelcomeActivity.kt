@@ -78,7 +78,7 @@ class WelcomeActivity : AppCompatActivity() {
         }
 
         checkForAppUpdates()
-
+        Log.d("AppUpdate", "HERE")
         if (hasLoggedIn && Firebase.auth.currentUser != null) {
             goToMainActivity()
         } else {
@@ -206,8 +206,11 @@ class WelcomeActivity : AppCompatActivity() {
                         updateRequestCode
                     )
                 } else {
-                    Log.d("AppUpdate","No update available")
+                    Log.d("AppUpdate","No update available $isUpdateAllowed || $isUpdateAvailable")
                 }
+            }
+            .addOnFailureListener {
+                Log.d("AppUpdate", "Update check failed ${it.message}")
             }
     }
 

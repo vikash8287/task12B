@@ -8,7 +8,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
 import com.company.chamberly.models.Chamber
 import com.company.chamberly.R
 import com.company.chamberly.models.chamberToMap
@@ -20,11 +19,8 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class CreateChamberActivity : ComponentActivity() {
-    private lateinit var onBackPressedCallback: OnBackPressedCallback
     private val auth = Firebase.auth
-    private val database = Firebase.firestore
     private val firestore = Firebase.firestore      // firestore
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +52,7 @@ class CreateChamberActivity : ComponentActivity() {
                     groupTitle = title
                 )
 
-                val collectionRef = database.collection("GroupChatIds")
+                val collectionRef = firestore.collection("GroupChatIds")
                 val documentRef = collectionRef.document() // generate a random document ID
                 chamber.groupChatId = documentRef.id // set the document ID to the random ID
 
@@ -98,8 +94,6 @@ class CreateChamberActivity : ComponentActivity() {
                         val hostRef = membersRef.child(chamber.AuthorUID)
                         hostRef.child("name").setValue(authorName).addOnSuccessListener {
                             val intent = Intent(this@CreateChamberActivity, ChatActivity::class.java)
-                            //TODO : pass chamber object to ChatActivity
-                            //intent.putExtra("chamber", chamber)
                             intent.putExtra("GroupChatId", chamber.groupChatId)
                             intent.putExtra("GroupTitle", chamber.groupTitle)
                             intent.putExtra("AuthorName",chamber.AuthorName)
@@ -107,26 +101,11 @@ class CreateChamberActivity : ComponentActivity() {
                             startActivity(intent)
                             finish()
                         }
-                        //Toast.makeText(this, "Chamber created: $chamber", Toast.LENGTH_SHORT).show()
                     }
                     .addOnFailureListener { e ->
                         Toast.makeText(this, "Error creating chamber: $e", Toast.LENGTH_SHORT).show()
                     }
             }
         }
-
-        onBackPressedCallback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                val intent = Intent(this@CreateChamberActivity, MainActivity::class.java)
-                startActivity(intent)
-            }
-        }
-        onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
-
     }
-    override fun onDestroy() {
-        onBackPressedCallback.remove()
-        super.onDestroy()
-    }
-
 }

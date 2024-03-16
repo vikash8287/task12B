@@ -455,13 +455,13 @@ class ChatActivity : ComponentActivity(){
 
         if(localUID == authorUID){
             dialog.setContentView(R.layout.dialog_host_message_options)
-            val blockButton = dialog.findViewById<Button>(R.id.buttonBlock)
-
-            // set block button's click listener
-            blockButton.setOnClickListener {
-                blockUser(message)
-                dialog.dismiss()
-            }
+//            val blockButton = dialog.findViewById<Button>(R.id.buttonBlock)
+//
+//            // set block button's click listener
+//            blockButton.setOnClickListener {
+//                blockUser(message)
+//                dialog.dismiss()
+//            }
         }
         else{
             dialog.setContentView(R.layout.dialog_message_options)

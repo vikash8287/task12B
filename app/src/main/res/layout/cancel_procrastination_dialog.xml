@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Dialog"
+    android:padding="14dp"
+    android:background="@drawable/dialog_background">
+
+    <TextView
+        android:id="@+id/too_many_topics_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/too_many_topics_title"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#000"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <TextView
+        android:id="@+id/too_many_topics_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/too_many_topics_body"
+        android:textSize="18sp"
+        android:textColor="#222"
+        app:layout_constraintTop_toBottomOf="@id/too_many_topics_title"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

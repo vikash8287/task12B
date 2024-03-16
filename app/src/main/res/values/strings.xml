@@ -7,6 +7,8 @@
     <string name="register">Register</string>
     <string name="follow_us_on_social_media"> Follow us on social media :)</string>
     <string name="title_activity_create">CreateActivity</string>
+    <string name="title_activity_create_chamber">CreateChamberActivity</string>
+    <string name="title_activity_create_topic">CreateTopicActivity</string>
     <string name="title_activity_chat">ChatActivity</string>
     <string name="title_activity_search">SearchActivity</string>
     <string name="title_activity_search_topic">SearchTopicActivity</string>
@@ -71,4 +73,8 @@
     <string name="topic_request_message">Reserved by: %1$s</string>
     <string name="no_chambers_found">There are no chambers available now. Create a chamber or wait for someone to get started.</string>
     <string name="no_topics_found">There are no topics available right now. Create a topic now or wait for others to get started.</string>
+    <string name="too_many_topics_title">You\'ve been procrastinating on too many topics.</string>
+    <string name="too_many_topics_body">You\'re procrastinating on too many topics. Cancel some topics to make space for new ones.</string>
+    <string name="feedback_success_string">Your feedback has been submitted.</string>
+    <string name="too_many_topics">You\'re currently procrastinating on too many topics. Clear to make space for new one.</string>
 </resources>
