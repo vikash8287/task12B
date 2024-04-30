@@ -1,19 +1,20 @@
 plugins {
     id 'com.android.application'
     id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
     id 'org.jetbrains.kotlin.android'
 }
 
 android {
     namespace 'com.company.chamberly'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.company.chamberly"
         minSdk 24
-        targetSdk 33
+        targetSdk 34
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -74,6 +75,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics-buildtools:2.9.6'
     implementation 'com.google.firebase:firebase-core:20.0.1'
     implementation platform('androidx.compose:compose-bom:2022.10.00')
+    implementation 'org.jsoup:jsoup:1.17.2'
+    implementation 'androidx.emoji2:emoji2-emojipicker:1.5.0-alpha01'
+    implementation 'com.facebook.android:facebook-android-sdk:17.0.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
@@ -86,14 +90,13 @@ dependencies {
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
 
-    implementation 'com.google.firebase:firebase-messaging-ktx:23.0.0'
 
     implementation 'com.squareup.okhttp3:okhttp:4.9.2'
     // Import the BoM for the Firebase platform
     implementation platform('com.google.firebase:firebase-bom:32.1.1')
 
     // Add the dependency for the Realtime Database library
-    // When using the BoM, you don't specify versions in Firebase library dependencies
+    // When using the BoM, you don't specify versions in Firebase library adbdependencies
 
     // Add the dependency for the Firebase Authentication library
     implementation 'com.google.firebase:firebase-auth-ktx'
@@ -102,6 +105,11 @@ dependencies {
     // Add the dependency for the Realtime Database library
     implementation 'com.google.firebase:firebase-database-ktx'
     implementation 'com.google.code.gson:gson:2.8.9'
+
+    implementation "com.google.firebase:firebase-config"
+    implementation "com.google.firebase:firebase-analytics"
+    implementation "com.google.firebase:firebase-crashlytics"
+    implementation 'com.google.firebase:firebase-messaging'
 
     implementation 'com.github.Yalantis:Koloda-Android:v0.0.2-alpha'
 

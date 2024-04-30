@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.company.chamberly.models.Chamber
 import com.company.chamberly.R
@@ -21,8 +22,8 @@ class ChamberAdapter : BaseAdapter() {
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(parent.context).inflate(R.layout.item_koloda, parent, false)
         val textTitle: TextView = view.findViewById(R.id.textTitle)
-        val rightSwipeOverlay: TextView = view.findViewById(R.id.rightSwipeOverlay)
-        val leftSwipeOverlay: TextView = view.findViewById(R.id.leftSwipeOverlay)
+        val rightSwipeOverlay: LinearLayout = view.findViewById(R.id.rightSwipeOverlay)
+        val leftSwipeOverlay: LinearLayout = view.findViewById(R.id.leftSwipeOverlay)
 
         val chamber = getItem(position)
         textTitle.text = chamber.groupTitle

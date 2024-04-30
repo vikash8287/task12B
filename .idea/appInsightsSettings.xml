@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AppInsightsSettings">
-    <option name="selectedTabId" value="Android Vitals" />
+    <option name="selectedTabId" value="Firebase Crashlytics" />
     <option name="tabSettings">
       <map>
         <entry key="Firebase Crashlytics">
@@ -10,7 +10,7 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.company.chamberly" />
-                  <option name="mobileSdkAppId" value="1:511222289951:android:4cf4a37799edb4493ae72a" />
+                  <option name="mobileSdkAppId" value="1:511222289951:android:db08b6c0f14a2fe83ae72a" />
                   <option name="projectId" value="chamberly-v1ready" />
                   <option name="projectNumber" value="511222289951" />
                 </ConnectionSetting>

@@ -13,7 +13,9 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import com.company.chamberly.models.Topic
 import com.company.chamberly.R
-import com.company.chamberly.models.topicToMap
+import com.company.chamberly.logEvent
+import com.company.chamberly.models.toMap
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.ktx.firestore
@@ -24,34 +26,60 @@ class CreateTopicActivity : ComponentActivity() {
     private val auth = Firebase.auth
     private val database = Firebase.firestore
     private val realtimeDb = FirebaseDatabase.getInstance()
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
+    private val analyticsBundle = Bundle()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this@CreateTopicActivity)
         setContentView(R.layout.activity_create_topic)
-        val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
-        val topicsList = sharedPreferences.getString("topics", "")?.split(",") ?: emptyList()
 
-        val currentUser = auth.currentUser
+        val currentUser = auth.currentUser!!
+
+        val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+
+        val currentUserUID = sharedPreferences.getString("uid", currentUser.uid)
+        val currentUserName = sharedPreferences.getString("displayName", "NONE")
+
+        val notificationKey = sharedPreferences.getString("notificationKey", "")
+        val topicsList = sharedPreferences.getString("topics", "")?.split(",") ?: emptyList()
+        val isListener = sharedPreferences.getBoolean("isListener", false)
+
+        val blockedUsers = mutableListOf<String>()
+
+        database
+            .collection("Accounts")
+            .document(currentUser.uid)
+            .get()
+            .addOnSuccessListener {
+                blockedUsers += it["blockedUsers"] as List<String>? ?: emptyList()
+            }
 
         val editText = findViewById<EditText>(R.id.topic_title)
         val createButton = findViewById<Button>(R.id.create_button)
 
-        Log.d("TOPICS", topicsList.toString())
-        if(topicsList.size > 25) {
-            showTooManyTopicsDialog(topicsList, editText, createButton)
-        }
+        realtimeDb
+            .reference
+            .child("UX_Android")
+            .child("pendingChambersNotSubbedLimit")
+            .get()
+            .addOnSuccessListener {
+                val maxAllowedTopics = (it.value as Long?) ?: 25
+                createButton.isEnabled = true
+                if(topicsList.size > maxAllowedTopics) {
+                    showTooManyTopicsMessage(topicsList, editText, createButton)
+                }
+            }
+
 
         val maxLength = 50
         val filterArray = arrayOf<InputFilter>(InputFilter.LengthFilter(maxLength))
         editText.filters = filterArray
 
-
         createButton.setOnClickListener {
             createButton.isEnabled = false
-            val currentUserUID = sharedPreferences.getString("uid", currentUser?.uid)
-            val currentUserName = sharedPreferences.getString("displayName", "NONE")
             val topicTitle = editText.text.toString()
-            val notificationKey = sharedPreferences.getString("notificationKey", "")
             if(topicTitle.isEmpty()) {
                 editText.error = "Please enter a title"
             } else {
@@ -66,30 +94,50 @@ class CreateTopicActivity : ComponentActivity() {
                 val documentRef = collectionRef.document()
                 topic.TopicID = documentRef.id
 
-                documentRef.set(topicToMap(topic = topic))
+                documentRef.set(topic.toMap())
                     .addOnSuccessListener {
                         val topicDataRef = realtimeDb.getReference(topic.TopicID)
-                        topicDataRef.child("AuthorUID").setValue(topic.AuthorUID)
-                        topicDataRef.child("AuthorName").setValue(topic.AuthorName)
+                        topicDataRef.child("authorUID").setValue(topic.AuthorUID)
+                        topicDataRef.child("authorName").setValue(topic.AuthorName)
                         topicDataRef.child("timestamp").setValue(System.currentTimeMillis() / 1000)
-                        topicDataRef.child("TopicTitle").setValue(topic.TopicTitle)
+                        topicDataRef.child("topicTitle").setValue(topic.TopicTitle)
                         val usersRef = topicDataRef.child("users")
                         val userRef = usersRef.child(topic.AuthorUID)
                         userRef.child("isReserved").setValue(false)
+                        userRef.child("lfl").setValue(!isListener) //Listener won't look for listeners
+                        userRef.child("lfv").setValue(isListener) //Venter will look for listeners
+                        userRef.child("isAndroid").setValue(true)
                         userRef.child("isSubbed").setValue(false)
                         userRef.child("restricted").setValue(false)
                         userRef.child("notificationKey").setValue(notificationKey)
                         userRef.child("penalty").setValue(0)
                         userRef.child("timestamp").setValue(System.currentTimeMillis() / 1000)
-                        val editor = sharedPreferences.edit()
-                        val savedTopics = sharedPreferences.getString("topics", "")!!.split(",").toMutableList()
-                        Log.d("SAVEDTOPICs", savedTopics.toString())
+                        userRef.child("blockedUsers").setValue(blockedUsers as List<String>)
+
+                        val savedTopics = topicsList.toMutableList()
                         if(!savedTopics.contains(topic.TopicID)) {
                             savedTopics.add(topic.TopicID)
                         }
-                        Log.d("SAVEDTOPICs", savedTopics.joinToString(","))
                         editor.putString("topics", savedTopics.joinToString(","))
                         editor.apply()
+
+                        logEvent(
+                            firebaseAnalytics = firebaseAnalytics,
+                            eventName = "topic_started",
+                            params = hashMapOf(
+                                "uid" to currentUserUID!!,
+                                "name" to currentUserName!!
+                            )
+                        )
+
+                        logEvent(
+                            firebaseAnalytics = firebaseAnalytics,
+                            eventName = "Started_Procrastinating",
+                            params = hashMapOf(
+                                "uid" to currentUserUID,
+                                "name" to currentUserName,
+                            )
+                        )
 
                         Toast.makeText(this@CreateTopicActivity, "Topic created successfully", Toast.LENGTH_SHORT).show()
                         val intent = Intent(this@CreateTopicActivity, MainActivity::class.java)
@@ -105,7 +153,7 @@ class CreateTopicActivity : ComponentActivity() {
     }
 
 
-    private fun showTooManyTopicsDialog(
+    private fun showTooManyTopicsMessage(
         topicsList: List<String>,
         editText: EditText,
         createButton: Button
@@ -128,6 +176,7 @@ class CreateTopicActivity : ComponentActivity() {
                 val topicRef = realtimeDb.getReference(topic)
                 topicRef.child("users").removeValue()
             }
+            tooManyTopicsView.visibility = View.GONE
             createButton.isEnabled = true
             editText.isEnabled = true
         }

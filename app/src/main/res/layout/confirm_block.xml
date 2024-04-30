@@ -1,0 +1,57 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    style="@style/Dialog"
+    android:background="@drawable/dialog_background">
+
+    <TextView
+        android:id="@+id/blockDialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingVertical="16dp"
+        android:textAlignment="center"
+        android:paddingHorizontal="8dp"
+        android:textColor="#000"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/blockMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingVertical="16dp"
+        android:paddingHorizontal="8dp"
+        android:textAlignment="center"
+        android:text="Are you sure you want to continue with this action?"
+        android:textColor="#333"
+        android:textSize="16sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:showDividers="middle"
+        android:divider="@color/black">
+        <Button
+            android:id="@+id/buttonConfirmBlock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="4dp"
+            android:layout_marginHorizontal="8dp"
+            android:text="Block and exit chamber"
+            android:textColor="#F33"
+            android:background="#00000000"/>
+
+        <Button
+            android:id="@+id/buttonCancelBlock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="4dp"
+            android:layout_marginHorizontal="8dp"
+            android:text="Cancel"
+            android:textColor="#000"
+            android:background="#00000000"/>
+
+    </LinearLayout>
+</LinearLayout>

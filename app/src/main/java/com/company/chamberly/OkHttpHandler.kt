@@ -20,7 +20,6 @@ internal class OkHttpHandler(private val payload: JSONObject, private val token:
     override fun onPostExecute(result: String?) {
         super.onPostExecute(result)
         if (result != null) {
-            Log.d(TAG, "Response: $result")
             // Handle the response here
         } else {
             Log.e(TAG, "Error: No response received")
@@ -33,8 +32,6 @@ internal class OkHttpHandler(private val payload: JSONObject, private val token:
         requestJson.put("to", token)
         requestJson.put("priority", "high")
         requestJson.put("data", payload)
-        Log.d("TIFFF", requestJson.toString())
-        Log.d("NOTIF", token)
         val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), requestJson.toString())
         val request: Request = Request.Builder()
             .url(FCM_SERVER_URL)

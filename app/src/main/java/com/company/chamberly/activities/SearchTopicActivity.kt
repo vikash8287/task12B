@@ -1,10 +1,13 @@
 package com.company.chamberly.activities
 
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
@@ -13,6 +16,9 @@ import androidx.activity.ComponentActivity
 import com.company.chamberly.models.Topic
 import com.company.chamberly.R
 import com.company.chamberly.adapters.TopicAdapter
+import com.company.chamberly.logEvent
+import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -23,33 +29,41 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.yalantis.library.Koloda
 import com.yalantis.library.KolodaListener
+import kotlin.math.absoluteValue
 
 class SearchTopicActivity: ComponentActivity(), KolodaListener {
     private val auth = Firebase.auth
-    private val currentUser = auth.currentUser
+    private var currentUID: String = ""
+    private var displayName: String = ""
     private lateinit var koloda: Koloda
     private lateinit var adapter: TopicAdapter
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
+    private lateinit var sharedPreferences: SharedPreferences
     private val database = Firebase.database
     private val firestore = Firebase.firestore
     private var isFirstTimeEmpty = true
     private var lastTimestamp: Any? = null
+    private var procrastinatingTopics: MutableList<String> = mutableListOf()
+    private var isListener: Boolean = false
+    private var notificationKey: String = ""
+    private val blockedUsers: MutableList<String> = mutableListOf()
+    private var maxAllowedTopics: Long = 25
 
     override fun onCardDrag(position: Int, cardView: View, progress: Float) {
-        val rightSwipeOverlay = cardView.findViewById<TextView>(R.id.rightSwipeOverlay)
-        val leftSwipeOverlay = cardView.findViewById<TextView>(R.id.leftSwipeOverlay)
-
-        if(progress == 0f) {
-            rightSwipeOverlay.visibility = View.INVISIBLE
-            leftSwipeOverlay.visibility = View.VISIBLE
+        val rightSwipeOverlay = cardView.findViewById<LinearLayout>(R.id.rightSwipeOverlay)
+        val leftSwipeOverlay = cardView.findViewById<LinearLayout>(R.id.leftSwipeOverlay)
+        if(progress.absoluteValue <= 0.05f) {
+            rightSwipeOverlay.visibility = View.GONE
+            leftSwipeOverlay.visibility = View.GONE
         } else if(progress < 0f) {
-            rightSwipeOverlay.visibility = View.INVISIBLE
+            rightSwipeOverlay.visibility = View.GONE
             leftSwipeOverlay.visibility = View.VISIBLE
         } else if (progress > 0f){
             rightSwipeOverlay.visibility = View.VISIBLE
-            leftSwipeOverlay.visibility = View.INVISIBLE
+            leftSwipeOverlay.visibility = View.GONE
         } else {
-            rightSwipeOverlay.visibility = View.INVISIBLE
-            leftSwipeOverlay.visibility = View.INVISIBLE
+            rightSwipeOverlay.visibility = View.GONE
+            leftSwipeOverlay.visibility = View.GONE
         }
 
         super.onCardDrag(position, cardView, progress)
@@ -58,8 +72,62 @@ class SearchTopicActivity: ComponentActivity(), KolodaListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search_topic)
+
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this)
+
         koloda = findViewById(R.id.koloda)
         koloda.kolodaListener = this
+
+        sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+        isListener = sharedPreferences.getBoolean("isListener", false)
+        procrastinatingTopics = sharedPreferences.getString("topics", "")!!
+            .split(",")
+            .toMutableList()
+        if (procrastinatingTopics[0] == "") {
+            procrastinatingTopics.removeAt(0)
+        }
+        notificationKey = sharedPreferences.getString("notificationKey", "") ?: ""
+        currentUID = sharedPreferences.getString("uid", auth.currentUser!!.uid) ?: ""
+        displayName = sharedPreferences.getString("displayName", "Anonymous") ?: ""
+
+        database.reference
+            .child("UX_Android")
+            .child("pendingChambersNotSubbedLimit")
+            .get()
+            .addOnSuccessListener {
+                maxAllowedTopics = (it.value as Long?) ?: 25
+            }
+
+        // POSSIBLE REDUNDANT EVENTS
+        logEvent(
+            firebaseAnalytics = firebaseAnalytics,
+            eventName = "chamber_search",
+            params = hashMapOf(
+                "UID" to currentUID,
+                "name" to displayName
+            )
+        )
+
+        logEvent(
+            firebaseAnalytics = firebaseAnalytics,
+            eventName = "landed_on_cards_view",
+            params = hashMapOf(
+                "UID" to currentUID,
+                "name" to displayName
+            )
+        )
+
+        firestore
+            .collection("Accounts")
+            .document(currentUID)
+            .get()
+            .addOnSuccessListener {
+                blockedUsers += it["blockedUsers"] as List<String>? ?: emptyList()
+            }
+
+        if(procrastinatingTopics.size >= maxAllowedTopics) {
+            showTooManyTopicsDialog()
+        }
 
         adapter = TopicAdapter()
         koloda.adapter = adapter
@@ -68,10 +136,52 @@ class SearchTopicActivity: ComponentActivity(), KolodaListener {
         val joinButton: ImageButton = findViewById(R.id.ic_chat)
 
         dismissButton.setOnClickListener {
+            // POSSIBLE REDUNDANT EVENTS
+            logEvent(
+                firebaseAnalytics = firebaseAnalytics,
+                eventName = "swiped_left",
+                params = hashMapOf(
+                    "UID" to currentUID,
+                    "name" to displayName
+                )
+            )
+            logEvent(
+                firebaseAnalytics = firebaseAnalytics,
+                eventName = "swiped_on_card",
+                params = hashMapOf(
+                    "UID" to currentUID,
+                    "name" to displayName
+                )
+            )
             koloda.onClickLeft()
         }
 
         joinButton.setOnClickListener {
+            // POSSIBLE REDUNDANT EVENTS
+            logEvent(
+                firebaseAnalytics = firebaseAnalytics,
+                eventName = "swiped_right_${if(isListener) "listener" else "ventor"}",
+                params = hashMapOf(
+                    "UID" to currentUID,
+                    "name" to displayName
+                )
+            )
+            logEvent(
+                firebaseAnalytics = firebaseAnalytics,
+                eventName = "swiped_on_card",
+                params = hashMapOf(
+                    "UID" to currentUID,
+                    "name" to displayName
+                )
+            )
+            logEvent(
+                firebaseAnalytics = firebaseAnalytics,
+                eventName = "Started_Procrastinating",
+                params = hashMapOf(
+                    "UID" to currentUID,
+                    "name" to displayName
+                )
+            )
             koloda.onClickRight()
         }
 
@@ -82,17 +192,20 @@ class SearchTopicActivity: ComponentActivity(), KolodaListener {
         }
     }
 
-    private fun fetchChambers() {
+    private fun fetchTopics() {
+
         val query: Query = if (lastTimestamp == null) {
             firestore.collection("TopicIds")
+                .orderBy(if(isListener) "lflWeight" else "lfvWeight", Query.Direction.DESCENDING)
                 .orderBy("timestamp", Query.Direction.ASCENDING)
-                .limit(4)
+                .limit(8)
         } else {
             firestore.collection("TopicIds")
+                .orderBy(if(isListener) "lflWeight" else "lfvWeight", Query.Direction.DESCENDING)
                 .orderBy("timestamp", Query.Direction.ASCENDING)
+                .limit(8)
                 .startAfter(lastTimestamp)
         }
-
         fetchTopicsRecursively(query)
     }
 
@@ -134,103 +247,119 @@ class SearchTopicActivity: ComponentActivity(), KolodaListener {
 
     override fun onCardSwipedRight(position: Int) {
         val topic = adapter.getItem(position + 1)
-        val currentUserID = currentUser!!.uid
-        val currentUserName = currentUser.displayName
         val topicID = topic.TopicID
-        val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        val savedTopics = (sharedPreferences.getString("topics", "")!!.split(",") + topicID).joinToString(",")
-        editor.putString("topics", savedTopics)
-        editor.apply()
+        procrastinatingTopics.add(topicID)
+        // POSSIBLE REDUNDANT EVENTS
+        logEvent(
+            firebaseAnalytics = firebaseAnalytics,
+            eventName = "swiped_right_${if(isListener) "listener" else "ventor"}",
+            params = hashMapOf(
+                "UID" to currentUID,
+                "name" to displayName
+            )
+        )
+        logEvent(
+            firebaseAnalytics = firebaseAnalytics,
+            eventName = "swiped_on_card",
+            params = hashMapOf(
+                "UID" to currentUID,
+                "name" to displayName
+            )
+        )
+        logEvent(
+            firebaseAnalytics = firebaseAnalytics,
+            eventName = "Started_Procrastinating",
+            params = hashMapOf(
+                "UID" to currentUID,
+                "name" to displayName
+            )
+        )
+        if(procrastinatingTopics.size > maxAllowedTopics) {
+            showTooManyTopicsDialog()
+        } else {
+            val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+            val savedTopics = (sharedPreferences.getString("topics", "")!!.split(",") + topicID).joinToString(",")
+            editor.putString("topics", savedTopics)
+            editor.apply()
 
-//        sharedPreferences.w
-        Log.d("TOPICSWIPE", topicID)
-        val topicRef = database.reference.child(topicID)
-        val workerRef = topicRef.child("users").child(currentUserID)
-        workerRef.child("isReserved").setValue(false)
-        workerRef.child("isSubscribed").setValue(true)
-        workerRef.child("notificationKey").setValue("")
-        workerRef.child("penalty").setValue(0)
-        workerRef.child("timestamp").setValue(System.currentTimeMillis() / 1000)
-        topicRef.child("users").child(currentUserID)
-            .addValueEventListener(object: ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val isReserved = snapshot.child("isReserved").value as Boolean? ?: return
-                    if (isReserved) {
-                        val intent = Intent(this@SearchTopicActivity, TopicJoinRequestActivity::class.java)
-                        intent.putExtra("TopicTitle", topic.TopicTitle)
-                        intent.putExtra("TopicID", topicID)
-                        intent.putExtra("AuthorUID", currentUserID)
-                        intent.putExtra("AuthorName", currentUserName)
-                        startActivity(intent)
-                        finish()
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    TODO("Not yet implemented")
-                }
-
-            })
-//        val authorRef = topicRef.child("users").child(AuthorUID)
-//        authorRef.updateChildren(mapOf(
-//            "isReady" to false,
-//            "isReserved" to false,
-//            "reservedBy" to currentUserID
-//        ))
-//        createChamber(topic, currentUserID)
-//        sendNotification(currentUserID, AuthorUID)
+            val topicRef = database.reference.child(topicID)
+            val workerRef = topicRef.child("users").child(currentUID)
+            workerRef.child("isAndroid").setValue(true)
+            workerRef.child("isReserved").setValue(false)
+            workerRef.child("isSubscribed").setValue(true)
+            workerRef.child("notificationKey").setValue("")
+            workerRef.child("lfl").setValue(!isListener)
+            workerRef.child("lfv").setValue(isListener)
+            workerRef.child("penalty").setValue(0)
+            workerRef.child("timestamp").setValue(System.currentTimeMillis() / 1000)
+        }
         super.onCardSwipedRight(position)
     }
 
-
-//    private fun createChamber(topic: Topic, currentUserID: String) {
-//        val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
-//        val AuthorName = sharedPreferences.getString("displayName", "Anonymous")
-//        val chamber = Chamber(
-//            AuthorName = topic.AuthorName,
-//            AuthorUID = topic.AuthorUID,
-//            groupTitle = topic.TopicTitle
-//        )
-//        val documentRef = firestore.collection("GroupChatIds").document()
-//        chamber.groupChatId = documentRef.id
-//
-//        documentRef.set(chamber)
-//            .addOnSuccessListener {
-//                val realtimeDb = FirebaseDatabase.getInstance()
-//                val chamberDataRef = realtimeDb.getReference(chamber.groupChatId)
-//                documentRef.update("members", listOf(currentUserID, topic.AuthorUID))
-//                chamberDataRef.child("Host").setValue(chamber.AuthorUID)
-//                chamberDataRef.child("Users").child("members").child(currentUserID).setValue(AuthorName)
-//                    .addOnSuccessListener {
-//                        documentRef.update("locked", true)
-//                            .addOnSuccessListener {
-//                                val intent = Intent(this@SearchTopicActivity, ChatActivity::class.java)
-//                                intent.putExtra("groupChatId", chamber.groupChatId)
-//                                intent.putExtra("groupTitle", chamber.groupTitle)
-//                                intent.putExtra("AuthorName", chamber.AuthorName)
-//                                intent.putExtra("AuthorUID", chamber.AuthorUID)
-//                                startActivity(intent)
-//                                finish()
-//
-//                                val userRef = firestore.collection("Users").document(currentUserID)
-//                                userRef.update("chambers", FieldValue.arrayUnion(chamber.groupChatId))
-//                                val authorRef = firestore.collection("Users").document(topic.AuthorUID)
-//                                authorRef.update("chambers", FieldValue.arrayUnion(chamber.groupChatId))
-//                            }
-//                    }
-//            }
-//    }
-
+    override fun onCardSwipedLeft(position: Int) {
+        super.onCardSwipedLeft(position)
+        logEvent(
+            firebaseAnalytics = firebaseAnalytics,
+            eventName = "swiped_left",
+            params = hashMapOf(
+                "UID" to currentUID,
+                "name" to displayName
+            )
+        )
+        logEvent(
+            firebaseAnalytics = firebaseAnalytics,
+            eventName = "swiped_on_card",
+            params = hashMapOf(
+                "UID" to currentUID,
+                "name" to displayName
+            )
+        )
+    }
 
 
     override fun onEmptyDeck() {
         if(isFirstTimeEmpty) {
             isFirstTimeEmpty = false
         } else {
-            fetchChambers()
+            fetchTopics()
         }
         super.onEmptyDeck()
     }
 
+    private fun showTooManyTopicsDialog() {
+        val dialog = Dialog(this, R.style.Dialog)
+        dialog.setContentView(R.layout.cancel_procrastination_dialog)
+        dialog.setCancelable(false)
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.show()
+        val confirmButton = dialog.findViewById<Button>(R.id.cancelProcrastinationButton)
+        val dismissButton = dialog.findViewById<Button>(R.id.dismissDialogButton)
+        val loadingIndicator = dialog.findViewById<CircularProgressIndicator>(R.id.loading_indicator)
+
+        confirmButton.setOnClickListener {
+            confirmButton.isEnabled = false
+            loadingIndicator.visibility = View.VISIBLE
+            dismissButton.isEnabled = false
+            cancelProcrastinationOnAllTopics(dialog)
+        }
+
+        dismissButton.setOnClickListener {
+            dialog.dismiss()
+            finish()
+        }
+    }
+
+    private fun cancelProcrastinationOnAllTopics(dialog: Dialog) {
+        val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+        val uid = sharedPreferences.getString("uid", "") ?: auth.currentUser!!.uid
+        for(topic in procrastinatingTopics) {
+            database.reference.child(topic).child("users").child(uid).removeValue()
+        }
+        procrastinatingTopics.clear()
+        val editor = sharedPreferences.edit()
+        editor.remove("topics")
+        editor.apply()
+        dialog.dismiss()
+    }
 }

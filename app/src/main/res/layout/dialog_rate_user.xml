@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp"
+    android:orientation="vertical"
+    android:gravity="center"
+    style="@style/Dialog"
+    android:background="@drawable/dialog_background">
+
+    <TextView
+        android:id="@+id/title_rate_user"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:textColor="#000"
+        android:layout_marginVertical="8dp"/>
+
+    <RatingBar
+        android:id="@+id/user_review_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:backgroundTint="#FFFEFE"
+        android:numStars="5"
+        android:progressBackgroundTint="#D8C0C0"
+        android:progressBackgroundTintMode="src_in"
+        android:progressTint="#FFDD03"
+        android:rating="0"
+        android:stepSize="0.5" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:showDividers="middle"
+        android:divider="@color/black">
+
+        <Button
+            android:id="@+id/button_rating_cancel"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:textColor="#000"
+            android:background="#0000"/>
+
+        <Button
+            android:id="@+id/button_rating_confirm"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Rate"
+            android:textColor="#22AB8C"
+            android:background="#0000"/>
+
+    </LinearLayout>
+
+</LinearLayout>

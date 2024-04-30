@@ -48,7 +48,7 @@
     <string name="swipe_right_to_start_chatting1">Swipe right to start chatting!</string>
     <string name="my_chambers">My Chambers</string>
     <string name="skip_the_chamber">Skip the Chamber</string>
-    <string name="join_the_chamber">Join the Chamber  </string>
+    <string name="join_the_chamber">Join the Chamber</string>
     <string name="joinchamber"><![CDATA[Join the Chamber   ]]></string>
     <string name="you_do_not_have_any_chambers_yet">You do not have any Chambers yet</string>
     <string name="delete_chamber">delete chamber</string>
@@ -73,8 +73,17 @@
     <string name="topic_request_message">Reserved by: %1$s</string>
     <string name="no_chambers_found">There are no chambers available now. Create a chamber or wait for someone to get started.</string>
     <string name="no_topics_found">There are no topics available right now. Create a topic now or wait for others to get started.</string>
-    <string name="too_many_topics_title">You\'ve been procrastinating on too many topics.</string>
-    <string name="too_many_topics_body">You\'re procrastinating on too many topics. Cancel some topics to make space for new ones.</string>
+    <string name="too_many_topics_title">You\'re pending a match on too many topics</string>
+    <string name="too_many_topics_body">Remove them to continue</string>
     <string name="feedback_success_string">Your feedback has been submitted.</string>
-    <string name="too_many_topics">You\'re currently procrastinating on too many topics. Clear to make space for new one.</string>
+    <string name="title_activity_update">Update App Activity</string>
+    <string name="block_user_dialog_title">Block %1$s and leave chamber?</string>
+    <string name="confirm_role_change">WARNING: Once you change roles, you will stop looking for matches on saved topics. You can look for matches again by searching for them. Click confirm to proceed.</string>
+    <string name="listener_details">Take the role of a Listener</string>
+    <string name="ventor_details">Take the role of a Ventor</string>
+    <string name="report_user_title_text">Reporting %1$s</string>
+
+    <!-- TODO: FACEBOOK EVENT LOGGER STRINGS, ADD CORRECT STRINGS WHEN AVAILABLE-->
+    <string name="facebook_app_id">1425594254829689</string>
+    <string name="facebook_client_token">0b34138aea49ce7702b8cb662075e391</string>
 </resources>

@@ -3,7 +3,6 @@ package com.company.chamberly.activities
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
-import android.opengl.Visibility
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -13,6 +12,7 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.ContentInfoCompat.Flags
 import com.company.chamberly.models.Chamber
 import com.company.chamberly.models.Message
 import com.company.chamberly.R
@@ -43,23 +43,23 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
 
     override fun onCardDrag(position: Int, cardView: View, progress: Float) {
         // Get references to the overlay views
-        val rightSwipeOverlay = cardView.findViewById<TextView>(R.id.rightSwipeOverlay)
-        val leftSwipeOverlay = cardView.findViewById<TextView>(R.id.leftSwipeOverlay)
+        val rightSwipeOverlay = cardView.findViewById<LinearLayout>(R.id.rightSwipeOverlay)
+        val leftSwipeOverlay = cardView.findViewById<LinearLayout>(R.id.leftSwipeOverlay)
 
         // Based on the progress float, determine the visibility of the overlays
         if(progress==0f){
-            rightSwipeOverlay.visibility= View.INVISIBLE
-            leftSwipeOverlay.visibility=View.INVISIBLE
+            rightSwipeOverlay.visibility= View.GONE
+            leftSwipeOverlay.visibility=View.GONE
         }
         else if (progress > 0) { // Assuming positive progress indicates a right swipe
             rightSwipeOverlay.visibility = View.VISIBLE
-            leftSwipeOverlay.visibility = View.INVISIBLE
+            leftSwipeOverlay.visibility = View.GONE
         } else if (progress < 0) { // Assuming negative progress indicates a left swipe
-            rightSwipeOverlay.visibility = View.INVISIBLE
+            rightSwipeOverlay.visibility = View.GONE
             leftSwipeOverlay.visibility = View.VISIBLE
         } else { // No significant swipe, hide both overlays
-            rightSwipeOverlay.visibility = View.INVISIBLE
-            leftSwipeOverlay.visibility = View.INVISIBLE
+            rightSwipeOverlay.visibility = View.GONE
+            leftSwipeOverlay.visibility = View.GONE
         }
 
         super.onCardDrag(position, cardView, progress)
@@ -96,6 +96,7 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
         backButton.setOnClickListener {
             // Explicitly start MainActivity
             val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(intent)
         }
 
@@ -111,35 +112,13 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
 
     }
 
-    // TODO: Check why is "locked" but not "isLocked"
-
     // Check from real-time database
     private fun isVacant(chamber: Chamber, callback: (Boolean) -> Unit) {
         val uid = getSharedPreferences("cache", Context.MODE_PRIVATE).getString("uid", currentUser?.uid)
-        database.reference.child(chamber.groupChatId).child("Users").child("members").get()
-            .addOnSuccessListener { dataSnapshot ->
-                val size = dataSnapshot.childrenCount
-                for (snapshot in dataSnapshot.children) {
-                    //Check if Not currentUser himself
-                    if(snapshot.key == uid){
-                        callback(false)
-                        return@addOnSuccessListener
-                    }
-                }
-
-                //check size
-                val result = size <= 1
-                callback(result)
-            }
-            .addOnFailureListener { exception ->
-                Log.e("firebase", "Error getting data", exception)
-                callback(false)
-                callback(false)
-            }
+        callback(chamber.membersLimit >= chamber.members.size && !chamber.members.contains(uid))
     }
 
     private fun fetchChambers() {
-        //TODO: load lastTimestamp from cache
         val query: Query = if (lastTimestamp == null) {
             firestore.collection("GroupChatIds")
                 .whereEqualTo("isLocked", false)
@@ -161,7 +140,7 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
     }
 
     private fun fetchChambersRecursively(query: Query) {
-        val kolodaView = findViewById<com.yalantis.library.Koloda>(R.id.koloda)
+        val kolodaView = findViewById<Koloda>(R.id.koloda)
         val buttonsView = findViewById<LinearLayout>(R.id.buttonsLayout)
         val emptyStateView = findViewById<RelativeLayout>(R.id.emptyStateView)
         kolodaView.visibility = View.GONE
@@ -169,7 +148,6 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
         emptyStateView.visibility = View.VISIBLE
         query.get()
             .addOnSuccessListener { querySnapshot ->
-                Log.e(TAG, "fetchChambers: ${querySnapshot.documents.size}")
                 for (documentSnapshot in querySnapshot) {
                     val chamber = documentSnapshot.toObject(Chamber::class.java)
                     kolodaView.visibility = View.VISIBLE
@@ -179,7 +157,6 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
                     firestore.collection("GroupChatIds").document(chamber.groupChatId)
                         .update("publishedPool", false)
                     isVacant(chamber) { isVacant ->
-                        Log.d("SEARCH", isVacant.toString())
                         if (isVacant) {
                             adapter.setData(chamber)
                         }
@@ -191,7 +168,6 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
                     }
                 }
                 val lastDocument = querySnapshot.documents.lastOrNull()
-                //TODO: save into cache
                 lastTimestamp = lastDocument?.get("timestamp")
             }
             .addOnFailureListener { exception ->
@@ -202,8 +178,6 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
     // override koloda listener
     override fun onCardSwipedLeft(position: Int) {
         val chamber = adapter.getItem(position+1)
-        Log.e("SearchActivity", "Card swiped left : ${chamber.groupTitle}")
-
 
         firestore.collection("GroupChatIds").document(chamber.groupChatId)
             .update("publishedPool", true)
@@ -225,9 +199,7 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
     }
 
     override fun onClickLeft(position: Int)  {
-        Log.e("SearchActivity", "Card swiped left at position: $position")
         val chamber = adapter.getItem(position+1)
-        Log.e("SearchActivity", "Card swiped left : ${chamber.groupTitle}")
 
         firestore.collection("GroupChatIds").document(chamber.groupChatId)
             .update("publishedPool", true)
@@ -237,7 +209,6 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
 
     override fun onClickRight(position: Int)  {
         //Log.e("SearchActivity", "Card swiped right at position: $position")
-        // TODO: check why position starts from -1
         val chamber = adapter.getItem(position+1)
         isVacant(chamber) { isVacant ->
             if (isVacant) {
@@ -251,10 +222,7 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
     override fun onEmptyDeck() {
         if (isFirstTimeEmpty) {
             isFirstTimeEmpty = false
-            Log.e("onEmptyDeck", "Initial")
         } else {
-            Log.e("onEmptyDeck", "Now it's empty")
-            //TODO: set publishedPool as true again
             releaseCards()
             fetchChambers()
         }
@@ -297,7 +265,7 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
                                     val intent = Intent(this@SearchActivity, ChatActivity::class.java)
                                     intent.putExtra("GroupChatId", chamber.groupChatId)
                                     intent.putExtra("GroupTitle", chamber.groupTitle)
-                                    intent.putExtra("AuthorName",chamber.AuthorName)
+                                    intent.putExtra("Authorname",chamber.AuthorName)
                                     intent.putExtra("AuthorUID",chamber.AuthorUID)
                                     startActivity(intent)
                                     finish()
@@ -310,7 +278,6 @@ class SearchActivity : ComponentActivity() ,KolodaListener{
                                         }
                                         .addOnFailureListener { e ->
                                             // Handle error in updating the chamber list
-                                            Log.d("SEARCHACTIVITY", "JOINING FAILED message: $e")
                                         }
                                 }
                         }

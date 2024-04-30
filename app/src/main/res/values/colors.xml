@@ -7,6 +7,8 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="primary">#FF7A7AFF</color>
     <!-- colors.xml -->
     <color name="overlay_background_right">#883498FB</color> <!-- Adjust the color value as needed -->
     <color name="overlay_background_left">#88FC4444</color>  <!-- Adjust the color value as needed -->

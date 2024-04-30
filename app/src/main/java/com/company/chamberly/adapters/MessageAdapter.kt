@@ -1,6 +1,7 @@
 package com.company.chamberly.adapters
 
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +10,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.models.Message
 import com.company.chamberly.R
+import com.company.chamberly.models.toMap
 
 class MessageAdapter(private val uid: String) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -28,10 +30,12 @@ class MessageAdapter(private val uid: String) :
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val textSender: TextView = itemView.findViewById(R.id.text_gchat_user_other)
         val textMessage: TextView = itemView.findViewById(R.id.text_gchat_message_other)
+        val reactedWithHolder: TextView = itemView.findViewById(R.id.reactedWith)
+        val replyingToHolder: TextView = itemView.findViewById(R.id.replyingToHolder)
         init {
             // set on long click listener
             itemView.setOnLongClickListener {
-                val message = messages[adapterPosition]
+                val message = messages[bindingAdapterPosition]
                 onMessageLongClickListener!!.onMessageLongClick(message)
                 onMessageLongClickListener!!.onSelfLongClick(message)
                 true
@@ -41,6 +45,8 @@ class MessageAdapter(private val uid: String) :
 
     inner class MessageViewHolderMe(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val textMessage: TextView = itemView.findViewById(R.id.text_gchat_message_me)
+        val reactedWithHolder: TextView = itemView.findViewById(R.id.reactedWith)
+        val replyingToHolder: TextView = itemView.findViewById(R.id.replyingToHolder)
     }
 
     inner class MessageViewHolderSystem(itemView: View): RecyclerView.ViewHolder(itemView) {
@@ -74,14 +80,27 @@ class MessageAdapter(private val uid: String) :
                     onMessageLongClickListener?.onSelfLongClick(message)
                     true
                 }
+                holder.reactedWithHolder.text = message.reactedWith.ifBlank { "" }
+                holder.reactedWithHolder.visibility = if(message.reactedWith.isNotBlank()) View.VISIBLE else View.GONE
+                holder.replyingToHolder.text = if(message.replyingTo.isNotBlank()) "Replying to: ${message.replyingTo}" else ""
+                holder.replyingToHolder.visibility = if(message.replyingTo.isNotBlank()) View.VISIBLE else View.GONE
             }
             is MessageViewHolder -> {
-                holder.textSender.text = message.sender_name
-                holder.textMessage.text = message.message_content
+                if(position != 0 && message.UID == messages[position - 1].UID && messages[position - 1].message_type == "text") {
+                    holder.textSender.visibility = View.GONE
+                } else {
+                    holder.textSender.visibility = View.VISIBLE
+                    holder.textSender.text = message.sender_name
+                }
                 holder.itemView.setOnLongClickListener {
                     onMessageLongClickListener?.onMessageLongClick(message)
                     true
                 }
+                holder.textMessage.text = message.message_content
+                holder.reactedWithHolder.text = message.reactedWith.ifBlank { "" }
+                holder.reactedWithHolder.visibility = if(message.reactedWith.isNotBlank()) View.VISIBLE else View.GONE
+                holder.replyingToHolder.text = if(message.replyingTo.isNotBlank()) "Replying to: ${message.replyingTo}" else ""
+                holder.replyingToHolder.visibility = if(message.replyingTo.isNotBlank()) View.VISIBLE else View.GONE
             }
             is MessageViewHolderSystem -> {
                 holder.message.text = message.message_content
@@ -99,6 +118,39 @@ class MessageAdapter(private val uid: String) :
         return messages.size
     }
 
+    fun addMessage(message: Message, position: Int = -1) {
+        if(position != -1) {
+            messages.add(position, message)
+            notifyItemInserted(position)
+        } else {
+            if(messages.contains(message)) {
+                return
+            }
+            messages.add(message)
+            notifyItemInserted(messages.size - 1)
+        }
+    }
+
+    fun messageChanged(message: Message, messageId: String) {
+        for(i in 0 until messages.size) {
+            if (messages[i].message_id == messageId) {
+                messages[i] = message
+                notifyItemChanged(i)
+                return
+            }
+        }
+    }
+
+    fun messageRemoved(message: Message) {
+        for(i in 0 until messages.size) {
+            if (messages[i].message_id == message.message_id) {
+                messages.removeAt(i)
+                notifyItemRemoved(i)
+                return
+            }
+        }
+    }
+
     override fun getItemViewType(position: Int): Int {
         val message = messages[position]
         return if (message.UID == uid) {
@@ -110,11 +162,8 @@ class MessageAdapter(private val uid: String) :
         }
     }
 
-
     interface OnMessageLongClickListener {
         fun onMessageLongClick(message: Message)
         fun onSelfLongClick(message: Message)
     }
-
-
 }
