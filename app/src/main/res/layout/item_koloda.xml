@@ -24,8 +24,71 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:background="@drawable/rounded_button"
-            android:padding="0dp">
+            android:background="@drawable/rounded_button">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1.3"
+                android:padding="8dp"
+                android:gravity="fill_horizontal"
+                android:orientation="horizontal">
+                <LinearLayout
+                    android:id="@+id/rightSwipeOverlay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:background="@drawable/right_overlay"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_chat"
+                        android:contentDescription="Join chamber"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/join_the_chamber"
+                        android:gravity="center_vertical"
+                        android:textSize="14sp"
+                        android:textColor="#00aa82"
+                        android:minHeight="26dp"
+                        android:minWidth="26dp"/>
+                </LinearLayout>
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+                <!-- Overlay for the swipe left action -->
+                <LinearLayout
+                    android:id="@+id/leftSwipeOverlay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:background="@drawable/left_overlay"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp"
+                    android:visibility="gone">
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_skip"
+                        android:contentDescription="Skip chamber"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/skip_the_chamber"
+                        android:gravity="center_vertical|end"
+                        android:textSize="14sp"
+                        android:textColor="#ff6066"
+                        android:minHeight="26dp"
+                        android:minWidth="26dp"/>
+                </LinearLayout>
+            </LinearLayout>
 
             <!-- TextView for the title -->
             <TextView
@@ -52,6 +115,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/chat"
+                    android:tint="#FFF"
                     android:padding="8dp"
                     android:contentDescription="@string/chat_icon" />
 
@@ -61,48 +125,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/_1_2"
+                    android:textColor="#FFF"
                     android:textStyle="bold"
                     android:textSize="16sp" />
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Overlay for the swipe right action -->
-    <TextView
-        android:id="@+id/rightSwipeOverlay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|start"
-        android:gravity="center_vertical|start"
-        android:text="@string/joinchamber"
-        android:textSize="18sp"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        android:background="@drawable/right_overlay"
-        android:padding="4dp"
-        android:minHeight="26dp"
-        android:minWidth="26dp"
-        android:layout_margin="8dp"
-        android:paddingStart="24dp"
-        android:visibility="invisible" />
-
-    <!-- Overlay for the swipe left action -->
-    <TextView
-        android:id="@+id/leftSwipeOverlay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:gravity="center_vertical|end"
-        android:text="@string/skip_the_chamber"
-        android:textSize="18sp"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        android:padding="4dp"
-        android:minHeight="26dp"
-        android:minWidth="26dp"
-        android:layout_margin="8dp"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:background="@drawable/left_overlay"
-        android:visibility="invisible" />
 </FrameLayout>

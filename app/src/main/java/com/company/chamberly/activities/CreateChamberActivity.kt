@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import com.company.chamberly.models.Chamber
 import com.company.chamberly.R
-import com.company.chamberly.models.chamberToMap
+import com.company.chamberly.models.toMap
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FieldValue
@@ -45,7 +45,7 @@ class CreateChamberActivity : ComponentActivity() {
             if (title.isEmpty()){
                 editText.error = "Please enter a title"
             } else {
-                //Toast.makeText(this, AuthorName, Toast.LENGTH_SHORT).show()
+                //Toast.makeText(this, Authorname, Toast.LENGTH_SHORT).show()
                 val chamber = Chamber(
                     AuthorName = authorName ?: "",
                     AuthorUID = authorUID ?: "",
@@ -56,7 +56,7 @@ class CreateChamberActivity : ComponentActivity() {
                 val documentRef = collectionRef.document() // generate a random document ID
                 chamber.groupChatId = documentRef.id // set the document ID to the random ID
 
-                documentRef.set(chamberToMap(chamber = chamber))
+                documentRef.set(chamber.toMap())
                     .addOnSuccessListener {
                         // Save additional data to Realtime Database
                         val realtimeDb = FirebaseDatabase.getInstance()
@@ -96,7 +96,7 @@ class CreateChamberActivity : ComponentActivity() {
                             val intent = Intent(this@CreateChamberActivity, ChatActivity::class.java)
                             intent.putExtra("GroupChatId", chamber.groupChatId)
                             intent.putExtra("GroupTitle", chamber.groupTitle)
-                            intent.putExtra("AuthorName",chamber.AuthorName)
+                            intent.putExtra("Authorname",chamber.AuthorName)
                             intent.putExtra("AuthorUID",chamber.AuthorUID)
                             startActivity(intent)
                             finish()

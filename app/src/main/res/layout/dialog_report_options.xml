@@ -22,55 +22,12 @@
         android:textAppearance="?android:textAppearanceMedium"
         android:textColor="#000"/>
 
-
-    <Button
-        android:id="@+id/buttonHarassment"
+    <LinearLayout
+        android:id="@+id/reportReasonsLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginVertical="4dp"
-        android:layout_marginHorizontal="8dp"
-        android:text="Harassment or bullying"
-        android:textColor="#FFF"
-        android:background="@drawable/rounded_button"/>
-
-    <Button
-        android:id="@+id/buttonInappropriateBehavior"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginVertical="4dp"
-        android:layout_marginHorizontal="8dp"
-        android:text="Inappropriate Behaviour"
-        android:textColor="#FFF"
-        android:background="@drawable/rounded_button" />
-
-    <Button
-        android:id="@+id/buttonUnsupportiveBehavior"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginVertical="4dp"
-        android:layout_marginHorizontal="8dp"
-        android:text="Unsupportive behaviour"
-        android:textColor="#FFF"
-        android:background="@drawable/rounded_button" />
-
-    <Button
-        android:id="@+id/buttonSpamming"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginVertical="4dp"
-        android:layout_marginHorizontal="8dp"
-        android:text="Spamming"
-        android:textColor="#FFF"
-        android:background="@drawable/rounded_button"/>
-
-    <Button
-        android:id="@+id/buttonAnnoying"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginVertical="4dp"
-        android:layout_marginHorizontal="8dp"
-        android:text="Annoying"
-        android:textColor="#FFF"
-        android:background="@drawable/rounded_button"/>
+        android:orientation="vertical"
+        android:divider="@color/black"
+        android:showDividers="beginning"/>
 
 </LinearLayout>

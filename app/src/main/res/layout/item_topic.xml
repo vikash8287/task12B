@@ -2,50 +2,49 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="horizontal"
+    android:paddingVertical="4dp"
+    android:gravity="center"
+    android:baselineAligned="false">
 
-    <TextView
-        android:id="@+id/topic_request_title"
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:textColor="#000"/>
+        android:layout_weight="8"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/topic_request_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textSize="16sp"
+            android:textColor="#000"/>
 
-    <TextView
-        android:id="@+id/topic_request_message"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="12sp"
-        android:textColor="#333"/>
+        <TextView
+            android:id="@+id/topic_request_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textSize="12sp"
+            android:textColor="#333"/>
+    </LinearLayout>
+
     <TableRow
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal">
-
-        <Button
+        android:gravity="center">
+        <ImageButton
             android:id="@+id/deny_request"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="#FFF"
-            android:elevation="0dp"
-            android:padding="16dp"
-            android:text="@string/deny"
-            android:textColor="#2962FF"
-            android:textSize="14sp" />
+            style="@style/CircularButton"
+            android:backgroundTint="#f9e1e8"
+            android:src="@drawable/ic_skip" />
 
-        <Button
+        <ImageButton
             android:id="@+id/accept_request"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="#FFF"
-            android:elevation="0dp"
-            android:padding="16dp"
-            android:text="@string/accept"
-            android:textColor="#2962FF"
-            android:textSize="14sp" />
+            style="@style/CircularButton"
+            android:backgroundTint="#c0e9e4"
+            android:src="@drawable/ic_chat"/>
     </TableRow>
 </LinearLayout>

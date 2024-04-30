@@ -6,6 +6,7 @@ import android.view.View
 import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
@@ -32,8 +33,8 @@ class TopicRequestRecyclerViewAdapter(
     class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
         val topicTitle: TextView = view.findViewById(R.id.topic_request_title)
         val message: TextView = view.findViewById(R.id.topic_request_message)
-        val acceptButton: Button = view.findViewById(R.id.accept_request)
-        val denyButton: Button = view.findViewById(R.id.deny_request)
+        val acceptButton: ImageButton = view.findViewById(R.id.accept_request)
+        val denyButton: ImageButton = view.findViewById(R.id.deny_request)
 
     }
 
@@ -49,10 +50,9 @@ class TopicRequestRecyclerViewAdapter(
         val topic = dataList[position].split("::")
         val topicId = topic[0]
         val topicTitle = topic[1]
-        var reservedBy: String = ""
+        var reservedBy = ""
         firestore.collection("Accounts").document(topic[2]).get().addOnSuccessListener { userSnapshot ->
             reservedBy = userSnapshot.data?.get("Display_Name").toString()
-            Log.d("ACCEPT", (userSnapshot.data?.toString() ?: "ERROR!!!") + topic[2])
             holder.message.text = "Reserved by: $reservedBy"
         }
         holder.topicTitle.text = topicTitle
@@ -65,6 +65,11 @@ class TopicRequestRecyclerViewAdapter(
     }
 
     fun addItem(topic: String) {
+        for(item in dataList) {
+            if(item == topic) {
+                return
+            }
+        }
         dataList.add(topic)
         notifyItemInserted(dataList.size - 1)
     }

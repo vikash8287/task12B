@@ -8,22 +8,22 @@ data class Topic(
     var TopicID: String = "",
     var TopicTitle: String = "",
     var forGender: String = "male",
-    var lflCount: Int = 0,
-    var lfvCount: Int = 0,
+    var lflWeight: Int = 15,
+    var lfvWeight: Int = 15,
     var timestamp:  Any = FieldValue.serverTimestamp(),
     var weight: Int = 60,
 )
 
-fun topicToMap(topic: Topic): Map<String, Any> {
+fun Topic.toMap(): Map<String, Any> {
     val topicMap = HashMap<String, Any>()
-    topicMap["AuthorName"] = topic.AuthorName
-    topicMap["AuthorUID"] = topic.AuthorUID
-    topicMap["TopicTitle"] = topic.TopicTitle
-    topicMap["TopicID"] = topic.TopicID
-    topicMap["forGender"] = topic.forGender
-    topicMap["lflCount"] = topic.lflCount
-    topicMap["lfvCount"] = topic.lfvCount
-    topicMap["timestamp"] = topic.timestamp
-    topicMap["weight"] = topic.weight
+    topicMap["AuthorName"] = this.AuthorName
+    topicMap["AuthorUID"] = this.AuthorUID
+    topicMap["TopicTitle"] = this.TopicTitle
+    topicMap["TopicID"] = this.TopicID
+    topicMap["forGender"] = this.forGender
+    topicMap["lflWeight"] = this.lflWeight
+    topicMap["lfvWeight"] = this.lfvWeight
+    topicMap["timestamp"] = this.timestamp
+    topicMap["weight"] = this.weight
     return topicMap
 }

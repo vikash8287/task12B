@@ -49,18 +49,15 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-
-
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
         // Handle incoming message here
-
         val title = remoteMessage.data["title"]
         val body = remoteMessage.data["body"]
         val groupChatId = remoteMessage.data["groupChatId"]
-        val groupTitle  = remoteMessage.data["groupTitle"]
-        val authorUid  = remoteMessage.data["AuthorUID"]
-        val authorName = remoteMessage.data["AuthorName"]
+        val groupTitle = remoteMessage.data["groupTitle"]
+        val authorUid = remoteMessage.data["AuthorUID"]
+        val authorName = remoteMessage.data["Authorname"]
         // You can customize the notification's behavior here
         //  if(ChatActivity().isFinishing || ChatActivity().isDestroyed){
         sendNotification(title, body, groupChatId, groupTitle, authorUid, authorName)
@@ -71,12 +68,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         return (appProcessInfo.importance== ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)
     }
     private fun sendNotification(title: String?, messageBody: String?,groupChatId:String?,groupTitle:String?,authorUid:String?,authorName:String?) {
-        Log.d("DATA", "$title:$messageBody:$groupTitle:$groupChatId")
-        val requestCode = System.currentTimeMillis().toInt()
+        val requestCode = groupChatId.hashCode()
         val intent = Intent(this, ChatActivity::class.java)
         intent.putExtra("GroupChatId", groupChatId)
         intent.putExtra("GroupTitle", groupTitle)
-        intent.putExtra("AuthorName",authorName)
+        intent.putExtra("Authorname",authorName)
         intent.putExtra("AuthorUID",authorUid)
         val pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT)
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
@@ -102,5 +98,4 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
         notificationManager.notify(requestCode, notificationBuilder.build())
     }
-
 }

@@ -6,7 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/Dialog"
     android:padding = "18dp"
-    android:background="@drawable/dialog_background">
+    android:background="@drawable/popup_bottom_left">
 
     <TextView
         android:id="@+id/feedback_dialog_title"

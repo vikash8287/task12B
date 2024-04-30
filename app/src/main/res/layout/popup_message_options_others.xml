@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    style="@style/PopupMessageOptions"
+    android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/dialog_background">
+        <TextView
+            android:id="@+id/DialogTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#000"
+            android:maxLines="1"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/MessageContent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:textColor="#000"
+            android:maxLines="3"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="8dp"/>
+
+    <LinearLayout
+        android:id="@+id/reactionEmojis"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/dialog_background"/>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="8dp" />
+    <LinearLayout
+        android:id="@+id/message_popup_action_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dialog_background"
+        android:showDividers="middle"
+        android:divider="@color/black"
+        android:orientation="vertical">
+        <Button
+            android:id="@+id/buttonCopy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="2dp"
+            android:text="Copy"
+            android:textColor="#000"
+            android:background="#0000"/>
+
+        <Button
+            android:id="@+id/buttonReply"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="2dp"
+            android:text="Reply"
+            android:textColor="#000"
+            android:background="#0000"/>
+
+        <Button
+            android:id="@+id/buttonRate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="2dp"
+            android:text="Rate"
+            android:textColor="#22AB8C"
+            android:background="#0000"/>
+
+        <Button
+            android:id="@+id/buttonReport"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="2dp"
+            android:text="Report"
+            android:textColor="#F33"
+            android:background="#0000"/>
+
+        <Button
+            android:id="@+id/buttonBlock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Block"
+            android:layout_marginVertical="2dp"
+            android:textColor="#F33"
+            android:background="#0000"/>
+    </LinearLayout>
+
+</LinearLayout>

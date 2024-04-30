@@ -4,12 +4,13 @@
 
     <item
         android:id="@+id/menu_copy"
-        android:title="Coyp"
+        android:title="Copy"
         />
 
     <item
         android:id="@+id/menu_report"
-        android:title="Report User" >
+        android:title="Report User"
+        app:actionViewClass="androidx.appcompat.widget.DialogTitle">
         <menu >
             <item android:title="Harassment or bullying" />
             <item android:title="Inappropriate Behaviour" />
