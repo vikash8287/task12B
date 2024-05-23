@@ -100,6 +100,7 @@ class CreateChamberActivity : ComponentActivity() {
                             intent.putExtra("AuthorUID",chamber.AuthorUID)
                             startActivity(intent)
                             finish()
+
                         }
                     }
                     .addOnFailureListener { e ->

@@ -78,6 +78,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.17.2'
     implementation 'androidx.emoji2:emoji2-emojipicker:1.5.0-alpha01'
     implementation 'com.facebook.android:facebook-android-sdk:17.0.0'
+    implementation 'com.google.firebase:firebase-storage-ktx:20.0.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
@@ -89,7 +90,6 @@ dependencies {
     androidTestImplementation platform('androidx.compose:compose-bom:2022.10.00')
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
-
 
     implementation 'com.squareup.okhttp3:okhttp:4.9.2'
     // Import the BoM for the Firebase platform
@@ -119,4 +119,7 @@ dependencies {
 
     // For Kotlin users also import the Kotlin extensions library for Play In-App Update:
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+// Date Handling Module
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+
 }

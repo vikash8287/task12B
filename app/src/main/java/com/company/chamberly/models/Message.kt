@@ -8,7 +8,8 @@ data class Message @JvmOverloads constructor(
     var message_id: String = "",
     var game_content: String = "",
     var reactedWith: String = "",
-    var replyingTo: String = ""
+    var replyingTo: String = "",
+    var message_date:String = "",
 )
 
 fun Message.toMap(): Map<String, Any> {
@@ -24,6 +25,9 @@ fun Message.toMap(): Map<String, Any> {
     }
     if(replyingTo.isNotBlank()) {
         messageMap["replyingTo"] = this.replyingTo
+    }
+    if(message_date.isNotBlank()){
+        messageMap["message_date"] = this.message_date
     }
     return messageMap
 }

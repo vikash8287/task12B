@@ -22,6 +22,9 @@ import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -39,13 +42,20 @@ import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflec
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.ktx.storage
 import com.google.gson.Gson
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -62,7 +72,7 @@ class ChatActivity : ComponentActivity(){
     private lateinit var cacheFile : File   // cache file
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var recyclerView: RecyclerView
-    private lateinit var messageAdapter: MessageAdapter
+    private lateinit var   messageAdapter: MessageAdapter
     private lateinit var groupChatId: String
     private lateinit var groupTitle :String
     private lateinit var authorName :String
@@ -71,6 +81,7 @@ class ChatActivity : ComponentActivity(){
     private val auth = Firebase.auth                // get current user
     private val database = Firebase.database        // realtime database
     private val firestore = Firebase.firestore      // firestore
+    private val firebaseStorage = Firebase.storage
     private var hasLeftChat: Boolean = false
     private var replyingTo: String = ""
     private val reactionEmojis: List<String> = listOf("👍", "💗", "😂", "😯", "😥", "😔", "+")
@@ -318,6 +329,17 @@ class ChatActivity : ComponentActivity(){
                 }
         }
         addNotificationKeyListener()
+        //Uploading Image to Firebase
+        val addImageButton = findViewById<Button>(R.id.buttonAddImage)
+        val senderName = sharedPreferences.getString("displayName", "NONE")
+
+        val postImage =PostImage(activity= this,storage = firebaseStorage,auth = auth, database = database,groupChatId = groupChatId,senderName=senderName)
+        addImageButton.setOnClickListener {
+
+
+
+          postImage.LaunchPhotoPicker()
+        }
     }
 
     private fun exitChat(groupChatId: String) {
@@ -929,5 +951,107 @@ class ChatActivity : ComponentActivity(){
                 Log.i("beforeSend","inside callAPi onresponse")
             }
         })
+    }
+
+
+
+}
+class PostImage(
+    val activity: ComponentActivity,
+    val storage: FirebaseStorage,
+    val auth: FirebaseAuth,
+    val database: FirebaseDatabase,
+    val groupChatId: String,
+
+   val senderName: String?
+){
+lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
+    init{
+      getImageFromGallery()
+    }
+   private fun getImageFromGallery(){
+       pickMedia = activity.registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+           // Callback is invoked after the user selects a media item or closes the
+           // photo picker.
+           if (uri != null) {
+               Log.d("PhotoPicker", "Selected URI: $uri")
+               
+               postImageToStorage(uri)
+           } else {
+               Log.d("PhotoPicker", "No media selected")
+           }
+       }
+    }
+    private  fun GetCurrentDateInCestTimeZone():String{
+        val now = Clock.System.now()
+        val timeZone = TimeZone.of("Europe/Berlin")
+        val now_in_cest = now.toLocalDateTime(timeZone)
+        val day = now_in_cest.dayOfMonth.toString().padStart(2, '0')
+        val month = now_in_cest.month.toString() // Use shortName for abbreviated month name
+        val year = now_in_cest.year.toString()
+        val hours = now_in_cest.hour.toString().padStart(2, '0')
+        val minutes = now_in_cest.minute.toString().padStart(2, '0')
+        val seconds = now_in_cest.second.toString().padStart(2, '0')
+        val timezone  = "CEST"
+
+        val formattedDateTime = "$day $month $year $hours:$minutes:$seconds $timezone"
+        return formattedDateTime
+    }
+    private fun postImageToStorage(uri: Uri) {
+      val storageRef:StorageReference = storage.reference
+        val uid  = auth.currentUser?.uid
+        // in european time zone
+
+
+        val todayDateInCest = GetCurrentDateInCestTimeZone()
+        val filename = "photo_message_"+uid+"_"+todayDateInCest
+        val path  = storageRef.child("message_image/${filename}")
+
+val uploadTask = path.putFile(uri)
+
+        uploadTask.addOnFailureListener { error(it) }.addOnCompleteListener {
+       task->
+            if(task.isSuccessful){
+                path.downloadUrl.addOnSuccessListener {
+                addImageInfoToRealtimeDatabase( getUrl(it),todayDateInCest)
+
+                }.addOnFailureListener {
+                    Log.d("FirebaseStorageError",it.message.toString())
+                }
+            }else{
+                Log.d("FirebaseStorageError",task.exception?.toString()!!)
+            }
+
+        }
+
+    }
+    private  fun addImageInfoToRealtimeDatabase(imagelUrl: String, todayDateInCest: String) {
+
+
+      val ref =   database.getReference(groupChatId).child("messages")
+val key = ref.push().key
+        val messageId = key!!
+        val data = Message(
+            UID = auth.currentUser?.uid!!,
+            message_content = imagelUrl ,
+            message_date = todayDateInCest,
+            message_id = messageId,
+            message_type = "photo",
+            sender_name = senderName!!
+        )
+        ref.child(messageId).setValue(data.toMap())
+            .addOnSuccessListener {
+                Log.i("beforeSend","success")
+
+            }
+    }
+    fun LaunchPhotoPicker(){
+        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
+
+private  fun getUrl(uri: Uri):String
+    {
+
+return uri.toString()
     }
 }
