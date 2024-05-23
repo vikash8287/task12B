@@ -87,4 +87,7 @@
     <string name="facebook_app_id">1425594254829689</string>
     <string name="facebook_client_token">0b34138aea49ce7702b8cb662075e391</string>
     <string name="dd_mmm_yyyy_hh_mm_ss_z">dd MMM yyyy HH:mm:ss z</string>
+    <string name="message_photo">message_photo</string>
+    <string name="preview">preview</string>
+    <string name="photo">Photo</string>
 </resources>
