@@ -25,6 +25,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.res.dimensionResource
 import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -977,8 +978,17 @@ lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
            // photo picker.
            if (uri != null) {
                Log.d("PhotoPicker", "Selected URI: $uri")
-               
-               postImageToStorage(uri)
+
+               showDialogBox(true) {
+                   if (it) {
+
+                        postImageToStorage(uri)
+                   } else {
+                       Log.d("test", "false")
+                   }
+               }
+
+
            } else {
                Log.d("PhotoPicker", "No media selected")
            }
@@ -1055,5 +1065,23 @@ private  fun getUrl(uri: Uri):String
     {
 
 return uri.toString()
+    }
+    private fun   showDialogBox(cancellable: Boolean,result:(v:Boolean)->Unit){
+        val dialog = Dialog(activity,R.style.Dialog)
+        dialog.setContentView(R.layout.dialog_box_upload_button)
+        dialog.setCancelable(cancellable)
+        val confirm_button = dialog.findViewById<Button>(R.id.confirm_button)
+        val  cancel_button = dialog.findViewById<Button>(R.id.cancel_button)
+        confirm_button.setOnClickListener{
+
+          result(true)
+            dialog.dismiss()
+        }
+        cancel_button.setOnClickListener{
+            result(false)
+            dialog.dismiss()
+        }
+        dialog.show()
+
     }
 }
