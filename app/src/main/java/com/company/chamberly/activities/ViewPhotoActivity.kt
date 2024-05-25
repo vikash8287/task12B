@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.company.chamberly.R
 
 class ViewPhotoActivity : ComponentActivity() {
@@ -24,7 +25,9 @@ val image_url:String = intent.getStringExtra("image_url")?:""
             // TODO : show some error message
 Toast.makeText(this,"Some error happened",Toast.LENGTH_SHORT).show()
         }else{
-Glide.with(this).load(image_url).into(imagePreview)
+Glide.with(this).load(image_url)
+    .diskCacheStrategy(DiskCacheStrategy.DATA)
+    .into(imagePreview)
         }
 
     backButton.setOnClickListener{

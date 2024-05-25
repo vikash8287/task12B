@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.MultiTransformation
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.company.chamberly.models.Message
 import com.company.chamberly.R
@@ -132,7 +133,7 @@ inner class MessagePhotoViewHolderSystemMe(itemView: View):RecyclerView.ViewHold
             }
             is MessagePhotoViewHolderSystemMe->{
                 val multi = MultiTransformation<Bitmap>(
-                    BlurTransformation(25),
+                    BlurTransformation(150),
                     CropSquareTransformation()
                 )
 val image_view = holder.imageView
@@ -141,6 +142,8 @@ val image_view = holder.imageView
                 Glide
                     .with(Context)
                     .load(message.message_content)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+
                     .apply(RequestOptions.bitmapTransform(multi))
                     .into(image_view)
                 image_view.setOnClickListener{
@@ -152,7 +155,7 @@ val intent  = Intent(Context,ViewPhotoActivity::class.java)
             }
             is MessagePhotoViewHolderSystemOther->{
                 val multi = MultiTransformation<Bitmap>(
-                    BlurTransformation(25),
+                    BlurTransformation(150),
                     CropSquareTransformation()
                 )
                 val image_view = holder.imageView
@@ -161,6 +164,7 @@ val intent  = Intent(Context,ViewPhotoActivity::class.java)
                 Glide
                     .with(Context)
                     .load(message.message_content)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
                     .apply(RequestOptions.bitmapTransform(multi))
                     .into(image_view)
                 image_view.setOnClickListener{

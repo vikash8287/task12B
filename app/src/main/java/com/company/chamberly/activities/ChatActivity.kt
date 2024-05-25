@@ -17,6 +17,7 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
@@ -25,7 +26,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.ui.res.dimensionResource
 import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -979,7 +979,7 @@ lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
            if (uri != null) {
                Log.d("PhotoPicker", "Selected URI: $uri")
 
-               showDialogBox(true) {
+               showDialogBox(true,imageUri = uri) {
                    if (it) {
 
                         postImageToStorage(uri)
@@ -1016,7 +1016,7 @@ lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
 
 
         val todayDateInCest = GetCurrentDateInCestTimeZone()
-        val filename = "photo_message_"+uid+"_"+todayDateInCest
+        val filename = "photo_message_"+uid+"_"+todayDateInCest+"_png"
         val path  = storageRef.child("message_image/${filename}")
 
 val uploadTask = path.putFile(uri)
@@ -1037,7 +1037,7 @@ val uploadTask = path.putFile(uri)
         }
 
     }
-    private  fun addImageInfoToRealtimeDatabase(imagelUrl: String, todayDateInCest: String) {
+    private  fun addImageInfoToRealtimeDatabase(imageUrl: String, todayDateInCest: String) {
 
 
       val ref =   database.getReference(groupChatId).child("messages")
@@ -1045,7 +1045,7 @@ val key = ref.push().key
         val messageId = key!!
         val data = Message(
             UID = auth.currentUser?.uid!!,
-            message_content = imagelUrl ,
+            message_content = imageUrl ,
             message_date = todayDateInCest,
             message_id = messageId,
             message_type = "photo",
@@ -1066,12 +1066,14 @@ private  fun getUrl(uri: Uri):String
 
 return uri.toString()
     }
-    private fun   showDialogBox(cancellable: Boolean,result:(v:Boolean)->Unit){
+    private fun   showDialogBox(cancellable: Boolean= true, imageUri: Uri,result: (v: Boolean) -> Unit){
         val dialog = Dialog(activity,R.style.Dialog)
         dialog.setContentView(R.layout.dialog_box_upload_button)
         dialog.setCancelable(cancellable)
         val confirm_button = dialog.findViewById<Button>(R.id.confirm_button)
         val  cancel_button = dialog.findViewById<Button>(R.id.cancel_button)
+        val previewImage= dialog.findViewById<ImageView>(R.id.previewImage)
+        previewImage.setImageURI(imageUri)
         confirm_button.setOnClickListener{
 
           result(true)
