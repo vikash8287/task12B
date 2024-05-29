@@ -9,7 +9,16 @@ data class Message @JvmOverloads constructor(
     var game_content: String = "",
     var reactedWith: String = "",
     var replyingTo: String = ""
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (other == null || other !is Message) return false
+        return message_id == other.message_id &&
+                message_content == other.message_content &&
+                message_type == other.message_type &&
+                reactedWith == other.reactedWith &&
+                replyingTo == other.replyingTo
+    }
+}
 
 fun Message.toMap(): Map<String, Any> {
     val messageMap: HashMap<String, Any> = hashMapOf(
@@ -27,3 +36,5 @@ fun Message.toMap(): Map<String, Any> {
     }
     return messageMap
 }
+
+//fun Message.e

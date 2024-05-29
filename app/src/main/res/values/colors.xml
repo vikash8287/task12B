@@ -7,6 +7,7 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="green">#00AA82</color>
 
     <color name="primary">#FF7A7AFF</color>
     <!-- colors.xml -->
@@ -15,4 +16,10 @@
 
     <color name="colorPrimary">#e6e6ff</color>
     <color name="red">#F44336</color>
+    <color name="radio_button_text_color_selector">
+        <selector xmlns:android="http://schemas.android.com/apk/res/android">
+            <item android:state_checked="true" android:color="#FFF" /> <!-- White when selected -->
+            <item android:color="#000" /> <!-- Black otherwise -->
+        </selector>
+    </color>
 </resources>

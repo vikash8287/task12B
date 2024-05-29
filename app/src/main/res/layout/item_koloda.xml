@@ -30,8 +30,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1.3"
                 android:padding="8dp"
-                android:gravity="fill_horizontal"
-                android:orientation="horizontal">
+                android:gravity="fill_horizontal">
                 <LinearLayout
                     android:id="@+id/rightSwipeOverlay"
                     android:layout_width="wrap_content"
@@ -42,7 +41,6 @@
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="8dp"
                     android:visibility="gone">
-
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -58,11 +56,11 @@
                         android:minHeight="26dp"
                         android:minWidth="26dp"/>
                 </LinearLayout>
-                <Space
+                <!-- Overlay for the swipe left action -->
+                <androidx.legacy.widget.Space
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     android:layout_weight="1"/>
-                <!-- Overlay for the swipe left action -->
                 <LinearLayout
                     android:id="@+id/leftSwipeOverlay"
                     android:layout_width="wrap_content"
@@ -102,33 +100,18 @@
                 android:textStyle="bold"
                 android:text="@string/title" />
 
-            <!-- LinearLayout for the bottom part with icon and text -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <!-- ImageView for the chat icon -->
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/chat"
-                    android:tint="#FFF"
-                    android:padding="8dp"
-                    android:contentDescription="@string/chat_icon" />
-
-                <!-- TextView for the number of chatters -->
-                <TextView
-                    android:id="@+id/num_chatter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/_1_2"
-                    android:textColor="#FFF"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
-            </LinearLayout>
+            <TextView
+                android:id="@+id/num_chatter"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:layout_height="wrap_content"
+                android:text="2"
+                android:drawableLeft="@drawable/chat"
+                android:drawablePadding="8dp"
+                android:textColor="#FFF"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp"/>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

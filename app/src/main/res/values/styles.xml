@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!-- Base application theme that extends from AppCompat -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
     </style>
 
     <!-- Dialog style -->
@@ -36,6 +37,10 @@
         <item name="android:windowCloseOnTouchOutside">true</item>
     </style>
 
+    <style name="RadioButtonLarge" parent="Widget.AppCompat.CompoundButton.RadioButton">
+        <item name="android:background">@drawable/toggle_switch_large_thumb</item>
+<!--        <item name="android:background" an-->
+    </style>
     <style name="CircularButton" parent="Widget.AppCompat.ImageButton">
         <item name="cornerRadius">1000dp</item>
         <item name="android:padding">2dp</item>
@@ -45,10 +50,26 @@
         <item name="android:layout_margin">4dp</item>
     </style>
 
+    <style name="ThemeOverlay.AppCompat.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:radius">32dp</item>
+        <item name="backgroundTint">@color/primary</item>
+    </style>
+
     <!-- Custom text style -->
     <style name="create_a_display_name">
         <item name="android:textSize">26sp</item>
         <item name="android:textColor">#2E2E5B</item>
+    </style>
+
+    <style name="BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="android:orientation">vertical</item>
+        <item name="android:background">@drawable/background_bottom_sheet</item>
+        <item name="android:gravity">center_horizontal|top</item>
+        <item name="behavior_peekHeight">1000dp</item>
+        <item name="behavior_skipCollapsed">true</item>
+        <item name="behavior_fitToContents">true</item>
     </style>
 
 </resources>

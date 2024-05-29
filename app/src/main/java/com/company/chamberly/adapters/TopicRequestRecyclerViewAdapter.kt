@@ -1,33 +1,32 @@
 package com.company.chamberly.adapters
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OnClickListener
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
-import com.company.chamberly.activities.MainActivity
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class TopicRequestRecyclerViewAdapter(
-    topics: List<String>,
+    topicIds: List<String>,
+    topicsTitles: List<String>,
+    reserverIds: List<String>,
     private val acceptRequest: (String, String, String, String) -> Unit,
     private val denyRequest: (String, String, String) -> Unit
 ): RecyclerView.Adapter<TopicRequestRecyclerViewAdapter.ViewHolder>() {
 
-    private val dataList = mutableListOf<String>()
+    private val topicIdsList = mutableListOf<String>()
+    private val topicTitlesList = mutableListOf<String>()
+    private val reserverIdsList = mutableListOf<String>()
 
     private val firestore = Firebase.firestore
     init {
-        dataList.addAll(topics)
+        topicIdsList.addAll(topicIds)
+        topicTitlesList.addAll(topicsTitles)
+        reserverIdsList.addAll(reserverIds)
     }
 
     class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
@@ -44,39 +43,48 @@ class TopicRequestRecyclerViewAdapter(
     }
 
     override fun getItemCount(): Int {
-        return dataList.size
+        return topicIdsList.size
     }
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val topic = dataList[position].split("::")
-        val topicId = topic[0]
-        val topicTitle = topic[1]
-        var reservedBy = ""
-        firestore.collection("Accounts").document(topic[2]).get().addOnSuccessListener { userSnapshot ->
-            reservedBy = userSnapshot.data?.get("Display_Name").toString()
-            holder.message.text = "Reserved by: $reservedBy"
-        }
+        val topicId = topicIdsList[position]
+        val topicTitle = topicTitlesList[position]
+        val reservedBy = reserverIdsList[position]
+        holder.message.text = "Reserved by: $reservedBy"
+        firestore
+            .collection("Accounts")
+            .document(reservedBy)
+            .get()
+            .addOnSuccessListener {
+                holder.message.text = "Reserved by: ${it.data?.get("Display_Name")}"
+            }
         holder.topicTitle.text = topicTitle
         holder.acceptButton.setOnClickListener {
-            acceptRequest(topicId, topicTitle, topic[2], reservedBy)
+            acceptRequest(topicId, topicTitle, reservedBy, reservedBy)
         }
         holder.denyButton.setOnClickListener {
-            denyRequest(topicId, topicTitle, topic[2])
+            denyRequest(topicId, topicTitle, reservedBy)
         }
     }
 
-    fun addItem(topic: String) {
-        for(item in dataList) {
-            if(item == topic) {
+    fun addItem(topicID: String, topicTitle: String, reservedBy: String) {
+        for(item in topicIdsList) {
+            if(item == topicID) {
                 return
             }
         }
-        dataList.add(topic)
-        notifyItemInserted(dataList.size - 1)
+        topicIdsList.add(topicID)
+        topicTitlesList.add(topicTitle)
+        reserverIdsList.add(reservedBy)
+        notifyItemInserted(topicIdsList.size - 1)
     }
 
     fun removeItem(topic: String) {
-        val ind = dataList.indexOf(topic)
-        dataList.remove(topic)
-        notifyItemRemoved(ind)
+        val ind = topicIdsList.indexOf(topic)
+        if(ind != -1) {
+            topicIdsList.remove(topic)
+            topicTitlesList.removeAt(ind)
+            reserverIdsList.removeAt(ind)
+            notifyItemRemoved(ind)
+        }
     }
 }
