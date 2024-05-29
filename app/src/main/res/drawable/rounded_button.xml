@@ -1,7 +1,18 @@
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#8080ff" />
-    <corners android:radius="10dp" />
-    <gradient android:startColor="#7A7AFF"
-        android:endColor="#AFAFFF"
-        android:angle="90"/> <!-- 270° = bottom -->
-</shape>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="true">
+        <shape>
+            <corners android:radius="10dp" />
+            <gradient android:startColor="#7A7AFF"
+                android:endColor="#AFAFFF"
+                android:angle="90"/>
+        </shape>
+    </item>
+    <item android:state_enabled="false">
+        <shape>
+            <corners android:radius="10dp" />
+            <gradient android:startColor="#898989"
+                android:endColor="#B8B8B8"
+                android:angle="90"/>
+        </shape>
+    </item>
+</selector>

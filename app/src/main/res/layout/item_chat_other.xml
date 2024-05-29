@@ -27,38 +27,51 @@
         android:maxLength="30"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="@id/image_gchat_profile_other"/>
-
     <LinearLayout
-        android:id="@+id/card_gchat_message_other"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_message_received"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="4dp"
-        android:maxWidth="260dp"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         app:layout_constraintStart_toEndOf="@+id/image_gchat_profile_other"
         app:layout_constraintTop_toBottomOf="@+id/replyingToHolder">
-        <TextView
-            android:id="@+id/text_gchat_user_other"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"/>
-        <TextView
-            android:id="@+id/text_gchat_message_other"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#2E2E5B"
-            android:textSize="16sp" />
+            android:orientation="vertical">
+            <LinearLayout
+                android:id="@+id/card_gchat_message_other"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_message_received"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/text_gchat_user_other"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"/>
+                <TextView
+                    android:id="@+id/text_gchat_message_other"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#2E2E5B"
+                    android:textSize="16sp" />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/reactedWith"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="-8dp"
+                android:textColor="#000"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="@id/card_gchat_message_other"
+                app:layout_constraintTop_toBottomOf="@id/card_gchat_message_other"/>
+        </LinearLayout>
+        <androidx.legacy.widget.Space
+            android:layout_height="0dp"
+            android:layout_width="0dp"
+            android:minWidth="48dp"
+            android:layout_weight="1"/>
     </LinearLayout>
-    <TextView
-        android:id="@+id/reactedWith"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="-8dp"
-        android:textColor="#000"
-        android:visibility="gone"
-        app:layout_constraintStart_toStartOf="@id/card_gchat_message_other"
-        app:layout_constraintTop_toBottomOf="@id/card_gchat_message_other"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

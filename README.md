@@ -10,8 +10,8 @@ git clone https://github.com/ChamberlyAB/ChamberlyAndroid.git
 cd ChamberlyAndroid
 ```
 
-- Create a new project in Google Cloud
-- Create a new Cloud Firestore database
+- Create a new project in Firebase.
+- Enable cloud firestore, realtime database, authentication (anonymous), firebase analytics and crashlytics for the project through firebase console.
 - Download google-services.json
 - Place the google-services.json under `app` folder
 - Open Android Studio

@@ -23,8 +23,6 @@ class ChambersRecyclerViewAdapter(private val onItemClick: (Chamber) -> Unit) : 
         return ViewHolder(view)
     }
 
-
-
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val chamber = dataList[position]
         holder.textTitle.text = chamber.groupTitle
@@ -32,15 +30,12 @@ class ChambersRecyclerViewAdapter(private val onItemClick: (Chamber) -> Unit) : 
         holder.itemView.setOnClickListener { onItemClick(chamber) }
     }
 
-
-    override fun getItemCount(): Int {
-        return dataList.size
-    }
+    override fun getItemCount(): Int = dataList.size
 
     fun updateChambers(chambers: List<Chamber>) {
         dataList.clear()
         dataList.addAll(chambers)
-        notifyDataSetChanged()
+        notifyItemRangeChanged(0, dataList.size)
     }
 }
 

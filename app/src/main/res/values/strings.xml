@@ -86,4 +86,10 @@
     <!-- TODO: FACEBOOK EVENT LOGGER STRINGS, ADD CORRECT STRINGS WHEN AVAILABLE-->
     <string name="facebook_app_id">1425594254829689</string>
     <string name="facebook_client_token">0b34138aea49ce7702b8cb662075e391</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="active_chambers">Active Chambers</string>
+    <string name="home">Home</string>
+    <string name="procrastination_cancel_success_message">You can now swipe right on new topics</string>
+    <string name="procrastion_cancel_success_title">Done!</string>
 </resources>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/base_nav_graph"
+    app:startDestination="@id/welcome_fragment">
+
+    <fragment
+        android:id="@+id/welcome_fragment"
+        android:name="com.company.chamberly.fragments.WelcomeFragment"
+        android:label="WelcomeFragment"/>
+    <fragment
+        android:id="@+id/main_fragment"
+        android:name="com.company.chamberly.fragments.MainFragment"
+        android:label="MainFragment">
+        <navGraph app:navGraph="@navigation/home_nav_graph" />
+        <action
+            android:id="@+id/action_main_fragment_to_topic_search_fragment"
+            app:destination="@id/topic_search_fragment"/>
+        <action
+            android:id="@+id/action_main_fragment_to_create_topic_fragment"
+            app:destination="@id/topic_create_fragment"/>
+        <action
+            android:id="@+id/action_main_fragment_to_create_chamber_fragment"
+            app:destination="@id/chamber_create_fragment"/>
+        <action
+            android:id="@+id/action_main_fragment_to_chamber_search_fragment"
+            app:destination="@id/chamber_search_fragment"/>
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/chat_fragment"
+        android:name="com.company.chamberly.fragments.ChatFragment"
+        android:label="ChatFragment"/>
+
+    <fragment
+        android:id="@+id/topic_search_fragment"
+        android:name="com.company.chamberly.fragments.TopicSearchFragment"
+        android:label="TopicSearchFragment"/>
+
+    <fragment
+        android:id="@+id/topic_create_fragment"
+        android:name="com.company.chamberly.fragments.CreateTopicFragment"
+        android:label="CreateTopicFragment" />
+
+    <fragment
+        android:id="@+id/chamber_create_fragment"
+        android:name="com.company.chamberly.fragments.CreateChamberFragment"
+        android:label="CreateChamberFragment" />
+
+    <fragment
+        android:id="@+id/chamber_search_fragment"
+        android:name="com.company.chamberly.fragments.ChamberSearchFragment"
+        android:label="ChamberSearchFragment" />
+</navigation>

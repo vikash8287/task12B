@@ -118,6 +118,10 @@ class MessageAdapter(private val uid: String) :
         return messages.size
     }
 
+    fun getMessageId(position: Int): String {
+        return messages[position].message_id
+    }
+
     fun addMessage(message: Message, position: Int = -1) {
         if(position != -1) {
             messages.add(position, message)
@@ -160,6 +164,10 @@ class MessageAdapter(private val uid: String) :
         } else {
             VIEW_TYPE_OTHER
         }
+    }
+
+    fun messageAt(index: Int): Message {
+        return messages[index]
     }
 
     interface OnMessageLongClickListener {

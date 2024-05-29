@@ -1,4 +1,4 @@
-package com.company.chamberly
+package com.company.chamberly.utils
 
 import android.os.Bundle
 import com.google.firebase.analytics.FirebaseAnalytics

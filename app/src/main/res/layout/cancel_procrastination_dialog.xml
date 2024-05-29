@@ -33,10 +33,14 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"/>
 
-    <com.google.android.material.progressindicator.CircularProgressIndicator
+    <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/loading_indicator"
-        android:layout_width="30dp"
+        android:layout_width="match_parent"
         android:layout_height="30dp"
+        android:indeterminate="true"
+        app:trackCornerRadius="2dp"
+        app:trackColor="@color/colorPrimary"
+        app:indicatorColor="@color/primary"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/too_many_topics_body"
@@ -56,9 +60,9 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
             android:layout_weight="0.5"
-            android:background="@drawable/rounded_button"
+            android:background="#0000"
             android:text="Confirm"
-            android:textColor="#ffffff"
+            android:textColor="#000"
             android:textSize="16sp"
             style="?android:attr/buttonBarButtonStyle" />
         <Button
@@ -68,7 +72,7 @@
             android:layout_marginHorizontal="10dp"
             android:background="#00000000"
             android:text="Dismiss"
-            android:textColor="#8D8DDD"
+            android:textColor="#F33"
             android:textSize="16sp"
             style="?android:attr/buttonBarButtonStyle" />
     </TableRow>

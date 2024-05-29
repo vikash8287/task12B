@@ -3,7 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:showDividers="none"
     android:divider="@color/black"
@@ -65,8 +64,7 @@
         android:id="@+id/confirm_role_change_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-       >
+        android:orientation="vertical">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -110,6 +108,16 @@
         android:layout_height="wrap_content"
         android:paddingVertical="8dp"
         android:text="Submit Feedback"
+        android:textSize="16sp"
+        android:textColor="#000"/>
+
+    <TextView
+        android:id="@+id/subscribe_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="8dp"
+        android:text="Subscribe"
+        android:visibility="gone"
         android:textSize="16sp"
         android:textColor="#000"/>
 

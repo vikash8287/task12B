@@ -56,6 +56,8 @@
         android:layout_height="wrap_content"
         android:layoutDirection="ltr"
         android:layout_marginTop="20dp"
+        android:divider="@color/black"
+        android:showDividers="middle"
         app:layout_constraintTop_toBottomOf="@id/content_layout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -64,9 +66,9 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
             android:layout_weight="0.5"
-            android:background="@drawable/rounded_button"
+            android:background="#0000"
             android:text="Submit"
-            android:textColor="#ffffff"
+            android:textColor="#00aa82"
             android:textSize="16sp"
             style="?android:attr/buttonBarButtonStyle" />
         <Button
@@ -74,9 +76,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
             android:layout_marginHorizontal="10dp"
-            android:background="#00000000"
+            android:background="#0000"
             android:text="Dismiss"
-            android:textColor="#8D8DDD"
+            android:textColor="#ff6066"
             android:textSize="16sp"
             style="?android:attr/buttonBarButtonStyle" />
     </TableRow>
