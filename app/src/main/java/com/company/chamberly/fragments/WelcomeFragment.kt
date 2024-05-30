@@ -57,6 +57,16 @@ class WelcomeFragment : Fragment() {
             roleMessage.text =
                 if (it == Role.VENTOR) { getString(R.string.ventor_details) }
                 else { getString(R.string.listener_details) }
+
+            roleVentorButton.setTextColor(
+                if(it == Role.VENTOR) { resources.getColor(R.color.black) }
+                else { resources.getColor(R.color.white)}
+            )
+
+            roleListenerButton.setTextColor(
+                if(it == Role.LISTENER) { resources.getColor(R.color.black) }
+                else { resources.getColor(R.color.white)}
+            )
         }
 
         createAccountButton.setOnClickListener {

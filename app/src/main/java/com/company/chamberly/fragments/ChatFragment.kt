@@ -35,6 +35,7 @@ import com.company.chamberly.models.toMap
 import com.company.chamberly.viewmodels.ChamberViewModel
 import com.company.chamberly.viewmodels.UserViewModel
 import com.google.firebase.firestore.FieldValue
+import java.lang.Integer.min
 
 class ChatFragment : Fragment() {
 
@@ -251,11 +252,6 @@ class ChatFragment : Fragment() {
             reactionEmojisView.addView(emojiButton)
         }
 
-        val window = dialog.window
-        val layoutParams = WindowManager.LayoutParams()
-        layoutParams.copyFrom(window?.attributes)
-        window?.attributes = layoutParams
-
         copyButton.setOnClickListener {
             copyMessage(message.message_content)
             dialog.dismiss()
@@ -283,8 +279,14 @@ class ChatFragment : Fragment() {
 
         blockButton.setOnClickListener {
             dialog.setContentView(R.layout.confirm_block)
-
         }
+
+//        val window = dialog.window
+//        val layoutParams = WindowManager.LayoutParams()
+//        layoutParams.copyFrom(window?.attributes)
+//        layoutParams.width = min(layoutParams.width, 400)
+//        layoutParams.gravity = Gravity.CENTER
+//        window?.attributes = layoutParams
 
         dialog.show()
     }

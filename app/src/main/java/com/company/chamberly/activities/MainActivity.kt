@@ -134,6 +134,23 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        userViewModel.pendingTopics.observe(this) {
+            if (it != null && it.size > 0) {
+                for (topic in it) {
+                    if(topic.isNotBlank()) {
+                        firestore
+                            .collection("TopicIds")
+                            .document(topic)
+                            .get()
+                            .addOnSuccessListener {topicDocSnapshot ->
+                                userViewModel.pendingTopicTitles[topic] =
+                                    topicDocSnapshot["TopicTitle"] as String? ?: ""
+                            }
+                    }
+                }
+            }
+        }
+
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val areNotificationsEnabled = notificationManager.areNotificationsEnabled()

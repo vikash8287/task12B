@@ -17,7 +17,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/create_a_display_name"
-            android:textAppearance="@style/create_a_display_name"
+            android:textColor="#2E2E5B"
             android:textSize="29sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.6"

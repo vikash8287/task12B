@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/white">
+
+        <LinearLayout
+            android:paddingHorizontal="10dp"
+            android:id="@+id/profileSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
+            android:orientation="horizontal"
+            android:paddingTop="8dp">
+
+            <ImageButton
+                android:id="@+id/profilePic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:paddingVertical="2dp"
+                android:paddingHorizontal="6dp"
+                android:contentDescription="@string/chamberly"
+                android:src="@drawable/profile_pic"
+                tools:ignore="TouchTargetSizeCheck" />
+
+            <TextView
+                android:id="@+id/usernameTextView"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:paddingTop="9dp"
+                android:text="@string/username"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="#2E2E5B"
+                android:textSize="21sp" />
+
+            <ImageButton
+                android:id="@+id/btnAddChamber"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_add"
+                android:contentDescription="@string/create_a_chamber" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/home_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:weightSum="2"
+            android:orientation="horizontal">
+            <FrameLayout
+                android:id="@+id/leftFragmentContainer"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/leftNavHostFragment"
+                    android:name="androidx.navigation.fragment.NavHostFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:navGraph="@navigation/large_nav_graph"/>
+            </FrameLayout>
+
+            <androidx.legacy.widget.Space
+                android:layout_width="16dp"
+                android:layout_height="0dp" />
+            <FrameLayout
+                android:id="@id/rightNavHostFragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/rightNavHostFragment"
+                    android:name="androidx.navigation.fragment.NavHostFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:navGraph="@navigation/large_nav_graph"/>
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

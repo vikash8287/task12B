@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -19,6 +20,8 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
@@ -28,11 +31,16 @@ import com.company.chamberly.viewmodels.UserViewModel
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import java.lang.Integer.min
 
 class MainFragment : Fragment() {
 
     private val userViewModel: UserViewModel by activityViewModels()
     private val firestore = Firebase.firestore
+
+    private var homeButton: ImageButton? = null
+    private var myChambersButton: ImageButton? = null
+    private var addChamberButton: ImageButton? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,70 +48,103 @@ class MainFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_main, container, false)
-        val homeNavHostFragment = childFragmentManager.findFragmentById(R.id.homeNavHostFragment) as NavHostFragment
-        val homeNavController = homeNavHostFragment.navController
-        val myChambersButton = view.findViewById<ImageButton>(R.id.myChambersButton)
-        val homeButton = view.findViewById<ImageButton>(R.id.homeButton)
+        val homeNavHostFragment =
+            childFragmentManager.findFragmentById(R.id.homeNavHostFragment) as? NavHostFragment
+        val leftNavHostFragment =
+            childFragmentManager.findFragmentById(R.id.leftNavHostFragment) as? NavHostFragment
+        val rightNavHostFragment =
+            childFragmentManager.findFragmentById(R.id.rightNavHostFragment) as? NavHostFragment
         val usernameTextView = view.findViewById<TextView>(R.id.usernameTextView)
         val profilePictureButton = view.findViewById<ImageButton>(R.id.profilePic)
-        val addChamberButton = view.findViewById<ImageButton>(R.id.btnAddChamber)
+
+        if(homeNavHostFragment == null) {
+            //Currently in large screen layout
+            setupLargeScreenNavigation(leftNavHostFragment!!, rightNavHostFragment!!)
+        } else {
+            //Currently in small screen layout
+            myChambersButton = view.findViewById(R.id.myChambersButton)
+            homeButton = view.findViewById(R.id.homeButton)
+            addChamberButton = view.findViewById(R.id.btnAddChamber)
+            setupSmallScreenNavigation(homeNavHostFragment)
+        }
 
         usernameTextView.text = userViewModel.userState.value?.displayName ?: "Anonymous"
+        profilePictureButton.setOnClickListener {
+            showProfileOptionsPopup(it)
+        }
+        return view
+    }
 
+    private fun setupSmallScreenNavigation(homeNavHostFragment: NavHostFragment) {
+        val homeNavController = homeNavHostFragment.navController
         homeNavController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.home_fragment -> {
-                    homeButton.isEnabled = false
-                    myChambersButton.isEnabled = true
-                    myChambersButton.setImageResource(R.drawable.mychambers)
-                    homeButton.setImageResource(R.drawable.home)
-                    addChamberButton.visibility = View.GONE
+                    homeButton?.isEnabled = false
+                    myChambersButton?.isEnabled = true
+                    myChambersButton?.setImageResource(R.drawable.mychambers)
+                    homeButton?.setImageResource(R.drawable.home)
+                    addChamberButton?.visibility = View.GONE
                 }
                 R.id.active_chambers_fragment -> {
-                    homeButton.isEnabled = true
-                    myChambersButton.isEnabled = false
-                    myChambersButton.setImageResource(R.drawable.mychambersactive)
-                    homeButton.setImageResource(R.drawable.homeinactive)
-                    addChamberButton.visibility = View.VISIBLE
+                    homeButton?.isEnabled = true
+                    myChambersButton?.isEnabled = false
+                    myChambersButton?.setImageResource(R.drawable.mychambersactive)
+                    homeButton?.setImageResource(R.drawable.homeinactive)
+                    addChamberButton?.visibility = View.VISIBLE
                 }
             }
+        }
+        homeButton?.setOnClickListener {
+            homeNavController.popBackStack(R.id.home_fragment, inclusive = false)
+        }
 
-            homeButton.setOnClickListener {
-                homeNavController.popBackStack(R.id.home_fragment, inclusive = false)
-            }
-
-            myChambersButton.setOnClickListener {
-                homeNavController.navigate(
-                    R.id.active_chambers_fragment,
+        myChambersButton?.setOnClickListener {
+            homeNavController.navigate(
+                R.id.active_chambers_fragment,
+                null,
+                navOptions = navOptions {
+                    anim {
+                        enter = R.anim.slide_in
+                        exit = R.anim.slide_out
+                    }
+                }
+            )
+        }
+        addChamberButton?.setOnClickListener {
+            homeNavController
+                .navigate(
+                    R.id.topic_create_fragment,
                     null,
-                    navOptions = navOptions {
+                    navOptions {
                         anim {
                             enter = R.anim.slide_in
                             exit = R.anim.slide_out
                         }
                     }
                 )
-            }
-
-            profilePictureButton.setOnClickListener {
-                showProfileOptionsPopup(it)
-            }
-            addChamberButton.setOnClickListener {
-                requireParentFragment()
-                    .findNavController()
-                    .navigate(
-                        R.id.topic_create_fragment,
-                        null,
-                        navOptions {
-                            anim {
-                                enter = R.anim.slide_in
-                                exit = R.anim.slide_out
-                            }
-                        }
-                    )
-            }
         }
-        return view
+    }
+
+    private fun setupLargeScreenNavigation(
+        leftNavHostFragment: NavHostFragment,
+        rightNavHostFragment: NavHostFragment
+    ) {
+        val leftNavController = leftNavHostFragment.navController
+        val rightNavController = rightNavHostFragment.navController
+
+        rightNavController
+            .navigate(
+                R.id.activeChambersFragment,
+                null,
+                navOptions {
+                    apply {
+                        popUpTo(R.id.home_fragment) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
     }
 
     private fun showProfileOptionsPopup(buttonView: View) {
@@ -165,8 +206,10 @@ class MainFragment : Fragment() {
 
         val params = WindowManager.LayoutParams()
         params.copyFrom(profileOptionsPopUp.window?.attributes)
-        params.gravity = Gravity.TOP
+        params.gravity = Gravity.TOP or Gravity.START
+        params.x = (buttonView.x + (buttonView.width / 2.0)).toInt()
         params.y = buttonView.bottom
+        params.width = min(params.width, 400)
         profileOptionsPopUp.window?.attributes = params
         profileOptionsPopUp.show()
     }

@@ -56,6 +56,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         MutableLiveData(mutableListOf())
     val pendingTopics: LiveData<MutableList<String>> = _pendingTopics
 
+    // This map will contain the topic title corresponding to the topic ID
+    val pendingTopicTitles = mutableMapOf<String, String>()
+
 
     private val auth = Firebase.auth
     private val sharedPreferences: SharedPreferences = application.getSharedPreferences("cache", Context.MODE_PRIVATE)
@@ -125,7 +128,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         _pendingTopics.value?.removeAll(listOf(""))
 //        attachTopicRequestListeners()
     }
-
     fun registerUser(
         displayName: String,
         role: Role,

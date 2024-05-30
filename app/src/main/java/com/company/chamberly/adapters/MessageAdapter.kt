@@ -159,7 +159,11 @@ class MessageAdapter(private val uid: String) :
         val message = messages[position]
         return if (message.UID == uid) {
             VIEW_TYPE_ME
-        } else if (message.message_type == "custom" || message.message_type == "system" || message.message_type == "photo") {
+        } else if (
+            message.message_type == "custom" ||
+            message.message_type == "system" ||
+            message.message_type == "photo"
+        ) {
             VIEW_TYPE_SYSTEM
         } else {
             VIEW_TYPE_OTHER

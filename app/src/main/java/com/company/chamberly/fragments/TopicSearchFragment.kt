@@ -1,7 +1,6 @@
 package com.company.chamberly.fragments
 
 import android.app.Dialog
-import android.content.res.Resources.Theme
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -16,13 +15,16 @@ import android.widget.TextView
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
+import com.company.chamberly.R.*
+import com.company.chamberly.adapters.PendingTopicsListAdapter
 import com.company.chamberly.adapters.TopicAdapter
 import com.company.chamberly.models.Topic
-import com.company.chamberly.models.toMap
 import com.company.chamberly.utils.Role
 import com.company.chamberly.viewmodels.UserViewModel
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
@@ -45,13 +47,14 @@ class TopicSearchFragment : Fragment(), KolodaListener {
 
     private lateinit var kolodaView: Koloda
     private lateinit var kolodaAdapter: TopicAdapter
+    private var pendingTopicsRecyclerView: RecyclerView? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        val view = inflater.inflate(R.layout.fragment_topic_search, container, false)
+        val view = inflater.inflate(layout.fragment_topic_search, container, false)
         roleField =
             if(userViewModel.userState.value!!.role == Role.LISTENER) "lflWeight"
             else "lfvWeight"
@@ -61,7 +64,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         val backButton = view.findViewById<ImageButton>(R.id.backButton)
         val buttonsView = view.findViewById<LinearLayout>(R.id.buttonsLayout)
         val emptyStateView = view.findViewById<RelativeLayout>(R.id.emptyStateView)
-
+        pendingTopicsRecyclerView = view.findViewById(R.id.pendingTopicsRecyclerView)
         kolodaView.kolodaListener = this
 
         kolodaAdapter = TopicAdapter()
@@ -73,6 +76,27 @@ class TopicSearchFragment : Fragment(), KolodaListener {
             kolodaView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
             buttonsView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
             emptyStateView.visibility = if(kolodaAdapter.count == 0) View.VISIBLE else View.GONE
+        }
+        val layoutManager = LinearLayoutManager(requireContext())
+
+        if (pendingTopicsRecyclerView != null) {
+            // Initialize recycler view to show pending topics
+            val pendingTopicsListAdapter = PendingTopicsListAdapter()
+            pendingTopicsRecyclerView!!.adapter = pendingTopicsListAdapter
+            for (topic in userViewModel.pendingTopics.value!!) {
+                if (topic.isNotBlank()) {
+                    pendingTopicsListAdapter
+                        .addItem(userViewModel.pendingTopicTitles[topic] ?: "")
+                }
+                Log.d("TOPICS", pendingTopicsListAdapter.itemCount.toString())
+            }
+            pendingTopicsRecyclerView!!.layoutManager = layoutManager
+            val dividerItemDecoration =
+                DividerItemDecoration(
+                    requireContext(),
+                    layoutManager.orientation
+                )
+            pendingTopicsRecyclerView!!.addItemDecoration(dividerItemDecoration)
         }
 
         dismissButton.setOnClickListener { kolodaView.onClickLeft() }
@@ -177,9 +201,9 @@ class TopicSearchFragment : Fragment(), KolodaListener {
     }
 
     private fun showTooManyTopicsDialog() {
-        val dialog = Dialog(requireContext(), R.style.Dialog)
+        val dialog = Dialog(requireContext(), style.Dialog)
 
-        dialog.setContentView(R.layout.cancel_procrastination_dialog)
+        dialog.setContentView(layout.cancel_procrastination_dialog)
         dialog.setCancelable(false)
         dialog.setCanceledOnTouchOutside(false)
         dialog.show()
@@ -199,10 +223,10 @@ class TopicSearchFragment : Fragment(), KolodaListener {
                 callback = {
                     confirmButton.visibility = View.GONE
                     dismissButton.isEnabled = true
-                    dismissButton.setTextColor(resources.getColor(R.color.green))
+                    dismissButton.setTextColor(resources.getColor(color.green))
                     loadingIndicator.visibility = View.GONE
-                    heading.text = getString(R.string.procrastion_cancel_success_title)
-                    message.text = getString(R.string.procrastination_cancel_success_message)
+                    heading.text = getString(string.procrastination_cancel_success_title)
+                    message.text = getString(string.procrastination_cancel_success_message)
                     dismissButton.setOnClickListener {
                         dialog.dismiss()
                     }

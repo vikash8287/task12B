@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:showDividers="none"
-    android:divider="@color/black"
     android:paddingHorizontal="32dp"
     android:paddingVertical="8dp"
     android:background="@drawable/popup_bottom_left">
@@ -29,6 +28,7 @@
             android:layout_width="0dp"
             android:layout_weight="2"
             android:layout_height="wrap_content"
+            android:minWidth="300dp"
             android:background="@drawable/role_selector_track"
             android:gravity="center"
             android:padding="4dp"
@@ -62,11 +62,12 @@
 
     <LinearLayout
         android:id="@+id/confirm_role_change_view"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical">
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
+            android:maxWidth="300dp"
             android:layout_height="wrap_content"
             android:text="@string/confirm_role_change"
             android:textSize="16sp"
@@ -74,10 +75,10 @@
 
         <TextView
             android:id="@+id/confirm_role_change_button"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Confirm"
-            android:gravity="end"
+            android:layout_gravity="end"
             android:textSize="16sp"
             android:textStyle="bold"
             android:paddingHorizontal="8dp"

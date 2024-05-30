@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/Dialog"
     android:padding = "18dp"
-    android:background="@drawable/popup_bottom_left">
+    android:background="@drawable/popup_bottom_left"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/feedback_dialog_title"
@@ -20,47 +21,35 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"/>
-    <LinearLayout
-        android:id="@+id/content_layout"
+
+    <EditText
+        android:id="@+id/feedback_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/feedback_dialog_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:orientation="vertical">
-        <EditText
-            android:id="@+id/feedback_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:maxLines="5"
-            android:background="@drawable/rounded_edittext"
-            android:hint="Enter your suggestions here"
-            android:padding="12dp"
-            android:textColorHint="#B0B0CA"
-            android:textColor="#000"
-            android:textSize="18sp"/>
-        <TextView
-            android:id="@+id/feedback_success_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/feedback_success_string"
-            android:textColor="#000"
-            android:layout_marginTop="16dp"
-            android:visibility="gone"/>
-    </LinearLayout>
+        android:layout_marginTop="16dp"
+        android:maxLines="5"
+        android:background="@drawable/rounded_edittext"
+        android:hint="Enter your suggestions here"
+        android:padding="12dp"
+        android:textColorHint="#B0B0CA"
+        android:textColor="#000"
+        android:textSize="18sp"/>
+    <TextView
+        android:id="@+id/feedback_success_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/feedback_success_string"
+        android:textColor="#000"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"/>
 
     <TableRow
         android:id="@+id/buttons_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layoutDirection="ltr"
         android:layout_marginTop="20dp"
         android:divider="@color/black"
-        android:showDividers="middle"
-        app:layout_constraintTop_toBottomOf="@id/content_layout"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:showDividers="middle">
         <Button
             android:id="@+id/submitFeedbackButton"
             android:layout_height="wrap_content"
@@ -69,8 +58,7 @@
             android:background="#0000"
             android:text="Submit"
             android:textColor="#00aa82"
-            android:textSize="16sp"
-            style="?android:attr/buttonBarButtonStyle" />
+            android:textSize="16sp"/>
         <Button
             android:id="@+id/dismissFeedbackDialogButton"
             android:layout_height="wrap_content"
@@ -79,7 +67,6 @@
             android:background="#0000"
             android:text="Dismiss"
             android:textColor="#ff6066"
-            android:textSize="16sp"
-            style="?android:attr/buttonBarButtonStyle" />
+            android:textSize="16sp"/>
     </TableRow>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
