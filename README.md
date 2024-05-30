@@ -11,11 +11,15 @@ cd ChamberlyAndroid
 ```
 
 - Create a new project in Firebase.
-- Enable cloud firestore, realtime database, authentication (anonymous), firebase analytics and crashlytics for the project through firebase console.
+- Enable cloud firestore, realtime database, authentication (anonymous), firebase analytics, firebase cloud messaging and crashlytics for the project through firebase console.
 - Download google-services.json
 - Place the google-services.json under `app` folder
 - Open Android Studio
+- In the Constants.kt file inside of utils package, provide the SERVER_KEY from your firebase console, modify any other constants as needed
 - Run Code in Emulator
+
+To use Facebook Ads Manager (optional):
+ - After setting up Ads Manager, modify the strings (facebook_app_id & facebook_client_token) in the strings.xml file
 
 ## Generating APK for sharing
 
