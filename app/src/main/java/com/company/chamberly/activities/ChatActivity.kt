@@ -211,9 +211,6 @@ class ChatActivity : ComponentActivity(){
                     if (message != null) {
                         if (message.message_type == "custom" && message.message_content == "gameCard") {
                             message.message_content = message.game_content
-                        } else if (message.message_type == "photo") {
-                            // TODO : remove this line
-                        //    message.message_content = "Images are not available to display on Android"
                         }
                         messageAdapter.addMessage(message)
                         recyclerView.smoothScrollToPosition(messageAdapter.itemCount - 1)
@@ -229,8 +226,6 @@ class ChatActivity : ComponentActivity(){
                     if (message != null) {
                         if (message.message_type == "custom" && message.message_content == "gameCard") {
                             message.message_content = message.game_content
-                        } else if (message.message_type == "photo") {
-                            message.message_content = "Images are not available to display on Android"
                         }
                         messageAdapter.messageChanged(message, message.message_id)
                         recyclerView.smoothScrollBy(0, 20)
