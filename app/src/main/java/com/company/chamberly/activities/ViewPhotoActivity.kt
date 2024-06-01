@@ -2,6 +2,7 @@ package com.company.chamberly.activities
 
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -18,7 +19,7 @@ class ViewPhotoActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_view_photo)
 val imagePreview: ImageView = findViewById<ImageView>(R.id.image_preview)
- val backButton:Button  = findViewById<Button>(R.id.back_button)
+ val backButton:ImageButton  = findViewById<ImageButton>(R.id.back_button)
 val image_url:String = intent.getStringExtra("image_url")?:""
         // TODO : use cache to reduce the request send
         if(image_url.equals("")){
