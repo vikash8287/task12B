@@ -3,18 +3,24 @@ package com.company.chamberly.adapters
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.Target
 import com.company.chamberly.models.Message
 import com.company.chamberly.R
 import com.company.chamberly.activities.ViewPhotoActivity
@@ -63,9 +69,13 @@ class MessageAdapter(private val uid: String) :
     }
 inner class MessagePhotoViewHolderSystemMe(itemView: View):RecyclerView.ViewHolder(itemView){
     val imageView:ImageView = itemView.findViewById(R.id.image_preview)
- }
+    val progressView :ProgressBar = itemView.findViewById(R.id.progressBar)
+
+}
     inner class MessagePhotoViewHolderSystemOther(itemView: View):RecyclerView.ViewHolder(itemView){
         val imageView:ImageView = itemView.findViewById(R.id.image_preview)
+      val progressView :ProgressBar = itemView.findViewById(R.id.progressBar)
+
 
     }
     inner class MessageViewHolderSystem(itemView: View): RecyclerView.ViewHolder(itemView) {
@@ -138,13 +148,45 @@ inner class MessagePhotoViewHolderSystemMe(itemView: View):RecyclerView.ViewHold
                 )
 val image_view = holder.imageView
                 val Context = holder.imageView.context
+                val progressBar = holder.progressView
+                progressBar.visibility = View.VISIBLE
+                image_view.isClickable =false
+
 // Todo: Add Exception
                 Glide
                     .with(Context)
-                    .load(message.message_content)
-                    .diskCacheStrategy(DiskCacheStrategy.DATA)
 
+                    .load(message.message_content)
+                    .listener(
+                        object:RequestListener<Drawable>{
+                            override fun onLoadFailed(
+                                e: GlideException?,
+                                model: Any?,
+                                target: Target<Drawable>,
+                                isFirstResource: Boolean
+                            ): Boolean {
+                                image_view.isClickable =false
+                                return false
+                            }
+
+                            override fun onResourceReady(
+                                resource: Drawable,
+                                model: Any,
+                                target: Target<Drawable>?,
+                                dataSource: DataSource,
+                                isFirstResource: Boolean
+                            ): Boolean {
+                                progressBar.visibility = View.GONE
+                                image_view.isClickable =true
+
+                                return  false
+                            }
+
+                        }
+                    )
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
                     .apply(RequestOptions.bitmapTransform(multi))
+
                     .into(image_view)
                 image_view.setOnClickListener{
 val intent  = Intent(Context,ViewPhotoActivity::class.java)
@@ -160,10 +202,41 @@ val intent  = Intent(Context,ViewPhotoActivity::class.java)
                 )
                 val image_view = holder.imageView
                 val Context = holder.imageView.context
+                val progressBar = holder.progressView
+                progressBar.visibility = View.VISIBLE
+                image_view.isClickable =false
+
 // Todo: Add Exception
                 Glide
                     .with(Context)
+
                     .load(message.message_content)
+                    .listener(
+                        object:RequestListener<Drawable>{
+                            override fun onLoadFailed(
+                                e: GlideException?,
+                                model: Any?,
+                                target: Target<Drawable>,
+                                isFirstResource: Boolean
+                            ): Boolean {
+image_view.isClickable = false
+                                return false
+                            }
+
+                            override fun onResourceReady(
+                                resource: Drawable,
+                                model: Any,
+                                target: Target<Drawable>?,
+                                dataSource: DataSource,
+                                isFirstResource: Boolean
+                            ): Boolean {
+                                progressBar.visibility = View.GONE
+                                image_view.isClickable =true
+                                return  false
+                            }
+
+                        }
+                    )
                     .diskCacheStrategy(DiskCacheStrategy.DATA)
                     .apply(RequestOptions.bitmapTransform(multi))
                     .into(image_view)

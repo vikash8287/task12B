@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
 import id.zelory.compressor.Compressor
+import id.zelory.compressor.constraint.Compression
 import id.zelory.compressor.constraint.quality
 import id.zelory.compressor.constraint.resolution
 import  id.zelory.compressor.constraint.size
@@ -15,12 +16,10 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
-suspend fun compressImageFile(context: Context,imageFileUri:Uri ):File{
+suspend fun compressImageFile(context: Context,imageFileUri:Uri,filter:(Compression)->Unit ):File{
     val tempImageFile = getFilePathFromUri(uri = imageFileUri, context = context)
     val compressedImageFile = Compressor.compress(context,File(tempImageFile?.path!!) ) {
-        resolution(1280, 720)
-        quality(80)
-        size(400000)
+     filter(this)
 
 
     }

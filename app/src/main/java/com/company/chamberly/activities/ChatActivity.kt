@@ -57,6 +57,9 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.google.gson.Gson
+import id.zelory.compressor.constraint.quality
+import id.zelory.compressor.constraint.resolution
+import id.zelory.compressor.constraint.size
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -183,8 +186,6 @@ class ChatActivity : ComponentActivity(){
                                 if (message.message_type == "custom" && message.message_content == "gameCard") {
                                     message.message_content = message.game_content
                                 } else if (message.message_type == "photo") {
-                                    // TODO: FROM remove this message
-                             //       message.message_content = "Images are not available to display on Android"
                                 }
                                 messages.add(message)
                                 lastMsg = message.message_content
@@ -219,8 +220,13 @@ class ChatActivity : ComponentActivity(){
                     if (message != null) {
                         if (message.message_type == "custom" && message.message_content == "gameCard") {
                             message.message_content = message.game_content
+                        }else if (message.message_type=="photo"){
+                            Log.d("added",message.message_content)
+
                         }
-                        messageAdapter.addMessage(message)
+                            messageAdapter.addMessage(message)
+
+
                         recyclerView.smoothScrollToPosition(messageAdapter.itemCount - 1)
                     }
                 } catch(e: Exception) {
@@ -235,6 +241,7 @@ class ChatActivity : ComponentActivity(){
                         if (message.message_type == "custom" && message.message_content == "gameCard") {
                             message.message_content = message.game_content
                         }
+                        Log.d("update",message.message_content)
                         messageAdapter.messageChanged(message, message.message_id)
                         recyclerView.smoothScrollBy(0, 20)
                     }
@@ -338,7 +345,7 @@ class ChatActivity : ComponentActivity(){
         //Uploading Image to Firebase
         val addImageButton = findViewById<Button>(R.id.buttonAddImage)
         val senderName = sharedPreferences.getString("displayName", "NONE")
-        val postImage =PostImage(activity= this,storage = firebaseStorage,auth = auth, database = database,groupChatId = groupChatId,senderName=senderName)
+        val postImage =PostImage(activity= this,storage = firebaseStorage,auth = auth, database = database,groupChatId = groupChatId,senderName=senderName,messageAdapter = messageAdapter, recyclerView = recyclerView,messages = messages)
         addImageButton.setOnClickListener {
 
 
@@ -968,7 +975,10 @@ class PostImage(
     val database: FirebaseDatabase,
     val groupChatId: String,
 
-   val senderName: String?
+    val senderName: String?,
+    val recyclerView: RecyclerView,
+    val messageAdapter: MessageAdapter,
+  val  messages: MutableList<Message>
 ) {
     lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
 
@@ -986,9 +996,13 @@ class PostImage(
 
                     showDialogBox(true, imageUri = uri) {
                         if (it) {
+//TODO: add message over here
+                            val todayDateInCest = getCurrentDateInCestTimeZone()
+                          val messageId =   addImageInfoToRealtimeDatabase(todayDateInCest)
+
 
                             CoroutineScope(Dispatchers.Default).launch {
-                                compressImageAndUploadItToStorage(uri = uri)
+                                compressImageAndUploadItToStorage(uri = uri,messageId)
                             }
                         } else {
                             Log.d("test", "false")
@@ -1002,24 +1016,28 @@ class PostImage(
             }
     }
 
-    private suspend fun compressImageAndUploadItToStorage(uri: Uri) {
+    private suspend fun compressImageAndUploadItToStorage(uri: Uri, messageId: String) {
         val fileDescriptor: AssetFileDescriptor =
             activity.applicationContext.contentResolver.openAssetFileDescriptor(uri, "r")!!
         val fileSize = fileDescriptor.getLength()
         fileDescriptor.close()
-        if(fileSize>400000){
+        if (fileSize > 400000) {
             val tempImageFile = CoroutineScope(Dispatchers.Default).async {
-                compressImageFile(context = activity,uri)
+                compressImageFile(context = activity, uri) {
+                    it.resolution(1280, 720)
+                    it.quality(80)
+                    it.size(400000)
+                }
             }
-            postImageToStorage(tempImageFile.await().toUri())
-        }else{
-            postImageToStorage(uri)
+            postImageToStorage(tempImageFile.await().toUri(),messageId)
+        } else {
+            postImageToStorage(uri, messageId)
         }
-        Log.d("size",fileSize.toString())
+        Log.d("size", fileSize.toString())
 
     }
 
-    private fun GetCurrentDateInCestTimeZone(): String {
+    private fun getCurrentDateInCestTimeZone(): String {
         val now = Clock.System.now()
         val timeZone = TimeZone.of("Europe/Berlin")
         val now_in_cest = now.toLocalDateTime(timeZone)
@@ -1035,13 +1053,13 @@ class PostImage(
         return formattedDateTime
     }
 
-    private fun postImageToStorage(uri: Uri) {
+    private fun postImageToStorage(uri: Uri, messageId: String) {
         val storageRef: StorageReference = storage.reference
         val uid = auth.currentUser?.uid
         // in european time zone
 
 
-        val todayDateInCest = GetCurrentDateInCestTimeZone()
+        val todayDateInCest = getCurrentDateInCestTimeZone()
         val filename = "photo_message_" + uid + "_" + todayDateInCest + "_png"
         val path = storageRef.child("message_image/${filename}")
 
@@ -1050,7 +1068,8 @@ class PostImage(
         uploadTask.addOnFailureListener { error(it) }.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 path.downloadUrl.addOnSuccessListener {
-                    addImageInfoToRealtimeDatabase(getUrl(it), todayDateInCest)
+
+                    updateImageUrl(getUrl(it), messageId)
 
                 }.addOnFailureListener {
                     Log.d("FirebaseStorageError", it.message.toString())
@@ -1063,7 +1082,7 @@ class PostImage(
 
     }
 
-    private fun addImageInfoToRealtimeDatabase(imageUrl: String, todayDateInCest: String) {
+    private fun addImageInfoToRealtimeDatabase(todayDateInCest: String):String {
 
 
         val ref = database.getReference(groupChatId).child("messages")
@@ -1071,7 +1090,7 @@ class PostImage(
         val messageId = key!!
         val data = Message(
             UID = auth.currentUser?.uid!!,
-            message_content = imageUrl,
+            message_content = "",
             message_date = todayDateInCest,
             message_id = messageId,
             message_type = "photo",
@@ -1080,10 +1099,20 @@ class PostImage(
         ref.child(messageId).setValue(data.toMap())
             .addOnSuccessListener {
                 Log.i("beforeSend", "success")
-
             }
+        return key
+    }
+private fun updateImageUrl(imageUrl:String,messageId:String){
+    val ref = database.getReference(groupChatId).child("messages").child(messageId).child("message_content")
+    ref.setValue(imageUrl).addOnSuccessListener {
+        Log.d("realtimeDatabaseImageUrlUpdate","Success")
+
+    }.addOnFailureListener {
+        Log.d("realtimeDatabaseImageUrlUpdate",it.message.toString())
+
     }
 
+}
     fun LaunchPhotoPicker() {
         pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
@@ -1104,17 +1133,35 @@ class PostImage(
         val confirm_button = dialog.findViewById<Button>(R.id.confirm_button)
         val cancel_button = dialog.findViewById<Button>(R.id.cancel_button)
         val previewImage = dialog.findViewById<ImageView>(R.id.previewImage)
-        previewImage.setImageURI(imageUri)
-        confirm_button.setOnClickListener {
+            confirm_button.setOnClickListener {
+                result(true)
+                dialog.dismiss()
+            }
+            cancel_button.setOnClickListener {
+                result(false)
+                dialog.dismiss()
+            }
+        CoroutineScope(Dispatchers.Main).launch {
+          compressThumbnail(imageUri,previewImage,dialog)
+            }
 
-            result(true)
-            dialog.dismiss()
         }
-        cancel_button.setOnClickListener {
-            result(false)
-            dialog.dismiss()
-        }
-        dialog.show()
 
+    private suspend fun compressThumbnail(uri: Uri, previewImage: ImageView, dialog: Dialog) {
+
+
+        val tempImageFile = CoroutineScope(Dispatchers.Default).async {
+            compressImageFile(context = activity, uri) {
+                it.resolution(100, 100)
+                it.quality(30)
+                it.size(40000)
+            }
+        }
+        CoroutineScope(Dispatchers.Main).launch{
+
+previewImage.setImageURI(Uri.fromFile(tempImageFile.await()))
+            dialog.show()
+
+        }
     }
-}
+    }
