@@ -155,7 +155,6 @@ val image_view = holder.imageView
 // Todo: Add Exception
                 Glide
                     .with(Context)
-
                     .load(message.message_content)
                     .listener(
                         object:RequestListener<Drawable>{
