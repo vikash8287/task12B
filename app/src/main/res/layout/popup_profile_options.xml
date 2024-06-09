@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:showDividers="none"
+    android:layout_marginEnd="8dp"
     android:paddingHorizontal="32dp"
     android:paddingVertical="8dp"
+    style="@style/Dialog"
     android:background="@drawable/popup_bottom_left">
 
     <LinearLayout
@@ -62,12 +64,11 @@
 
     <LinearLayout
         android:id="@+id/confirm_role_change_view"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
         <TextView
             android:layout_width="wrap_content"
-            android:maxWidth="300dp"
             android:layout_height="wrap_content"
             android:text="@string/confirm_role_change"
             android:textSize="16sp"
@@ -118,7 +119,6 @@
         android:layout_height="wrap_content"
         android:paddingVertical="8dp"
         android:text="Subscribe"
-        android:visibility="gone"
         android:textSize="16sp"
         android:textColor="#000"/>
 

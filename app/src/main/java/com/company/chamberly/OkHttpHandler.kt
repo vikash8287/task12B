@@ -34,9 +34,10 @@ internal class OkHttpHandler(private val payload: JSONObject, private val token:
         requestJson.put("data", payload)
         requestJson.put("notification", payload)
         val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), requestJson.toString())
+//        val fm = Firebase
         val request: Request = Request.Builder()
             .url(FCM_SERVER_URL)
-            .addHeader("Authorization", "key=$SERVER_KEY")
+            .addHeader("Authorization", "BEARER $SERVER_KEY")
             .post(requestBody)
             .build()
         return try {

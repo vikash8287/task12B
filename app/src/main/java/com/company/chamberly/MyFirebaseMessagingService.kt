@@ -9,7 +9,7 @@ import android.content.Intent
 import android.media.RingtoneManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.company.chamberly.activities.MainActivity
+import com.company.chamberly.presentation.activities.MainActivity
 import com.company.chamberly.utils.channelID
 import com.company.chamberly.utils.channelName
 import com.google.firebase.auth.FirebaseAuth

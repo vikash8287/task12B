@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.HomeFragment">
+    tools:context=".presentation.fragments.HomeFragment">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -53,7 +53,7 @@
                         android:layout_marginHorizontal="16dp"
                         android:textColor="@color/white"
                         android:text="@string/create_a_chamber"
-                        android:background="@drawable/bg_button_placeholder"/>
+                        android:background="@drawable/rounded_button"/>
 
                     <Button
                         android:id="@+id/createTopicButton"
@@ -63,7 +63,7 @@
                         android:layout_marginHorizontal="16dp"
                         android:textColor="@color/white"
                         android:text="@string/create_a_topic"
-                        android:background="@drawable/bg_button_placeholder" />
+                        android:background="@drawable/rounded_button" />
 
                     <!-- Find a Chamber Button -->
                     <Button
@@ -74,7 +74,7 @@
                         android:layout_marginVertical="8dp"
                         android:layout_marginHorizontal="16dp"
                         android:text="@string/find_a_chamber"
-                        android:background="@drawable/bg_button_placeholder" />
+                        android:background="@drawable/rounded_button" />
 
                     <Button
                         android:id="@+id/findTopicButton"
@@ -84,7 +84,7 @@
                         android:layout_marginVertical="8dp"
                         android:layout_marginHorizontal="16dp"
                         android:text="@string/find_a_topic"
-                        android:background="@drawable/bg_button_placeholder" />
+                        android:background="@drawable/rounded_button" />
                 </LinearLayout>
 
 

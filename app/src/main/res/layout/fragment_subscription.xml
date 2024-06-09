@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".presentation.fragments.SubscriptionFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/chamberlyPlusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textSize="32sp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Vent and share how you feel"
+            android:textColor="#2E2E5B"
+            android:layout_gravity="center"
+            android:textSize="16sp" />
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="325dp"
+            android:background="@drawable/people_background"
+            android:src="@drawable/people" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:translationY="-8dp"
+            android:background="@drawable/background_bottom_sheet">
+            <LinearLayout
+                android:id="@+id/chamberlyBenefits"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+            <LinearLayout
+                android:id="@+id/benefitConditions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+            <TextView
+                android:id="@+id/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginHorizontal="16dp"
+                android:textAlignment="textStart"
+                android:text="1 Only 1 subscriber in a chamber is enough"
+                android:textColor="#B0B0CA"
+                android:textSize="16sp" />
+            <LinearLayout
+                android:id="@+id/subscriptionBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="8dp"
+                android:layout_marginHorizontal="12dp"
+                android:paddingVertical="8dp"
+                android:background="@drawable/rounded_button"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Get 3 days trial"
+                    android:textColor="@color/white"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="then 19kr/month"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/restoreBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="12dp"
+                android:text="Restore Purchase"
+                android:textColor="#B0B0CA"
+                android:textSize="20sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>
