@@ -86,4 +86,6 @@
     <!-- TODO: FACEBOOK EVENT LOGGER STRINGS, ADD CORRECT STRINGS WHEN AVAILABLE-->
     <string name="facebook_app_id">1425594254829689</string>
     <string name="facebook_client_token">0b34138aea49ce7702b8cb662075e391</string>
+    <string name="chamber_info">Chamber info</string>
+    <string name="memberEntry">User 1</string>
 </resources>

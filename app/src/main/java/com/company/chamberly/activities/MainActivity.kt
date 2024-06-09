@@ -1,11 +1,8 @@
 package com.company.chamberly.activities
 
-import android.app.ActionBar.LayoutParams
-import android.app.AlertDialog
 import android.app.Dialog
 import android.app.NotificationManager
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
@@ -15,24 +12,18 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
-import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
-import android.widget.PopupMenu
 import android.widget.RadioButton
 import android.widget.RadioGroup
-import android.widget.TableRow
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.view.ContextThemeWrapper
-
 import androidx.core.app.NotificationManagerCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -55,8 +46,6 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import kotlin.math.log
 
 class MainActivity : ComponentActivity() {
     private val auth = Firebase.auth
@@ -76,6 +65,7 @@ class MainActivity : ComponentActivity() {
         setAutoLogAppEventsEnabled(false)
         firebaseAnalytics = FirebaseAnalytics.getInstance(this)
         sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+
         // TODO: Complete implementation of app events logger (facebook)
         FacebookSdk.setIsDebugEnabled(true);
         FacebookSdk.addLoggingBehavior(LoggingBehavior.APP_EVENTS);
@@ -139,11 +129,11 @@ class MainActivity : ComponentActivity() {
             startActivity(intent)
         }
 
-
         createChamberButton.setOnClickListener {
             val intent = Intent(this, CreateChamberActivity::class.java)
             startActivity(intent)
         }
+
         createTopicButton.setOnClickListener {
             val intent = Intent(this, CreateTopicActivity::class.java)
             startActivity(intent)
@@ -249,8 +239,6 @@ class MainActivity : ComponentActivity() {
         editor.putBoolean("isListener", role == "listener")
         editor.apply()
     }
-
-
 
     private fun deleteAccount() {
         val user = auth.currentUser
@@ -561,6 +549,7 @@ class MainActivity : ComponentActivity() {
             isShowingJoinDialog = true
         }
     }
+
     private fun stopProcrastination() {
         val editor = sharedPreferences.edit()
         val uid = sharedPreferences.getString("uid", auth.currentUser!!.uid)

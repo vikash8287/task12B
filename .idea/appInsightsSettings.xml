@@ -10,9 +10,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.company.chamberly" />
-                  <option name="mobileSdkAppId" value="1:511222289951:android:db08b6c0f14a2fe83ae72a" />
-                  <option name="projectId" value="chamberly-v1ready" />
-                  <option name="projectNumber" value="511222289951" />
+                  <option name="mobileSdkAppId" value="1:676706124041:android:0eb72e818bc941dd6853d8" />
+                  <option name="projectId" value="chamberly-e331c" />
+                  <option name="projectNumber" value="676706124041" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

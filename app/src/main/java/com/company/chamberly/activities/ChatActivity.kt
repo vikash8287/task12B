@@ -29,6 +29,7 @@ import com.company.chamberly.OkHttpHandler
 import com.company.chamberly.R
 import com.company.chamberly.adapters.MessageAdapter
 import com.company.chamberly.logEvent
+import com.company.chamberly.models.ActiveChatInfoModel
 import com.company.chamberly.models.Message
 import com.company.chamberly.models.UserRatingModel
 import com.company.chamberly.models.toMap
@@ -39,6 +40,7 @@ import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflec
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
@@ -46,6 +48,7 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
+import kotlinx.coroutines.tasks.await
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -88,7 +91,6 @@ class ChatActivity : ComponentActivity(){
         "Spamming",
         "Annoying"
     )
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -258,6 +260,22 @@ class ChatActivity : ComponentActivity(){
 
         val titleTextView = findViewById<TextView>(R.id.groupTitle)
         titleTextView.text = groupTitle
+        val chamberMetadata = getChamberMetadata(groupChatId)
+        titleTextView.setOnClickListener() {
+            if(chamberMetadata.isNotEmpty()){
+                val chamberInfo  = ActiveChatInfoModel(
+                    groupChatID =groupChatId,
+                    groupChatName =groupTitle,
+                    activeChatMemberLimit =2,
+                    memberInfoList = chamberMetadata
+                )
+                val intent = Intent(this, ChamberInfoActivity::class.java)
+                intent.putExtra("chamberInfo", chamberInfo)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Chamber info not available", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         val sendButton = findViewById<Button>(R.id.buttonSend)
         sendButton.setOnClickListener {
@@ -371,6 +389,63 @@ class ChatActivity : ComponentActivity(){
     }
 
 
+    private fun getChamberMetadata(id: String): List<List<String>> {
+        val membersRef = FirebaseDatabase.getInstance().getReference().child(id).child("users").child("members")
+        val result : MutableList<MutableList<String>> = mutableListOf()
+
+        membersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                for (memberSnapshot in dataSnapshot.children) {
+                    val memberList : MutableList<String> = mutableListOf()
+                    val memberId = memberSnapshot.key ?: continue
+                    val memberName = memberSnapshot.child("name").value as? String ?: continue
+                    //result[memberName] = memberId
+                    memberList.add(memberId)
+                    memberList.add(memberName)
+                    result.add(memberList)
+                }
+                getChatMemberRatings(result)
+            }
+            override fun onCancelled(databaseError: DatabaseError) {
+                println("Database error: ${databaseError.message}")
+            }
+        })
+        return result
+    }
+
+    private fun getChatMemberRatings(chatMemberList: List<MutableList<String>>) {
+        //for ((name, uid) in chatMemberList) {
+        for (memberInfo in chatMemberList) {
+            firestore.collection("StarReviews")
+                .whereEqualTo("To", memberInfo[0])
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .addOnSuccessListener { documents ->
+                    if (!documents.isEmpty) {
+                        val document = documents.documents[0]
+
+                        val averageStars = document.getDouble("AverageStars")
+                        if (averageStars != null)
+                            memberInfo.add(averageStars.toString())
+                        else
+                            memberInfo.add("0.0")
+
+                        val reviewsCount = document.getLong("ReviewsCount")
+                        if (reviewsCount != null)
+                            memberInfo.add(reviewsCount.toString())
+                        else
+                            memberInfo.add("0")
+
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    // Handle any errors here
+                    println("Error getting documents: $exception")
+                }
+        }
+    }
+
     // copy message
     private fun copyMessage(message: Message) {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -461,7 +536,6 @@ class ChatActivity : ComponentActivity(){
         })
     }
 
-
     private fun addNotificationKey() {
         val userRef = database.reference.child(groupChatId).child("users").child("members").child(auth.currentUser!!.uid)
         userRef.get().addOnSuccessListener {
@@ -483,6 +557,7 @@ class ChatActivity : ComponentActivity(){
             }
         }
     }
+
     private fun sendNotificationToInActiveMembers() {
         val currentNotifKey = sharedPreferences.getString("notificationKey", "") ?: ""
         val notificationPayload = JSONObject()

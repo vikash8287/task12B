@@ -52,6 +52,7 @@ class MessageAdapter(private val uid: String) :
     inner class MessageViewHolderSystem(itemView: View): RecyclerView.ViewHolder(itemView) {
         val message: TextView = itemView.findViewById(R.id.text_system_message)
     }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
