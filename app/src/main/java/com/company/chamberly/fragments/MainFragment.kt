@@ -66,6 +66,7 @@ class MainFragment : Fragment() {
                     homeButton.setImageResource(R.drawable.homeinactive)
                     addChamberButton.visibility = View.VISIBLE
                 }
+
             }
 
             homeButton.setOnClickListener {
@@ -86,7 +87,18 @@ class MainFragment : Fragment() {
             }
 
             profilePictureButton.setOnClickListener {
-                showProfileOptionsPopup(it)
+        //        showProfileOptionsPopup(it)
+                // TODO:change screen
+                requireParentFragment().findNavController().navigate(
+                    R.id.profile_fragment,
+                    null,
+                    navOptions {
+                        anim {
+                            enter = R.anim.slide_in
+                            exit = R.anim.slide_out
+                        }
+                    }
+                )
             }
             addChamberButton.setOnClickListener {
                 requireParentFragment()

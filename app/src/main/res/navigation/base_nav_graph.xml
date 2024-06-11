@@ -28,7 +28,11 @@
             app:destination="@id/chamber_search_fragment"/>
     </fragment>
 
-
+<fragment
+    android:id="@+id/profile_fragment"
+    android:name="com.company.chamberly.fragments.ProfileFragment"
+    android:label="ProfileFragment"
+    />
     <fragment
         android:id="@+id/chat_fragment"
         android:name="com.company.chamberly.fragments.ChatFragment"
