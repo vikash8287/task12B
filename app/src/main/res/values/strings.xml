@@ -92,4 +92,5 @@
     <string name="home">Home</string>
     <string name="procrastination_cancel_success_message">You can now swipe right on new topics</string>
     <string name="procrastion_cancel_success_title">Done!</string>
+    <string name="save">Save</string>
 </resources>
