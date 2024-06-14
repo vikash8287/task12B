@@ -12,6 +12,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.company.chamberly.constant.Gender
 import com.company.chamberly.models.Chamber
 import com.company.chamberly.models.Message
 import com.company.chamberly.models.Topic
@@ -155,6 +156,12 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         putString("uid", user.uid)
                         putString("displayName", displayName)
                         putBoolean("isListener", role == Role.LISTENER)
+                        putInt("age",24)
+                        putInt("gender", Gender.MALE_GENDER_INT)
+                        putInt("firstGender", Gender.MALE_GENDER_INT)
+                        putString("bio","")
+                        putFloat("rating",0f)
+                        putInt("reviewCount",0)
                         apply()
                     }
                     createDisplayNameDocument(
@@ -210,7 +217,12 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             "platform" to "android",
             "isModerator" to false,
             "timestamp" to FieldValue.serverTimestamp(),
-            "selectedRole" to role.toString()
+            "selectedRole" to role.toString(),
+            "age" to 24,
+            "gender" to "male",
+            "firstGender" to "male",
+            "bio" to "",
+            "Coins" to 0,
         )
 
         firestore
