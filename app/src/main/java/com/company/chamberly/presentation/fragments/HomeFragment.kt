@@ -3,11 +3,11 @@ package com.company.chamberly.presentation.fragments
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.company.chamberly.R
@@ -35,6 +35,8 @@ class HomeFragment : Fragment() {
                         anim {
                             enter = R.anim.slide_in
                             exit = R.anim.slide_out
+                            popEnter = R.anim.slide_in
+                            popExit = R.anim.slide_out
                         }
                     }
                 )
@@ -51,6 +53,8 @@ class HomeFragment : Fragment() {
                         anim {
                             enter = R.anim.slide_in
                             exit = R.anim.slide_out
+                            popEnter = R.anim.slide_in
+                            popExit = R.anim.slide_out
                         }
                     }
                 )
@@ -67,6 +71,8 @@ class HomeFragment : Fragment() {
                         anim {
                             enter = R.anim.slide_in
                             exit = R.anim.slide_out
+                            popEnter = R.anim.slide_in
+                            popExit = R.anim.slide_out
                         }
                     }
                 )
@@ -83,6 +89,8 @@ class HomeFragment : Fragment() {
                         anim {
                             enter = R.anim.slide_in
                             exit = R.anim.slide_out
+                            popEnter = R.anim.slide_in
+                            popExit = R.anim.slide_out
                         }
                     }
                 )

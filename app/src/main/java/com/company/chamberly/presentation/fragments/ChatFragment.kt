@@ -29,9 +29,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
-import com.company.chamberly.presentation.adapters.MessageAdapter
 import com.company.chamberly.models.Message
 import com.company.chamberly.models.toMap
+import com.company.chamberly.presentation.adapters.MessageAdapter
 import com.company.chamberly.presentation.viewmodels.ChamberViewModel
 import com.company.chamberly.presentation.viewmodels.UserViewModel
 import com.google.firebase.firestore.FieldValue
@@ -195,13 +195,19 @@ class ChatFragment : Fragment() {
         }
 
         backButton.setOnClickListener {
-            chamberViewModel.clear()
+            chamberViewModel.clear(
+                userViewModel.userState.value!!.UID,
+                userViewModel.userState.value!!.notificationKey
+            )
             userViewModel.closeChamber()
         }
 
         val backPressHandler = object: OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                chamberViewModel.clear()
+                chamberViewModel.clear(
+                    userViewModel.userState.value!!.UID,
+                    userViewModel.userState.value!!.notificationKey
+                )
                 userViewModel.closeChamber()
             }
         }
@@ -343,7 +349,7 @@ class ChatFragment : Fragment() {
 
     private fun showChamberExitDialog() {
         val dialog = Dialog(requireContext(), R.style.Dialog)
-        dialog.setContentView(R.layout.dialog_info)
+        dialog.setContentView(R.layout.dialog_leave_chamber)
         dialog.setCancelable(true)
         dialog.setCanceledOnTouchOutside(true)
 
@@ -528,7 +534,7 @@ class ChatFragment : Fragment() {
     }
 
     private fun askForPlayStoreReview(dialog: Dialog, callback: () -> Unit = {}) {
-        dialog.setContentView(R.layout.dialog_ask_rating_playstore)
+        dialog.setContentView(R.layout.dialog_playstore_rating)
 
         val confirmButton = dialog.findViewById<TextView>(R.id.getPlayStoreReviewButton)
         val dismissButton = dialog.findViewById<TextView>(R.id.dismissDialogButton)

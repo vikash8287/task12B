@@ -3,14 +3,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    style="@style/Dialog"
+    android:layout_marginHorizontal="36dp"
     android:orientation="vertical"
-    android:showDividers="none"
-    android:layout_marginEnd="8dp"
     android:paddingHorizontal="32dp"
     android:paddingVertical="8dp"
-    style="@style/Dialog"
     android:background="@drawable/popup_bottom_left">
-
+<!-- The horizontal margin is a workaround to display the popup properly -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -117,7 +116,8 @@
         android:id="@+id/subscribe_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingVertical="8dp"
+        android:paddingTop="8dp"
+        android:visibility="gone"
         android:text="Subscribe"
         android:textSize="16sp"
         android:textColor="#000"/>

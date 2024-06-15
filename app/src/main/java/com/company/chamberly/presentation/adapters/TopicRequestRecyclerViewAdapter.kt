@@ -45,6 +45,11 @@ class TopicRequestRecyclerViewAdapter(
         val topicId = topic.topicID
         val topicTitle = topic.topicTitle
         val reservedBy = topic.reservedByUID
+
+        holder.loader.visibility = if (topic.loading) View.VISIBLE else View.GONE
+        holder.acceptButton.isEnabled = !topic.loading
+        holder.denyButton.isEnabled = !topic.loading
+
         firestore
             .collection("Accounts")
             .document(reservedBy)
@@ -56,17 +61,15 @@ class TopicRequestRecyclerViewAdapter(
             }
         holder.topicTitle.text = topicTitle
         holder.acceptButton.setOnClickListener {
+            topicsList[position].loading = true
+            notifyItemChanged(position)
             acceptRequest(topicsList[position])
-            holder.loader.visibility = View.VISIBLE
-            holder.acceptButton.isEnabled = false
-            holder.denyButton.isEnabled = false
 
         }
         holder.denyButton.setOnClickListener {
+            topicsList[position].loading = true
+            notifyItemChanged(position)
             denyRequest(topicsList[position])
-            holder.loader.visibility = View.VISIBLE
-            holder.acceptButton.isEnabled = false
-            holder.denyButton.isEnabled = false
         }
     }
 

@@ -30,7 +30,6 @@ import com.company.chamberly.utils.Role
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import java.lang.Integer.min
 
 class MainFragment : Fragment() {
 
@@ -69,10 +68,12 @@ class MainFragment : Fragment() {
 
         userViewModel.userState.observe(viewLifecycleOwner) {
             if(it.entitlement == Entitlement.CHAMBERLY_PLUS) {
-                usernameTextView.text = "${usernameTextView.text} (Plus Member)"
+                // User is subscribed
             }
         }
+
         profilePictureButton.setOnClickListener {
+//            Log.d("POSITION BUTTON", profilePictureButton.)
             showProfileOptionsPopup(it)
         }
         return view
@@ -108,6 +109,8 @@ class MainFragment : Fragment() {
                     anim {
                         enter = R.anim.slide_in
                         exit = R.anim.slide_out
+                        popEnter = R.anim.slide_in
+                        popExit = R.anim.slide_out
                     }
                 }
             )
@@ -206,17 +209,19 @@ class MainFragment : Fragment() {
                         anim {
                             enter = R.anim.slide_in
                             exit = R.anim.slide_out
+                            popEnter = R.anim.slide_in
+                            popExit = R.anim.slide_out
                         }
                     }
                 )
         }
 
+        //TODO: Later, rectify positioning of the popup
         val params = WindowManager.LayoutParams()
         params.copyFrom(profileOptionsPopUp.window?.attributes)
         params.gravity = Gravity.TOP or Gravity.START
-        params.x = (buttonView.x + (buttonView.width / 2.0)).toInt()
+//        params.x = buttonView.width
         params.y = buttonView.bottom
-        params.width = min(params.width, 400)
         profileOptionsPopUp.window?.attributes = params
         profileOptionsPopUp.show()
     }

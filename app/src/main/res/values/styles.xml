@@ -9,9 +9,8 @@
 
     <!-- Dialog style -->
     <style name="Dialog" parent="Theme.AppCompat.Dialog">
-        <item name="android:windowMinWidthMajor">45%</item>
-        <item name="android:windowMinWidthMinor">45%</item>
-        <item name="maxWidth">500dp</item>
+        <item name="android:windowMinWidthMajor">35%</item>
+        <item name="android:windowMinWidthMinor">85%</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowNoTitle">true</item>

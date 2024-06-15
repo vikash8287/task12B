@@ -1,8 +1,6 @@
 package com.company.chamberly.presentation.fragments
 
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,11 +9,12 @@ import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
 import com.company.chamberly.R
-import com.company.chamberly.utils.Role
 import com.company.chamberly.presentation.viewmodels.UserViewModel
+import com.company.chamberly.utils.Role
 
 
 class WelcomeFragment : Fragment() {
@@ -28,6 +27,7 @@ class WelcomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        userViewModel.logEventToAnalytics("landed_on_confirm_login_page_vc")
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_welcome, container, false)
         val createAccountButton = view.findViewById<Button>(R.id.btnCreateAccount)
@@ -43,7 +43,6 @@ class WelcomeFragment : Fragment() {
 
         roleListenerButton.setOnClickListener {
             selectedRole.value = Role.LISTENER
-            Log.d("ISCHECKED", roleListenerButton.isChecked.toString())
         }
 
         selectedRole.observe(viewLifecycleOwner) {

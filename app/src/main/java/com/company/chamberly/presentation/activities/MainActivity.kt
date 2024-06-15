@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
 
         userViewModel.userState.observe(this) {
             if(it.UID.isBlank()) {
+                navController.popBackStack(R.id.main_fragment, true)
                 navController.navigate(
                     R.id.welcome_fragment,
                     null,
@@ -85,13 +86,11 @@ class MainActivity : AppCompatActivity() {
                             enter = R.anim.slide_in
                             exit = R.anim.slide_out
                         }
-                        popUpTo(R.id.welcome_fragment) {
-                            this.inclusive = true
-                        }
                     }
                 )
             } else if (navController.currentDestination?.id == R.id.welcome_fragment) {
                 checkRestrictions()
+                navController.popBackStack(R.id.welcome_fragment, true)
                 navController.navigate(
                     R.id.main_fragment,
                     null,
@@ -99,9 +98,6 @@ class MainActivity : AppCompatActivity() {
                         anim {
                             enter = R.anim.slide_in
                             exit = R.anim.slide_out
-                        }
-                        popUpTo(R.id.welcome_fragment) {
-                            this.inclusive = true
                         }
                     }
                 )
@@ -119,6 +115,8 @@ class MainActivity : AppCompatActivity() {
                         anim {
                             enter = R.anim.slide_in
                             exit = R.anim.slide_out
+                            popEnter = R.anim.slide_in
+                            popExit = R.anim.slide_out
                         }
                     }
                 )
@@ -163,18 +161,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestNotificationPermission() {
-        val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            // TODO: Handle denial of permission
-        }
+        val requestPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                if(!isGranted) {
+                    showPermissionNotGrantedDialog()
+                }
+            }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         } else {
-            Toast.makeText(this@MainActivity, "Grant notification permissions", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this@MainActivity,
+                "Grant notification permissions",
+                Toast.LENGTH_SHORT
+            ).show()
             val intent = Intent()
             intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
             intent.data = Uri.fromParts("package", packageName, null)
             startActivity(intent)
         }
+    }
+
+    private fun showPermissionNotGrantedDialog() {
+        val dialog = Dialog(this, R.style.Dialog)
+        dialog.setContentView(R.layout.dialog_leave_chamber)
     }
 
     private fun checkRestrictions() {

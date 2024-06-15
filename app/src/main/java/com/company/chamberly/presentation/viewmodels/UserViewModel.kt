@@ -74,7 +74,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     val matches: LiveData<MutableList<Match>> = _matches
     // This map will contain the topic title corresponding to the topic ID
     val pendingTopicTitles = mutableMapOf<String, String>()
-
+    // TODO: May need to remove this variable
+    val latestAvailableAppVersion: String = "1.0.0"
 
     private val auth = Firebase.auth
     private val sharedPreferences: SharedPreferences = application.getSharedPreferences("cache", Context.MODE_PRIVATE)
@@ -83,59 +84,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     private val realtimeDatabase = Firebase.database
     private val messaging = FirebaseMessaging.getInstance()
     private var currentOffering: Offering? = null
+    private val pInfo = application.packageManager.getPackageInfo(application.packageName, 0)
 
     init {
-        realtimeDatabase
-            .reference
-            .child("UX_Android")
-            .child("shouldAuthenticateUser")
-            .addValueEventListener(object: ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val isAppEnabled = (snapshot.value as Boolean?) ?: true
-                    _appState.value = _appState.value?.copy(isAppEnabled = isAppEnabled)
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                   // TODO: Will do later
-                }
-
-            })
-
-        realtimeDatabase
-            .reference
-            .child("UX_Android")
-            .child("latestAndroidAppVersion")
-            .addValueEventListener(object: ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val latestAvailableVersion = (snapshot.value as String?) ?: "1.0.0"
-                    try {
-                        val pInfo = application.packageManager.getPackageInfo(application.packageName, 0)
-                        val versionCode = pInfo.versionName
-                        _appState.value = _appState.value?.copy(
-                            isAppUpdated = !canUpdate(versionCode, latestAvailableVersion)
-                        )
-                    } catch(e: Exception) {
-                        // No need to do anything for now.
-                    }
-                }
-                override fun onCancelled(error: DatabaseError) {
-                    //Most likely a network issue has occurred. Will implement later.
-                }
-            })
-
-        realtimeDatabase
-            .reference
-            .child("UX_Android")
-            .child("pendingChambersNotSubbedLimit")
-            .addValueEventListener(object: ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    _maxAllowedTopics.value = (snapshot.value as Long?) ?: 25
-                }
-                override fun onCancelled(error: DatabaseError) {
-                    //No need to implement for now
-                }
-            })
-
         _pendingTopics.value =
             sharedPreferences
                 .getString("topics", "")!!
@@ -184,7 +135,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         uid = user.uid
                     )
                     if(isNewUser) {
-//                        logEventToAnalytics("")
+                        logEventToAnalytics("first_time_user")
+                    } else {
+                        logEventToAnalytics("account_recreated")
                     }
                     loginUser()
                 onComplete()
@@ -201,6 +154,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             "Email" to "$uid@chamberly.net",
             "UID" to uid
         )
+        Log.d("REGISTERING", "HERER")
         firestore
             .collection("Display_Names")
             .document(displayName)
@@ -286,12 +240,65 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         setPaywallStatus()
                     }
                 }
+            setupUXListeners()
             setNotificationToken()
             getUserRestrictions()
             getUserRating()
             attachTopicRequestListeners()
             true
         }
+    }
+
+    private fun setupUXListeners() {
+        realtimeDatabase
+            .reference
+            .child("UX_Android")
+            .child("shouldAuthenticateUser")
+            .addValueEventListener(object: ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val isAppEnabled = (snapshot.value as Boolean?) ?: true
+                    _appState.value = _appState.value?.copy(isAppEnabled = isAppEnabled)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    // TODO: Will do later
+                }
+
+            })
+
+        realtimeDatabase
+            .reference
+            .child("UX_Android")
+            .child("latestAndroidAppVersion")
+            .addValueEventListener(object: ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val latestAvailableVersion = (snapshot.value as String?) ?: "1.0.0"
+                    try {
+                        val versionCode = pInfo.versionName
+                        _appState.value = _appState.value?.copy(
+                            isAppUpdated = !canUpdate(versionCode, latestAvailableVersion)
+                        )
+                    } catch(e: Exception) {
+                        // No need to do anything for now.
+                    }
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    //Most likely a network issue has occurred. Will implement later.
+                }
+            })
+
+        realtimeDatabase
+            .reference
+            .child("UX_Android")
+            .child("pendingChambersNotSubbedLimit")
+            .addValueEventListener(object: ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    _maxAllowedTopics.value = (snapshot.value as Long?) ?: 25
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    //No need to implement for now
+                }
+            })
     }
 
     private fun setNotificationToken() {
@@ -486,11 +493,13 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     putString("topics",pendingTopics.value!!.joinToString(","))
                     apply()
                 }
+                attachListenerForTopic(topic.TopicID)
                 logEventToAnalytics("topic_started")
                 logEventToAnalytics("Started_Procrastinating")
                 callback()
             }
     }
+
     fun waitOnTopic(topicID: String, topicTitle: String) {
         val userData = mapOf(
             "isAndroid" to true,
@@ -500,6 +509,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             "lfl" to (userState.value!!.role == Role.VENTOR),
             "lfv" to (userState.value!!.role == Role.LISTENER),
             "penalty" to 0,
+            "restricted" to userState.value!!.isRestricted,
             "timestamp" to ServerValue.TIMESTAMP,
             "blockedUsers" to blockedUsers.value
         )
@@ -520,13 +530,14 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         attachListenerForTopic(topicID = topicID)
         logEventToAnalytics("swiped_right_${userState.value!!.role}")
         logEventToAnalytics("swiped_on_card")
-        logEventToAnalytics("Started_procrastinating")
+        logEventToAnalytics("Started_Procrastinating")
     }
 
     fun dismissTopic() {
         logEventToAnalytics("swiped_left")
         logEventToAnalytics("swiped_on_card")
     }
+
     private fun attachTopicRequestListeners() {
         for (topic in _pendingTopics.value!!) {
             if (topic.isBlank()) {
@@ -543,11 +554,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 .child(topicID)
                 .child("users")
                 .child(userState.value!!.UID)
-        Log.d("MATCH FUNCTION", topicID)
         userRef
             .addValueEventListener(object: ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    Log.d("MATCHING", snapshot.value.toString())
                     if(!snapshot.exists()) {
                         _pendingTopics.value!!.remove(topicID)
                         with(sharedPreferences.edit()) {
@@ -557,7 +566,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         return
                     }
                     val userData = snapshot.value as Map<String, Any>
-                    val isReserved = userData["isReserved"] as Boolean
+                    val isReserved = userData["isReserved"] as Boolean? ?: false
                     if (isReserved) {
                         // Start matching
                         Log.d("MATCH FOUND", "$topicID:$userData")
@@ -572,16 +581,15 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                 )
                             )
                             _matches.postValue(updatedMatches)
-                            Log.d("MATCH FOUND", updatedMatches.toString())
                         }
                     } else {
                         // Match expired
-                        Log.d("MATCH NOT FOUND", "REMOVE MATCH $userData")
                         val updatedMatches = _matches.value!!
                         val didMatchExpire = updatedMatches.removeIf {it.topicID == topicID}
                         _matches.postValue(updatedMatches)
                         if(didMatchExpire) {
                             showToast("The match has expired")
+                            logEventToAnalytics("match_timeout")
                         }
                         Log.d("MATCH NOT FOUND", _matches.value!!.toString())
                     }
@@ -594,6 +602,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     fun acceptMatch(match: Match) {
+        Log.d("ACCEPT", match.toString())
         val usersRef = realtimeDatabase
             .reference
             .child(match.topicID)
@@ -621,8 +630,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         .get()
                         .addOnSuccessListener {
                             val reservedUID = it.value as? String
+                            Log.d("ACCEPT1", reservedUID.toString())
                             if (reservedUID.isNullOrBlank()) {
-                                showToast("Matching failed")
                                 return@addOnSuccessListener
                             } else {
                                 val groupChatId = snapshot.value as String?
@@ -634,6 +643,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                         .reference
                                         .child(groupChatId)
                                         .child("users")
+                                        .child("members")
                                         .child(userState.value!!.UID)
                                         .child("name")
                                         .setValue(userState.value!!.displayName)
@@ -662,6 +672,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                                     "chambers",
                                                     FieldValue.arrayUnion(groupChatId)
                                                 )
+                                            val updatedMatches = _matches.value!!
+                                            updatedMatches.removeIf { it.topicID == match.topicID }
+                                            _matches.postValue(updatedMatches)
                                             openChamber(groupChatId)
                                         }
                                 }
@@ -673,9 +686,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     showToast("Matching Failed")
                 }
             })
-            val updatedMatches = _matches.value!!
-            updatedMatches.removeIf { it.topicID == match.topicID }
-            _matches.postValue(updatedMatches)
     }
 
     fun denyMatch(match: Match) {
@@ -687,11 +697,17 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
 
         userRef
             .child("isReserved")
-            .setValue(false)
+            .removeValue()
 
         userRef
             .child("reservedBy")
             .removeValue()
+
+        val updatedMatches = _matches.value!!
+        updatedMatches.removeIf { it.topicID == match.topicID }
+        _matches.postValue(updatedMatches)
+        logEventToAnalytics("skipped_match")
+        showToast("Match skipped")
     }
 
     private fun getUserRating() {
@@ -762,13 +778,20 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         _pendingTopics.value?.let {
             for (topic in it) {
                 if(topic.isNotBlank()) {
-                    realtimeDatabase
+                    val userRef = realtimeDatabase
                         .reference
                         .child(topic)
                         .child("users")
                         .child(userState.value!!.UID)
-                        .child("restricted")
-                        .setValue(isRestricted)
+                    userRef.get().addOnSuccessListener {
+                        if (it.exists()) {
+                            userRef
+                                .child("restricted")
+                                .setValue(isRestricted)
+                        } else {
+                            //TODO: Delete topic from cache
+                        }
+                    }
                 }
             }
         }
@@ -780,14 +803,11 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             if (sharedPreferences.getBoolean("isListener", false)) { Role.LISTENER }
             else { Role.VENTOR }
         if (role != selectedRole) {
-            val currentUserRef = firestore
+            firestore
                 .collection("Accounts")
                 .document(_userState.value!!.UID)
-            currentUserRef
-                .update("selectedRole",
-                    if(role == Role.LISTENER) { "listener" }
-                    else { "ventor" }
-                )
+                .update("selectedRole", role.toString())
+
             with(sharedPreferences.edit()) {
                 putBoolean("isListener", role == Role.LISTENER)
                 apply()
@@ -957,7 +977,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     private fun showToast(message: String) {
-        // Show a toast with the message
         Toast.makeText(
             getApplication(),
             message,

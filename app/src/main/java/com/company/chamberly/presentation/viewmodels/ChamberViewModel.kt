@@ -334,7 +334,9 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
         logEventToAnalytics(eventName = "ended_chat")
     }
 
-    fun clear() {
+    fun clear(uid: String, notificationKey: String) {
+        addNotificationKey(uid, notificationKey)
+        Log.d("HERE", "VIEWMODEL CLEARED")
         _messages.value?.clear()
         _chamberState.value = ChamberState(
             chamberID = "",
@@ -347,6 +349,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             sharedPreferences
                 .getString("notificationKey", "") ?: ""
         val notificationPayload = JSONObject()
+        val dataPayload = JSONObject()
         realtimeDatabase
             .reference
             .child(_chamberState.value!!.chamberID)
@@ -366,11 +369,16 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                                 "body",
                                 "sent you a message"
                             )
-                            notificationPayload.put(
+                            dataPayload.put(
                                 "groupChatId",
                                 _chamberState.value!!.chamberID
                             )
-                            OkHttpHandler(notificationPayload, token).execute()
+                            OkHttpHandler(
+                                getApplication() as Context,
+                                token,
+                                notification = notificationPayload,
+                                data = dataPayload
+                            ).executeAsync()
                         } catch (e: Exception) {
                             Log.e("Error sending notifications", e.message.toString())
                         }
@@ -384,6 +392,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
         notificationKey: String
     ) {
         if(chamberState.value != null) {
+            Log.d("CHAMBER ID", chamberState.value!!.toString())
             realtimeDatabase
                 .reference
                 .child(chamberState.value!!.chamberID)
@@ -412,7 +421,6 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     private fun logEventToAnalytics(eventName: String, params: HashMap<String, Any> = hashMapOf()) {
         params["UID"] = sharedPreferences.getString("uid", "") ?: ""
         params["name"] = sharedPreferences.getString("displayName", "") ?: ""
-        Log.d("LOG", params.toString())
         logEvent(
             firebaseAnalytics = firebaseAnalytics,
             eventName = eventName,

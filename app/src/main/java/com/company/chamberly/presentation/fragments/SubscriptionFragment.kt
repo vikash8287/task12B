@@ -73,8 +73,8 @@ class SubscriptionFragment : Fragment() {
         layout.setPadding(20, 5, 20, 0)
         iconButton.setImageResource(icon)
         iconButton.adjustViewBounds = true
-        iconButton.maxWidth = 50
-        iconButton.maxHeight = 50
+        iconButton.maxWidth = 100
+        iconButton.maxHeight = 100
         iconButton.foregroundGravity = Gravity.CENTER_VERTICAL
         iconButton.scaleType = ImageView.ScaleType.CENTER_INSIDE
         iconButton.setPadding(5)
