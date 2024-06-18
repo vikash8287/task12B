@@ -7,11 +7,11 @@
 
     <fragment
         android:id="@+id/welcome_fragment"
-        android:name="com.company.chamberly.fragments.WelcomeFragment"
+        android:name="com.company.chamberly.presentation.fragments.WelcomeFragment"
         android:label="WelcomeFragment"/>
     <fragment
         android:id="@+id/main_fragment"
-        android:name="com.company.chamberly.fragments.MainFragment"
+        android:name="com.company.chamberly.presentation.fragments.MainFragment"
         android:label="MainFragment">
         <navGraph app:navGraph="@navigation/home_nav_graph" />
         <action
@@ -31,26 +31,31 @@
 
     <fragment
         android:id="@+id/chat_fragment"
-        android:name="com.company.chamberly.fragments.ChatFragment"
+        android:name="com.company.chamberly.presentation.fragments.ChatFragment"
         android:label="ChatFragment"/>
 
     <fragment
         android:id="@+id/topic_search_fragment"
-        android:name="com.company.chamberly.fragments.TopicSearchFragment"
+        android:name="com.company.chamberly.presentation.fragments.TopicSearchFragment"
         android:label="TopicSearchFragment"/>
 
     <fragment
         android:id="@+id/topic_create_fragment"
-        android:name="com.company.chamberly.fragments.CreateTopicFragment"
+        android:name="com.company.chamberly.presentation.fragments.CreateTopicFragment"
         android:label="CreateTopicFragment" />
 
     <fragment
         android:id="@+id/chamber_create_fragment"
-        android:name="com.company.chamberly.fragments.CreateChamberFragment"
+        android:name="com.company.chamberly.presentation.fragments.CreateChamberFragment"
         android:label="CreateChamberFragment" />
 
     <fragment
         android:id="@+id/chamber_search_fragment"
-        android:name="com.company.chamberly.fragments.ChamberSearchFragment"
+        android:name="com.company.chamberly.presentation.fragments.ChamberSearchFragment"
         android:label="ChamberSearchFragment" />
+    <fragment
+        android:id="@+id/subscriptionFragment"
+        android:name="com.company.chamberly.presentation.fragments.SubscriptionFragment"
+        android:label="fragment_subscription"
+        tools:layout="@layout/fragment_subscription" />
 </navigation>

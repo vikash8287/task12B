@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".fragments.TopicSearchFragment">
+    tools:context=".presentation.fragments.TopicSearchFragment">
 
     <LinearLayout
         android:id="@+id/content_holder"

@@ -1,50 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:paddingVertical="4dp"
     android:gravity="center"
     android:baselineAligned="false">
 
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="8"
-        android:orientation="vertical">
-        <TextView
-            android:id="@+id/topic_request_title"
-            android:layout_width="match_parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textSize="16sp"
-            android:textColor="#000"/>
+            android:layout_weight="8"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/topic_request_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="16sp"
+                android:textColor="#000"/>
 
-        <TextView
-            android:id="@+id/topic_request_message"
-            android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/topic_request_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="12sp"
+                android:textColor="#333"/>
+        </LinearLayout>
+
+        <TableRow
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textSize="12sp"
-            android:textColor="#333"/>
+            android:gravity="center">
+            <ImageButton
+                android:id="@+id/deny_request"
+                style="@style/CircularButton"
+                android:backgroundTint="#f9e1e8"
+                android:src="@drawable/ic_skip" />
+
+            <ImageButton
+                android:id="@+id/accept_request"
+                style="@style/CircularButton"
+                android:backgroundTint="#c0e9e4"
+                android:src="@drawable/ic_chat"/>
+        </TableRow>
     </LinearLayout>
 
-    <TableRow
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center">
-        <ImageButton
-            android:id="@+id/deny_request"
-            style="@style/CircularButton"
-            android:backgroundTint="#f9e1e8"
-            android:src="@drawable/ic_skip" />
-
-        <ImageButton
-            android:id="@+id/accept_request"
-            style="@style/CircularButton"
-            android:backgroundTint="#c0e9e4"
-            android:src="@drawable/ic_chat"/>
-    </TableRow>
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/loader"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:indeterminate="true"
+        app:trackCornerRadius="2dp"
+        app:trackColor="@color/colorPrimary"
+        app:indicatorColor="@color/primary"
+        android:visibility="gone" />
 </LinearLayout>

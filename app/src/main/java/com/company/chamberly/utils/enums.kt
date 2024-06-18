@@ -12,3 +12,8 @@ enum class Role {
         }
     }
 }
+
+enum class Entitlement {
+    REGULAR,
+    CHAMBERLY_PLUS
+}

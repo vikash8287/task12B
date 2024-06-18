@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    style="@style/Dialog"
+    android:layout_marginHorizontal="36dp"
     android:orientation="vertical"
-    android:showDividers="none"
     android:paddingHorizontal="32dp"
     android:paddingVertical="8dp"
     android:background="@drawable/popup_bottom_left">
-
+<!-- The horizontal margin is a workaround to display the popup properly -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -62,12 +63,11 @@
 
     <LinearLayout
         android:id="@+id/confirm_role_change_view"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
         <TextView
             android:layout_width="wrap_content"
-            android:maxWidth="300dp"
             android:layout_height="wrap_content"
             android:text="@string/confirm_role_change"
             android:textSize="16sp"
@@ -116,9 +116,9 @@
         android:id="@+id/subscribe_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingVertical="8dp"
-        android:text="Subscribe"
+        android:paddingTop="8dp"
         android:visibility="gone"
+        android:text="Subscribe"
         android:textSize="16sp"
         android:textColor="#000"/>
 

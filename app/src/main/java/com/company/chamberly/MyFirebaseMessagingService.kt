@@ -9,7 +9,7 @@ import android.content.Intent
 import android.media.RingtoneManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.company.chamberly.activities.MainActivity
+import com.company.chamberly.presentation.activities.MainActivity
 import com.company.chamberly.utils.channelID
 import com.company.chamberly.utils.channelName
 import com.google.firebase.auth.FirebaseAuth
@@ -48,20 +48,18 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
         // Handle incoming message here
-        val title = remoteMessage.data["title"].toString().ifBlank {
-            remoteMessage.notification?.title
-        }
-        val body = remoteMessage.data["body"].toString().ifBlank {
-            remoteMessage.notification?.body
-        }
+        val title = remoteMessage.notification?.title
+        val body = remoteMessage.notification?.body
         val groupChatId = remoteMessage.data["groupChatId"]
         sendNotification(title, body, groupChatId)
     }
+
     private fun isAppInForeground():Boolean{
         val appProcessInfo = ActivityManager.RunningAppProcessInfo()
         ActivityManager.getMyMemoryState(appProcessInfo)
         return (appProcessInfo.importance== ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)
     }
+
     private fun sendNotification(title: String?, messageBody: String?,groupChatId:String?) {
         if(
             title.isNullOrBlank() ||

@@ -22,4 +22,6 @@
             <item android:color="#000" /> <!-- Black otherwise -->
         </selector>
     </color>
+    <color name="lightTextColor">#2E2E5B</color>
+    <color name="golden">#FFCA5F</color>
 </resources>
