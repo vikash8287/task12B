@@ -1,16 +1,13 @@
 package com.company.chamberly.presentation.adapters
 
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.compose.ui.text.style.TextAlign
 import androidx.recyclerview.widget.RecyclerView
-import com.company.chamberly.models.Message
 import com.company.chamberly.R
-import com.company.chamberly.models.toMap
+import com.company.chamberly.models.Message
 
 class MessageAdapter(private val uid: String) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -80,15 +77,30 @@ class MessageAdapter(private val uid: String) :
                     onMessageLongClickListener?.onSelfLongClick(message)
                     true
                 }
-                holder.reactedWithHolder.text = message.reactedWith.ifBlank { "" }
-                holder.reactedWithHolder.visibility = if(message.reactedWith.isNotBlank()) View.VISIBLE else View.GONE
-                holder.replyingToHolder.text = if(message.replyingTo.isNotBlank()) "Replying to: ${message.replyingTo}" else ""
-                holder.replyingToHolder.visibility = if(message.replyingTo.isNotBlank()) View.VISIBLE else View.GONE
+                holder.reactedWithHolder.text =
+                    message.reactedWith.ifBlank { "" }
+                holder.reactedWithHolder.visibility =
+                    if(message.reactedWith.isNotBlank()) View.VISIBLE else View.GONE
+                holder.replyingToHolder.text =
+                    if(message.replyingTo.isNotBlank()) "Replying to: ${message.replyingTo}" else ""
+                holder.replyingToHolder.visibility =
+                    if(message.replyingTo.isNotBlank()) View.VISIBLE else View.GONE
+                if (
+                    position != 0 &&
+                    messages[position - 1].UID != messages[position].UID
+                ) {
+                    holder.itemView.setPadding(0, 8, 0, 0)
+                }
             }
             is MessageViewHolder -> {
-                if(position != 0 && message.UID == messages[position - 1].UID && messages[position - 1].message_type == "text") {
+                if(
+                    position != 0 &&
+                    message.UID == messages[position - 1].UID &&
+                    messages[position - 1].message_type == "text"
+                ) {
                     holder.textSender.visibility = View.GONE
                 } else {
+                    holder.itemView.setPadding(0, 8, 0, 0)
                     holder.textSender.visibility = View.VISIBLE
                     holder.textSender.text = message.sender_name
                 }
@@ -98,9 +110,12 @@ class MessageAdapter(private val uid: String) :
                 }
                 holder.textMessage.text = message.message_content
                 holder.reactedWithHolder.text = message.reactedWith.ifBlank { "" }
-                holder.reactedWithHolder.visibility = if(message.reactedWith.isNotBlank()) View.VISIBLE else View.GONE
-                holder.replyingToHolder.text = if(message.replyingTo.isNotBlank()) "Replying to: ${message.replyingTo}" else ""
-                holder.replyingToHolder.visibility = if(message.replyingTo.isNotBlank()) View.VISIBLE else View.GONE
+                holder.reactedWithHolder.visibility =
+                    if(message.reactedWith.isNotBlank()) View.VISIBLE else View.GONE
+                holder.replyingToHolder.text =
+                    if(message.replyingTo.isNotBlank()) "Replying to: ${message.replyingTo}" else ""
+                holder.replyingToHolder.visibility =
+                    if(message.replyingTo.isNotBlank()) View.VISIBLE else View.GONE
             }
             is MessageViewHolderSystem -> {
                 holder.message.text = message.message_content

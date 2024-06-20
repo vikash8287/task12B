@@ -23,11 +23,11 @@ import com.company.chamberly.R.color
 import com.company.chamberly.R.layout
 import com.company.chamberly.R.string
 import com.company.chamberly.R.style
+import com.company.chamberly.models.Topic
 import com.company.chamberly.presentation.adapters.PendingTopicsListAdapter
 import com.company.chamberly.presentation.adapters.TopicAdapter
-import com.company.chamberly.models.Topic
-import com.company.chamberly.utils.Role
 import com.company.chamberly.presentation.viewmodels.UserViewModel
+import com.company.chamberly.utils.Role
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
@@ -67,11 +67,16 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         val backButton = view.findViewById<ImageButton>(R.id.backButton)
         val buttonsView = view.findViewById<LinearLayout>(R.id.buttonsLayout)
         val emptyStateView = view.findViewById<RelativeLayout>(R.id.emptyStateView)
+        val cancelButton = view.findViewById<ImageButton>(R.id.cancelProcrastinationButton)
         pendingTopicsRecyclerView = view.findViewById(R.id.pendingTopicsRecyclerView)
         kolodaView.kolodaListener = this
 
         kolodaAdapter = TopicAdapter()
         kolodaView.adapter = kolodaAdapter
+
+        cancelButton.setOnClickListener {
+            userViewModel.stopProcrastination()
+        }
 
         fetchedTopics.observe(viewLifecycleOwner) {
             kolodaAdapter.updateTopics(it)
@@ -142,13 +147,11 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         }
 
         super.onCardSwipedRight(position)
-        Log.d("SWIPE_RIGHT", fetchedTopics.value.toString())
     }
 
     override fun onCardSwipedLeft(position: Int) {
         fetchedTopics.value!!.remove(kolodaAdapter.getItem(position+1))
         userViewModel.dismissTopic()
-        Log.d("SWIPE_LEFT", fetchedTopics.value!!.map{ it.TopicTitle }.toString() + ":" + position.toString())
         super.onCardSwipedLeft(position)
     }
 

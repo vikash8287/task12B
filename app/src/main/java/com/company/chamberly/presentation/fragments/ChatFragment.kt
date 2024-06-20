@@ -374,20 +374,33 @@ class ChatFragment : Fragment() {
                 message = message.copy(
                     message_content = message.message_content + reason
                 )
+                val chamberMembers = chamberViewModel.chamberState.value!!.members
+                val userToRateUID =
+                    try {
+                        if (chamberMembers[0] != userViewModel.userState.value!!.UID) chamberMembers[0]
+                        else chamberMembers[1]
+                    } catch (_: Exception) {
+                        // The user is currently alone in the chamber so no need to show
+                        // the reporting dialog
+                        ""
+                    }
+                val userToRateName = chamberViewModel.memberNames[userToRateUID] ?: ""
                 chamberViewModel
                     .sendExitMessage(
                         message = message,
                         callback = {
-                            showRatingDialog(
-                                dialog = dialog,
-                                userToRateUID = uid,
-                                userToRateName = displayName,
-                                callback = {
-                                    dialog.dismiss()
-                                    exitChamber()
-                                    userViewModel.closeChamber()
-                                }
-                            )
+                            if (userToRateUID.isNotBlank()) {
+                                showRatingDialog(
+                                    dialog = dialog,
+                                    userToRateUID = userToRateUID,
+                                    userToRateName = userToRateName,
+                                    callback = {
+                                        dialog.dismiss()
+                                        exitChamber()
+                                        userViewModel.closeChamber()
+                                    }
+                                )
+                            }
                         }
                     )
             }
@@ -404,7 +417,6 @@ class ChatFragment : Fragment() {
             dialog.dismiss()
         }
         chamberExitOptionsLayout.addView(cancelButton)
-
         dialog.show()
     }
 
@@ -467,7 +479,7 @@ class ChatFragment : Fragment() {
             optionButton.text = reason
             optionButton.setTextColor(getColor(requireContext(), R.color.red))
             optionButton.textSize = 18.0f
-            optionButton.setPaddingRelative(16, 16, 16, 16)
+            optionButton.setPaddingRelative(16, 32, 16, 32)
             optionButton.gravity = Gravity.CENTER_HORIZONTAL
             optionButton.setOnClickListener {
                 reportUser(against = against, reason = reason)
@@ -501,7 +513,10 @@ class ChatFragment : Fragment() {
         reason: String,
         selfReport: Boolean = true
     ) {
-        val uid = userViewModel.userState.value!!.UID
+        val members = chamberViewModel.chamberState.value!!.members
+        val uid =
+            if(members[0] == userViewModel.userState.value!!.UID) members[1]
+            else members[0]
         val report = hashMapOf(
             "against" to (against ?: uid),
             "by" to uid,
