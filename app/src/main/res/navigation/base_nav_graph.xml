@@ -34,6 +34,21 @@
     android:label="ProfileFragment"
     />
     <fragment
+        android:id="@+id/setting_fragment"
+        android:name="com.company.chamberly.fragments.SettingFragment"
+        android:label="SettingFragment"
+        />
+    <fragment
+        android:id="@+id/edit_profile_setting_fragment"
+        android:name="com.company.chamberly.fragments.EditProfileFragment"
+        android:label="EditProfileFragment"
+        />
+    <fragment
+        android:id="@+id/notification_setting_fragment"
+        android:name="com.company.chamberly.fragments.NotificationsFragment"
+        android:label="NotificationsFragment"
+        />
+    <fragment
         android:id="@+id/chat_fragment"
         android:name="com.company.chamberly.fragments.ChatFragment"
         android:label="ChatFragment"/>

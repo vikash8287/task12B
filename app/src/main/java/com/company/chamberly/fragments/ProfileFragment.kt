@@ -29,6 +29,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import com.company.chamberly.R
 import com.company.chamberly.constant.Gender
 import com.google.firebase.auth.FirebaseAuth
@@ -67,7 +69,19 @@ class ProfileFragment: Fragment() {
         backButtonLogic(view)
         ratingLogic(view)
         bioEditTextLogic(bioText = bioText.toString(), view = view)
-
+val settingButton = view.findViewById<ImageButton>(R.id.setting_button)
+        settingButton.setOnClickListener {
+            requireParentFragment().findNavController().navigate(
+                R.id.setting_fragment,
+                null,
+                navOptions {
+                    anim {
+                        enter = R.anim.slide_in
+                        exit = R.anim.slide_out
+                    }
+                }
+            )
+        }
 
 
         return view

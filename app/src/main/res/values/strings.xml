@@ -95,4 +95,9 @@
     <string name="save">Save</string>
     <string name="back_button">back button\n</string>
     <string name="setting_button">setting_button\n</string>
+    <string name="setting">Setting</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="notifications">Notifications</string>
+    <string name="what_other_can_see">What other can see</string>
 </resources>
