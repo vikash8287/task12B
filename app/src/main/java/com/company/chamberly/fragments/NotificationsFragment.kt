@@ -6,7 +6,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import com.company.chamberly.R
 import com.company.chamberly.customview.SettingSectionWithListViewToggleButton
 
@@ -22,32 +21,30 @@ class NotificationsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val ChambersSection = view.findViewById<SettingSectionWithListViewToggleButton>(R.id.chamber_section)
-        val ChambersSectionList   = arrayListOf<SettingSectionWithListViewToggleButton.NormalListWithToggleItem>(
-            SettingSectionWithListViewToggleButton.NormalListWithToggleItem("Remainders","To check up on your chambers"),
+        val chambersSection = view.findViewById<SettingSectionWithListViewToggleButton>(R.id.chamber_section)
+        val chambersSectionList   = arrayListOf<SettingSectionWithListViewToggleButton.NormalListWithToggleItem>(
+            SettingSectionWithListViewToggleButton.NormalListWithToggleItem("Remainders","To check up on your chambers", toggleChangeListener = {
+                buttonView,  isChecked->
+                Log.i("Checked Remainder",isChecked.toString())
+
+            }),
 
 
             )
 
-        ChambersSection.setData(ChambersSectionList, AdapterView.OnItemClickListener{
-                _,_,position,_->
-            Log.d("Position",position.toString())
-        })
+        chambersSection.setData(chambersSectionList,)
 
-        val JournalSection = view.findViewById<SettingSectionWithListViewToggleButton>(R.id.journal_section)
-        val JournalSectionList   = arrayListOf<SettingSectionWithListViewToggleButton.NormalListWithToggleItem>(
+        val journalSection = view.findViewById<SettingSectionWithListViewToggleButton>(R.id.journal_section)
+        val journalSectionList   = arrayListOf<SettingSectionWithListViewToggleButton.NormalListWithToggleItem>(
             SettingSectionWithListViewToggleButton.NormalListWithToggleItem("Journal","Daily reminders to write your journal"),
             SettingSectionWithListViewToggleButton.NormalListWithToggleItem("Plupi","Reminders to chat with Plupi"),
 
 
             )
 
-        JournalSection.setData(JournalSectionList, AdapterView.OnItemClickListener{
-                _,_,position,_->
-            Log.d("Position",position.toString())
-        })
-        val PromotionalAndOtherSection = view.findViewById<SettingSectionWithListViewToggleButton>(R.id.promotional_and_other_section)
-        val PromotionalAndOtherSectionList   = arrayListOf<SettingSectionWithListViewToggleButton.NormalListWithToggleItem>(
+        journalSection.setData(journalSectionList, )
+        val promotionalAndOtherSection = view.findViewById<SettingSectionWithListViewToggleButton>(R.id.promotional_and_other_section)
+        val promotionalAndOtherSectionList   = arrayListOf<SettingSectionWithListViewToggleButton.NormalListWithToggleItem>(
             SettingSectionWithListViewToggleButton.NormalListWithToggleItem("Coins","Daily reminders to collect your coins"),
             SettingSectionWithListViewToggleButton.NormalListWithToggleItem("Discounts","When we offer discounts on purchases"),
             SettingSectionWithListViewToggleButton.NormalListWithToggleItem("Exciting app updates","When Chamberly gets major updates"),
@@ -56,10 +53,7 @@ class NotificationsFragment : Fragment() {
 
             )
 
-        PromotionalAndOtherSection.setData(PromotionalAndOtherSectionList, AdapterView.OnItemClickListener{
-                _,_,position,_->
-            Log.d("Position",position.toString())
-        })
+        promotionalAndOtherSection.setData(promotionalAndOtherSectionList, )
 
     }
 }

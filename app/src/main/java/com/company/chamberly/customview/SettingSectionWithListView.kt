@@ -89,7 +89,7 @@ val text = ta.getText(R.styleable.SettingSectionWithListViewToggleButton_text)
                 vh.rootLayout.background = AppCompatResources.getDrawable(activity,R.drawable.setting_bottom_list_item_background)
 
             }
-vh.state.setOnCheckedChangeListener(list[position].toggleChangeListener)
+            if(list[position].toggleChangeListener != null) vh.state.setOnCheckedChangeListener(list[position].toggleChangeListener)
             return  view
         }
         class ViewHolder(view:View){

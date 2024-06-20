@@ -51,9 +51,7 @@ class EditProfileFragment : Fragment() {
 
         )
 
-normalListWithToggleView.setData(toggleList) { _, _, position, _ ->
-    Log.i("Position", position.toString())
-}
+normalListWithToggleView.setData(toggleList)
     }
     enum class NormalListWithoutToggleAction{
         NAME,

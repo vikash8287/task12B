@@ -61,7 +61,7 @@ android:background="@color/setting_background_color"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-
+android:paddingHorizontal="16dp"
     >
 <com.company.chamberly.customview.SettingSectionWithListViewToggleButton
     android:layout_width="match_parent"
