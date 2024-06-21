@@ -1,7 +1,6 @@
 package com.company.chamberly.fragments
 
 import android.app.Dialog
-import android.content.res.Resources.Theme
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -19,10 +18,8 @@ import androidx.navigation.fragment.findNavController
 import com.company.chamberly.R
 import com.company.chamberly.adapters.TopicAdapter
 import com.company.chamberly.models.Topic
-import com.company.chamberly.models.toMap
 import com.company.chamberly.utils.Role
 import com.company.chamberly.viewmodels.UserViewModel
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
@@ -58,7 +55,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         kolodaView = view.findViewById(R.id.koloda)
         val dismissButton = view.findViewById<ImageButton>(R.id.ic_skip)
         val joinButton = view.findViewById<ImageButton>(R.id.ic_chat)
-        val backButton = view.findViewById<ImageButton>(R.id.backButton)
+        val backButton = view.findViewById<ImageButton>(R.id.back_button)
         val buttonsView = view.findViewById<LinearLayout>(R.id.buttonsLayout)
         val emptyStateView = view.findViewById<RelativeLayout>(R.id.emptyStateView)
 

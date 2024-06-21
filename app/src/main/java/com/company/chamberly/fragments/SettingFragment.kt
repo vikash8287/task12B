@@ -1,14 +1,16 @@
 package com.company.chamberly.fragments
 
 import android.app.Activity
-import android.content.Context
+import android.app.Dialog
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.BaseAdapter
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
@@ -16,9 +18,8 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
-import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.company.chamberly.R
-import org.w3c.dom.Text
+
 
 class SettingFragment : Fragment() {
 
@@ -28,6 +29,11 @@ class SettingFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 val view = inflater.inflate(R.layout.fragment_setting,container,false)
+        val backButton = view.findViewById<ImageButton>(R.id.back_button)
+        backButton.setOnClickListener {
+          requireActivity().supportFragmentManager.popBackStack()
+        }
+
 settingUpList(view)
         return view
 
@@ -72,6 +78,7 @@ when(listItems[position].action){
 
     }
     SettingAction.TermsAndCondition->{
+ showTermsConditionAndPrivacyPolicyDialogBox()
 
     }
 
@@ -81,6 +88,34 @@ when(listItems[position].action){
 }
         }
     }
+
+    private fun showTermsConditionAndPrivacyPolicyDialogBox() {
+        val dialog = Dialog(requireContext(),R.style.Dialog)
+        dialog.setContentView(R.layout.dialog_box_terms_and_condition_and_privacy_policy)
+dialog.setCancelable(true)
+        val termsAndConditionButton = dialog.findViewById<Button>(R.id.terms_and_condition)
+        val privacyPolicyButton = dialog.findViewById<Button>(R.id.show_privacy_policy)
+        val cancelButton = dialog.findViewById<Button>(R.id.cancel_button)
+
+        termsAndConditionButton.setOnClickListener {
+            val httpIntent = Intent(Intent.ACTION_VIEW)
+            httpIntent.setData(Uri.parse("https://www.chamberly.net/terms-and-conditions"))
+
+            startActivity(httpIntent)
+        }
+        privacyPolicyButton.setOnClickListener {
+            val httpIntent = Intent(Intent.ACTION_VIEW)
+            httpIntent.setData(Uri.parse("https://www.chamberly.net/privacy-policy"))
+
+            startActivity(httpIntent)
+        }
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
 
     enum class SettingAction {
         EditProfile,

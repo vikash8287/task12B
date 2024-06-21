@@ -23,14 +23,13 @@ android:background="@color/edit_profile_background"
         android:layout_height="wrap_content"
         android:gravity="center_vertical|center_horizontal"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
         android:paddingVertical="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
-            android:id="@+id/backButton"
+            android:id="@+id/back_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackgroundBorderless"
@@ -59,6 +58,8 @@ android:background="@color/edit_profile_background"
             android:layout_height="41dp" />
 
     </LinearLayout>
+
+
 <ListView
     android:id="@+id/normal_list_without_toggle"
     android:layout_width="match_parent"
@@ -69,14 +70,14 @@ android:background="@color/edit_profile_background"
   />
 
 
-<com.company.chamberly.customview.SettingSectionWithListViewToggleButton
+<com.company.chamberly.customview.SettingSectionWithListAndSwitchButton
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:text="@string/what_other_can_see"
-    android:id="@+id/list_with_toggle"
+    android:id="@+id/list_with_switch"
     />
+    </LinearLayout>
 
-</LinearLayout>
     <Button
         style="@style/Widget.AppCompat.Button.Borderless"
         android:layout_width="wrap_content"

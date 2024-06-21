@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.Typeface
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -23,16 +22,17 @@ import android.widget.NumberPicker
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.RatingBar
-import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.company.chamberly.R
 import com.company.chamberly.constant.Gender
+import com.company.chamberly.viewmodels.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -42,6 +42,7 @@ import com.google.firebase.ktx.Firebase
 
 class ProfileFragment: Fragment() {
     var age: Int = 24
+    private val profileViewModel:ProfileViewModel by activityViewModels()
     private var chosenGender = Gender.MALE_GENDER_INT //MALE_GENDER_INT
     private val firestore: FirebaseFirestore = Firebase.firestore
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -57,14 +58,14 @@ class ProfileFragment: Fragment() {
         sharedPreferences = requireActivity().getSharedPreferences("cache", Context.MODE_PRIVATE)
 
             isListener = getIsListenerFromSharedPreference()
-        age = getAgeFromSharePreference()
+        age = profileViewModel.getAgeFromSharePreference()
         val bioText = getBioTextFromSharePreference()
-        chosenGender = getGenderFromSharePreference()
+        chosenGender = profileViewModel.getGenderFromSharePreference()
 
         selectedRoleContainerLogic(view)
         agePickerContainerLogic(view)
-        genderPickerContainerLogic(view)
-        nameTextLogic(view)
+        genderPickerContainerView(view)
+        nameTextView(view)
         coinTextLogic(view)
         backButtonLogic(view)
         ratingLogic(view)
@@ -84,6 +85,7 @@ val settingButton = view.findViewById<ImageButton>(R.id.setting_button)
         }
 
 
+
         return view
     }
 
@@ -95,9 +97,9 @@ val settingButton = view.findViewById<ImageButton>(R.id.setting_button)
         getUserInfoFromDatabase(coinText)
     }
 
-    private fun nameTextLogic(view: View) {
+    private fun nameTextView(view: View) {
         val nameText = view.findViewById<TextView>(R.id.name_text)
-        nameText.setText(getNameFromSharePreference())
+        nameText.setText(profileViewModel.getNameFromSharePreference())
     }
     private fun getCoinsFromSharePreference(): Int {
         return sharedPreferences.getInt("Coins", 0)
@@ -105,10 +107,6 @@ val settingButton = view.findViewById<ImageButton>(R.id.setting_button)
     }
 
 
-    private fun getNameFromSharePreference(): String {
-        return sharedPreferences.getString("displayName", "Name") ?: ""
-
-    }
 
     private fun getUserInfoFromDatabase(coinText: TextView) {
         val editor = sharedPreferences.edit()
@@ -128,10 +126,7 @@ val settingButton = view.findViewById<ImageButton>(R.id.setting_button)
         }
     }
 
-    private fun getGenderFromSharePreference(): Int {
-        return sharedPreferences.getInt("gender", Gender.MALE_GENDER_INT)
 
-    }
 
     private fun getBioTextFromSharePreference(): String {
         return sharedPreferences.getString("bio", "default")!!
@@ -145,12 +140,12 @@ val settingButton = view.findViewById<ImageButton>(R.id.setting_button)
     private fun backButtonLogic(view: View) {
         val backButton = view.findViewById<ImageButton>(R.id.back_button)
         backButton.setOnClickListener {
-            //finish()
-            // TODO: go back
+            requireActivity().supportFragmentManager.popBackStack()
+
         }
     }
 
-    private fun genderPickerContainerLogic(view: View) {
+    private fun genderPickerContainerView(view: View) {
         val genderContainer = view.findViewById<LinearLayout>(R.id.gender_container)
         val chosenGenderText =view.findViewById<TextView>(R.id.gender_text)
         val chosenGenderIcon = view.findViewById<ImageView>(R.id.gender_icon)
@@ -176,7 +171,7 @@ val settingButton = view.findViewById<ImageButton>(R.id.setting_button)
             }
         }
         chosenGenderText.setText(text)
-        chosenGenderIcon.setImageDrawable(requireActivity().getDrawable(icon))
+        chosenGenderIcon.setImageDrawable(AppCompatResources.getDrawable(requireContext(),icon))
         genderContainer.setOnClickListener {
             showGenderPicker(
                 genderInt = chosenGender,
@@ -288,13 +283,13 @@ rootView.setOnClickListener{
                     text = "Male"
                     icon = R.drawable.male_gender_icon
 
-                    setGenderToDatabase("male")
+                    profileViewModel.setGenderToDatabase("male",chosenGender)
                 }
 
                 Gender.FEMALE_GENDER_INT -> {
                     text = "Female"
                     icon = R.drawable.female_gender_icon
-                    setGenderToDatabase("female")
+                    profileViewModel.setGenderToDatabase("female",chosenGender)
 
 
                 }
@@ -302,7 +297,7 @@ rootView.setOnClickListener{
                 Gender.OTHER_GENDER_INT -> {
                     text = "Other"
                     icon = R.drawable.other_gender_icon
-                    setGenderToDatabase("other")
+                    profileViewModel.setGenderToDatabase("other",chosenGender)
 
                 }
             }
@@ -456,7 +451,7 @@ rootView.setOnClickListener{
     private fun updateAge(textView: TextView) {
 
         textView.text = "$age y/o"
-        setAgeToDatabase(age)
+        profileViewModel.setAgeToDatabase(age)
     }
 
     private fun getIsListenerFromSharedPreference(): Boolean {
@@ -480,20 +475,7 @@ rootView.setOnClickListener{
         editor.apply()
     }
 
-    private fun setAgeToDatabase(age: Int) {
-        val editor = sharedPreferences.edit()
 
-        val currUserRef = firestore.collection("Accounts").document(uid!!)
-        currUserRef.update("age", age).addOnSuccessListener {
-            editor.putInt("age", age)
-            editor.apply()
-            Log.d("ageUpdate", "Success")
-        }.addOnFailureListener {
-            Log.d("ageUpdate", "Failure")
-
-        }
-
-    }
 
     private fun setBioToDatabase(bio: String) {
         val editor = sharedPreferences.edit()
@@ -511,29 +493,7 @@ rootView.setOnClickListener{
 
     }
 
-    private fun setGenderToDatabase(genderData: String) {
-        val editor = sharedPreferences.edit()
 
-        val currUserRef = firestore.collection("Accounts").document(uid!!)
-        currUserRef.update("gender", genderData).addOnSuccessListener {
-            Log.d("genderUpdate", "Success")
-            editor.putInt("gender", chosenGender)
-            editor.apply()
-
-        }.addOnFailureListener {
-            Log.d("genderUpdate", "Failure")
-
-        }
-
-        currUserRef.update("firstGender", genderData).addOnSuccessListener {
-            editor.putInt("firstGender", chosenGender)
-            editor.apply()
-            Log.d("firstGenderUpdate", "Success")
-        }.addOnFailureListener {
-            Log.d("firstGenderUpdate", "Failure")
-
-        }
-    }
     private fun getUserRatingFromDataBase(numberOfPeopleView: TextView, ratingBar: RatingBar) {
         val editor = sharedPreferences.edit()
 

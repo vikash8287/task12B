@@ -100,4 +100,6 @@
     <string name="edit_profile">Edit Profile</string>
     <string name="notifications">Notifications</string>
     <string name="what_other_can_see">What other can see</string>
+    <string name="terms_and_conditions">Terms and conditions</string>
+    <string name="privacy_policy">Privacy policy</string>
 </resources>

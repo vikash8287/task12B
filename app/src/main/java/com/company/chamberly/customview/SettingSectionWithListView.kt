@@ -5,7 +5,6 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.ListView
 import android.widget.CompoundButton.OnCheckedChangeListener
@@ -15,9 +14,9 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.company.chamberly.R
 
-class SettingSectionWithListViewToggleButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+class SettingSectionWithListAndSwitchButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
     ConstraintLayout(context, attrs, defStyleAttr) {
-private  var dataList:ArrayList<NormalListWithToggleItem>? = null
+private  var dataList:ArrayList<ListWithSwitchItem>? = null
     private var  listView: ListView? = null
     init {
 init(attrs)
@@ -28,9 +27,9 @@ init(attrs)
         val title = findViewById<TextView>(R.id.title)
     listView  = findViewById<ListView>(R.id.list)
 
-        val ta = context.obtainStyledAttributes(attrs,R.styleable.SettingSectionWithListViewToggleButton)
+        val ta = context.obtainStyledAttributes(attrs,R.styleable.SettingSectionWithListAndSwitchButton)
         try{
-val text = ta.getText(R.styleable.SettingSectionWithListViewToggleButton_text)
+val text = ta.getText(R.styleable.SettingSectionWithListAndSwitchButton_text)
       title.text = text
 
         }finally {
@@ -39,13 +38,13 @@ val text = ta.getText(R.styleable.SettingSectionWithListViewToggleButton_text)
         }
 
     }
-      fun  setData(list:ArrayList<NormalListWithToggleItem>){
+      fun  setData(list:ArrayList<ListWithSwitchItem>){
         this.dataList = list
-          listView!!.adapter = dataList?.let { NormalListWithToggleAdapter( list = it, activity = context as Activity) }
+          listView!!.adapter = dataList?.let { ListWithSwitchAdapter( list = it, activity = context as Activity) }
     }
 
-    data class  NormalListWithToggleItem(val label:String,val subItem:String ="",val toggleChangeListener:OnCheckedChangeListener?= null)
-    class NormalListWithToggleAdapter(val list: ArrayList<NormalListWithToggleItem>, val activity: Activity):
+    data class  ListWithSwitchItem(val label:String, val subItem:String ="", val state:Boolean=false, val switchStateListener:OnCheckedChangeListener?= null)
+    class ListWithSwitchAdapter(val list: ArrayList<ListWithSwitchItem>, val activity: Activity):
         BaseAdapter(){
         override fun getCount(): Int {
             return list.size
@@ -89,19 +88,20 @@ val text = ta.getText(R.styleable.SettingSectionWithListViewToggleButton_text)
                 vh.rootLayout.background = AppCompatResources.getDrawable(activity,R.drawable.setting_bottom_list_item_background)
 
             }
-            if(list[position].toggleChangeListener != null) vh.state.setOnCheckedChangeListener(list[position].toggleChangeListener)
+            vh.switch.isChecked = list[position].state
+            if(list[position].switchStateListener != null) vh.switch.setOnCheckedChangeListener(list[position].switchStateListener)
             return  view
         }
         class ViewHolder(view:View){
             val label:TextView
             val rootLayout:ConstraintLayout
             val subItem :TextView
-            val state:Switch
+            val switch:Switch
             init{
                 label = view.findViewById<TextView>(R.id.label)
                 rootLayout = view.findViewById<ConstraintLayout>(R.id.root_layout)
                 subItem = view.findViewById<TextView>(R.id.subItem)
-                state = view.findViewById<Switch>(R.id.state)
+                switch = view.findViewById<Switch>(R.id.state)
             }
         }
     }

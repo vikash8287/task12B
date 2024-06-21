@@ -14,13 +14,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.navigation.fragment.findNavController
 import com.company.chamberly.R
 import com.company.chamberly.adapters.ChamberAdapter
-import com.company.chamberly.adapters.KolodaAdapter
 import com.company.chamberly.models.Chamber
 import com.company.chamberly.models.toMap
 import com.company.chamberly.viewmodels.UserViewModel
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.yalantis.library.Koloda
 import com.yalantis.library.KolodaListener
@@ -47,7 +45,7 @@ class ChamberSearchFragment : Fragment(), KolodaListener {
 
         val dismissButton = view.findViewById<ImageButton>(R.id.ic_skip)
         val joinButton = view.findViewById<ImageButton>(R.id.ic_chat)
-        val backButton = view.findViewById<ImageButton>(R.id.backButton)
+        val backButton = view.findViewById<ImageButton>(R.id.back_button)
         val buttonsView = view.findViewById<LinearLayout>(R.id.buttonsLayout)
         val emptyStateView = view.findViewById<RelativeLayout>(R.id.emptyStateView)
         kolodaView = view.findViewById(R.id.koloda)

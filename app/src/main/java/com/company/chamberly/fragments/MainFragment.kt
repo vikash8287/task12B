@@ -1,12 +1,13 @@
 package com.company.chamberly.fragments
 
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +19,7 @@ import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
@@ -28,6 +30,7 @@ import com.company.chamberly.viewmodels.UserViewModel
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+
 
 class MainFragment : Fragment() {
 
@@ -47,6 +50,8 @@ class MainFragment : Fragment() {
         val usernameTextView = view.findViewById<TextView>(R.id.usernameTextView)
         val profilePictureButton = view.findViewById<ImageButton>(R.id.profilePic)
         val addChamberButton = view.findViewById<ImageButton>(R.id.btnAddChamber)
+
+
 
         usernameTextView.text = userViewModel.userState.value?.displayName ?: "Anonymous"
 
