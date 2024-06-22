@@ -9,6 +9,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -144,6 +146,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        userViewModel.completedMatches.observe(this) {
+            if(it.first.isNotBlank() && it.second.isNotBlank()) {
+                showNewMatchDialog(it.first, it.second)
+            }
+        }
+
         setupJoinRequestsDialog()
 
         val notificationManager =
@@ -181,6 +189,27 @@ class MainActivity : AppCompatActivity() {
             intent.data = Uri.fromParts("package", packageName, null)
             startActivity(intent)
         }
+    }
+
+    private fun showNewMatchDialog(
+        groupChatId: String,
+        topicTitle: String
+    ) {
+        val dialog = Dialog(this, R.style.Dialog)
+        dialog.setContentView(R.layout.dialog_match_successful)
+
+        val topicTitleTextView = dialog.findViewById<TextView>(R.id.topicTitleTextView)
+        val openChatButton = dialog.findViewById<Button>(R.id.openChatButton)
+        val cancelButton = dialog.findViewById<Button>(R.id.cancelButton)
+
+        topicTitleTextView.text = "Chamber topic: \"$topicTitle\""
+        openChatButton.setOnClickListener {
+            userViewModel.openChamber(groupChatId)
+            dialog.dismiss()
+        }
+        cancelButton.setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
     }
 
     private fun showPermissionNotGrantedDialog() {

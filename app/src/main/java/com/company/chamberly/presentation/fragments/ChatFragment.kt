@@ -400,6 +400,10 @@ class ChatFragment : Fragment() {
                                         userViewModel.closeChamber()
                                     }
                                 )
+                            } else {
+                                dialog.dismiss()
+                                exitChamber()
+                                userViewModel.closeChamber()
                             }
                         }
                     )
