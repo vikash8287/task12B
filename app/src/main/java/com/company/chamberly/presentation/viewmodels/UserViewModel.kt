@@ -72,6 +72,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         MutableLiveData(mutableListOf())
     val pendingTopics: LiveData<MutableList<String>> = _pendingTopics
 
+    private var _timeForPenalty: Long = 15L
+
     private val _blockedUsers: MutableLiveData<MutableList<String>> =
         MutableLiveData(mutableListOf())
     val blockedUsers: LiveData<MutableList<String>> = _blockedUsers
@@ -91,11 +93,13 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     private val messaging = FirebaseMessaging.getInstance()
     private var currentOffering: Offering? = null
     private val pInfo = application.packageManager.getPackageInfo(application.packageName, 0)
+    private var versionName: String = pInfo.versionName
     private val checkedUsers: MutableList<String> = mutableListOf()
     private val eligibleUsers: MutableMap<String,MutableList<MutableMap<String, Any>>> =
         mutableMapOf()
     private lateinit var databaseManager: DatabaseManager
     private val taskScheduler: TaskScheduler = TaskScheduler()
+
     init {
         _pendingTopics.value =
             sharedPreferences
@@ -237,7 +241,12 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             setNotificationToken()
             getUserRestrictions()
             getUserRating()
-            attachTopicRequestListeners()
+            for( topic in _pendingTopics.value ?: mutableListOf()) {
+                waitAsWorker(
+                    topicID = topic,
+                    topicTitle = pendingTopicTitles[topic] ?: ""
+                )
+            }
             if (appState.value?.areExperimentalFeaturesEnabled == true) {
                 setPaywallStatus()
             }
@@ -249,50 +258,35 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         realtimeDatabase
             .reference
             .child("UX_Android")
-            .child("shouldAuthenticateUser")
             .addValueEventListener(object: ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val isAppEnabled = (snapshot.value as Boolean?) ?: true
-                    _appState.value = _appState.value?.copy(isAppEnabled = isAppEnabled)
-                }
+                    val data = snapshot.value as Map<String, Any>
+                    val isAppEnabled =
+                        try { data["shouldAuthenticateUser"] as Boolean }
+                        catch (_: Exception) { true }
+                    val latestAvailableVersion =
+                        try { data["latestAvailableAppVersion"] as String }
+                        catch (_: Exception) { "1.0.0" }
+                    _maxAllowedTopics.postValue(
+                        try { data["pendingChambersNotSubbedLimit"] as Long }
+                        catch (_: Exception) { 15L }
+                    )
+                    _timeForPenalty =
+                        try { data["timeForPenalty"] as Long }
+                        catch (_: Exception) { 15L }
 
-                override fun onCancelled(error: DatabaseError) {
-                    // TODO: Will do later
-                }
-            })
-
-        realtimeDatabase
-            .reference
-            .child("UX_Android")
-            .child("latestAndroidAppVersion")
-            .addValueEventListener(object: ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val latestAvailableVersion = (snapshot.value as String?) ?: "1.0.0"
-                    try {
-                        val versionCode = pInfo.versionName
-                        _appState.value = _appState.value?.copy(
-                            isAppUpdated = !canUpdate(versionCode, latestAvailableVersion)
+                    _appState.postValue(
+                        _appState.value?.copy(
+                            isAppEnabled = isAppEnabled,
+                            isAppUpdated = !canUpdate(versionName, latestAvailableVersion)
                         )
-                    } catch(e: Exception) {
-                        // No need to do anything for now.
-                    }
+                    )
                 }
-                override fun onCancelled(error: DatabaseError) {
-                    //Most likely a network issue has occurred. Will implement later.
-                }
-            })
 
-        realtimeDatabase
-            .reference
-            .child("UX_Android")
-            .child("pendingChambersNotSubbedLimit")
-            .addValueEventListener(object: ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    _maxAllowedTopics.value = (snapshot.value as Long?) ?: 25
-                }
                 override fun onCancelled(error: DatabaseError) {
-                    //No need to implement for now
+                    TODO("Not yet implemented")
                 }
+
             })
     }
 
@@ -539,6 +533,17 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         topicID: String,
         topicTitle: String,
     ) {
+        var title = topicTitle
+        if(topicTitle.isBlank()) {
+            firestore
+                .collection("TopicIds")
+                .document(topicID)
+                .get()
+                .addOnSuccessListener {
+                    pendingTopicTitles[topicID] = it.data?.get("TopicTitle") as String? ?: ""
+                    title = pendingTopicTitles[topicID] ?: ""
+                }
+        }
         val lookingFor =
             if(userState.value!!.role == Role.LISTENER) "lfl"
             else                                        "lfv"
@@ -547,16 +552,24 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             .child("$topicID/users")
             .get()
             .addOnSuccessListener { snapshot ->
-                Log.d("EligibleUsers", snapshot.value.toString())
-                val procrastinators = snapshot.value as Map<String, Any>
+                val procrastinators = snapshot.value as Map<String, Any>?
+                if(procrastinators == null) {
+                    realtimeDatabase
+                        .reference
+                        .child("$topicID/users/${userState.value!!.UID}/isWorker")
+                        .setValue(false)
+                    attachListenerForTopic(topicID)
+                    return@addOnSuccessListener
+                }
                 val users = mutableListOf<Map<String, Any>>()
-
+                Log.d("WORKING", procrastinators.toString())
                 procrastinators.forEach { (uid, userData) ->
                     val userMap = (userData as Map<String, Any>).toMutableMap()
                     if(uid != userState.value!!.UID &&
-                        userMap["isReserved"] == false &&
+                        (userMap["isReserved"] ?: false) == false &&
                         (userMap["restricted"] ?: false) == false &&
                         userMap[lookingFor] == true &&
+                        (userMap["isWorker"] ?: false) == false &&
                         uid !in checkedUsers
                     ) {
                             userMap["UID"] = uid
@@ -570,7 +583,12 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 if (eligibleUsers[topicID] != null) {
                     eligibleUsers[topicID]!!
                         .sortBy { if(it["isSubscribed"] == true) 0 else 1 }
-                    sendRequestsSequentially(topicID, topicTitle)
+                    sendRequestsSequentially(topicID, title)
+                } else {
+                    realtimeDatabase
+                        .reference
+                        .child("$topicID/users/${userState.value!!.UID}/isWorker")
+                        .setValue(false)
                 }
             }
             .addOnFailureListener {
@@ -595,7 +613,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     private suspend fun sendRequest(topicID: String, topicTitle: String, user: Map<String, Any>) {
-        Log.d("Sending Request", user.toString())
         val reservedUserRef =
             realtimeDatabase
                 .reference
@@ -607,7 +624,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         try {
             val userSnapshot = reservedUserRef.get().await()
             val userData = userSnapshot.value as Map<String, Any>
-            if(userSnapshot.exists() && (userData["isReserved"] as Boolean? == false)) {
+            val penalty = try { userData["penalty"] as Long } catch(_: Exception) { 0L }
+            if(userSnapshot.exists() && (userData["isReserved"] ?: false) == false) {
                 val isReadyListener = object: ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val isReady = snapshot.value as Boolean?
@@ -669,23 +687,32 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
 
                 checkedUsers.add(user["UID"].toString())
 
-                Log.d("Request", "HERE ${user["UID"]}")
                 taskScheduler.scheduleTask(
                     topicID = topicID,
                     forUID = user["UID"].toString(),
-                    timeInterval = 10 * 1000L,
+                    timeInterval = _timeForPenalty * 1000L,
                     repeats = false
                 ) {
                     reservedUserRef
-                        .updateChildren(
-                            mapOf(
-                                "isReserved" to false,
-                                "reservedBy" to null
-                            )
-                        )
-                    reservedUserRef
                         .child("isReady")
                         .removeEventListener(isReadyListener)
+                    if (penalty == 1L) {
+                        // User has accumulated too much penalty.
+                        // Remove them as procrastinator in this topic.
+                        reservedUserRef
+                            .removeValue()
+                        return@scheduleTask
+                    } else {
+                        reservedUserRef
+                            .updateChildren(
+                                mapOf(
+                                    "isReserved" to false,
+                                    "reservedBy" to null,
+                                    "penalty" to (penalty + 1)
+                                )
+                            )
+                    }
+
                     currentUserRef
                         .updateChildren(
                             mapOf(
@@ -696,7 +723,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             }
 
         } catch (e: Exception) {
-            Log.d("An error occured", "Error message: ${e.localizedMessage}")
+            Log.d("An error occurred", "Error message: ${e.localizedMessage}")
         }
     }
 
@@ -710,6 +737,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     private fun attachListenerForTopic(topicID: String) {
+        Log.d("LISTENER", "HERE $topicID")
         val userRef =
             realtimeDatabase
                 .reference
@@ -731,7 +759,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     val isReserved = userData["isReserved"] as Boolean? ?: false
                     if (isReserved) {
                         // Start matching
-                        Log.d("MATCH FOUND", "$topicID:$userData")
                         if(matches.value!!.indexOfFirst { it.topicID == topicID } == -1) {
                             val updatedMatches = _matches.value!!
                             updatedMatches.add(
@@ -753,7 +780,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             showToast("The match has expired")
                             logEventToAnalytics("match_timeout")
                         }
-                        Log.d("MATCH NOT FOUND", _matches.value!!.toString())
                     }
                 }
 
@@ -764,7 +790,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     fun acceptMatch(match: Match) {
-        Log.d("ACCEPT", match.toString())
         val usersRef = realtimeDatabase
             .reference
             .child(match.topicID)
@@ -792,7 +817,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         .get()
                         .addOnSuccessListener {
                             val reservedUID = it.value as? String
-                            Log.d("ACCEPT1", reservedUID.toString())
                             if (reservedUID.isNullOrBlank()) {
                                 return@addOnSuccessListener
                             } else {
@@ -1003,10 +1027,15 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     fun stopWorking() {
-        taskScheduler.invalidateAllTimers()
-        for (topic in eligibleUsers.keys) {
-
-        }
+        // TODO: Stop working on all topics
+//        taskScheduler.invalidateAllTimers()
+//        for (topic in eligibleUsers.keys) {
+//            realtimeDatabase
+//                .reference
+//                .child("$topic/users/${userState.value!!.UID}/isWorker")
+//                .setValue(false)
+//
+//        }
     }
 
     fun openChamber(chamberID: String) {

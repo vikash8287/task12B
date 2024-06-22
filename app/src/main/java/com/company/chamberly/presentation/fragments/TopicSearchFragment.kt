@@ -67,16 +67,11 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         val backButton = view.findViewById<ImageButton>(R.id.backButton)
         val buttonsView = view.findViewById<LinearLayout>(R.id.buttonsLayout)
         val emptyStateView = view.findViewById<RelativeLayout>(R.id.emptyStateView)
-        val cancelButton = view.findViewById<ImageButton>(R.id.cancelProcrastinationButton)
         pendingTopicsRecyclerView = view.findViewById(R.id.pendingTopicsRecyclerView)
         kolodaView.kolodaListener = this
 
         kolodaAdapter = TopicAdapter()
         kolodaView.adapter = kolodaAdapter
-
-        cancelButton.setOnClickListener {
-            userViewModel.stopProcrastination()
-        }
 
         fetchedTopics.observe(viewLifecycleOwner) {
             kolodaAdapter.updateTopics(it)
@@ -99,7 +94,6 @@ class TopicSearchFragment : Fragment(), KolodaListener {
                         titles.add(userViewModel.pendingTopicTitles[topic] ?: "")
                     }
                 }
-                Log.d("Topics", it.toString() + ":" + titles.toString())
                 pendingTopicsListAdapter.addItems(titles)
             }
             pendingTopicsRecyclerView!!.layoutManager = layoutManager
@@ -115,6 +109,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         joinButton.setOnClickListener { kolodaView.onClickRight() }
 
         backButton.setOnClickListener {  findNavController().popBackStack() }
+
         userViewModel.logEventToAnalytics("chamber_search")
         userViewModel.logEventToAnalytics("landed_on_cards_view")
         return view

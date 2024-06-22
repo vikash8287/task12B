@@ -36,15 +36,6 @@
                 android:text="@string/swipe_right_to_start_chatting1"
                 android:textColor="#2E2E5B"
                 android:textSize="20sp" />
-            <ImageButton
-                android:id="@+id/cancelProcrastinationButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:layout_gravity="center"
-                android:contentDescription="Cancel Procrastination"
-                android:src="@drawable/ic_dislike"/>
         </LinearLayout>
 
         <com.yalantis.library.Koloda

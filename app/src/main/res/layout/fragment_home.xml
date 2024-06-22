@@ -44,57 +44,32 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:paddingTop="30dp">
-                    <Button
-                        android:id="@+id/createChamberButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="8dp"
-                        android:layout_marginHorizontal="16dp"
-                        android:textColor="@color/white"
-                        android:text="@string/create_a_chamber"
-                        android:background="@drawable/rounded_button"/>
+                    android:paddingVertical="30dp"
+                    android:paddingHorizontal="16dp">
 
                     <Button
                         android:id="@+id/createTopicButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginVertical="8dp"
-                        android:layout_marginHorizontal="16dp"
                         android:textColor="@color/white"
                         android:text="@string/create_a_topic"
-                        android:background="@drawable/rounded_button" />
-
-                    <!-- Find a Chamber Button -->
-                    <Button
-                        android:id="@+id/findChamberButton"
-                        android:layout_width="match_parent"
-                        android:textColor="@color/white"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="8dp"
-                        android:layout_marginHorizontal="16dp"
-                        android:text="@string/find_a_chamber"
-                        android:background="@drawable/rounded_button" />
-
+                        android:background="@drawable/button_filled" />
+                    <androidx.legacy.widget.Space
+                        android:layout_width="0dp"
+                        android:layout_height="16dp" />
                     <Button
                         android:id="@+id/findTopicButton"
                         android:layout_width="match_parent"
-                        android:textColor="@color/white"
+                        android:textColor="@color/black"
                         android:layout_height="wrap_content"
-                        android:layout_marginVertical="8dp"
-                        android:layout_marginHorizontal="16dp"
                         android:text="@string/find_a_topic"
-                        android:background="@drawable/rounded_button" />
+                        android:background="@drawable/button_outlined" />
                 </LinearLayout>
-
-
-                <!-- Follow us on Instagram -->
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-
                     <ImageButton
                         android:id="@+id/instagramIcon"
                         android:layout_width="wrap_content"
