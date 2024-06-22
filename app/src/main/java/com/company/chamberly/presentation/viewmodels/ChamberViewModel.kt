@@ -36,7 +36,9 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     private val realtimeDatabase = Firebase.database
     private val firestore = Firebase.firestore
     private val firebaseAnalytics = FirebaseAnalytics.getInstance(getApplication())
-    private val sharedPreferences = application.getSharedPreferences("cache", Context.MODE_PRIVATE)
+    private val sharedPreferences =
+        application.getSharedPreferences("cache", Context.MODE_PRIVATE)
+    val memberNames: MutableMap<String, String> = mutableMapOf()
 
     fun setChamber(chamberID: String, UID: String) {
         Log.d("CHAMBER1", chamberID)
@@ -48,6 +50,16 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                 if(chamberSnapshot.data != null) {
                     _chamberState.value = getChamberFromSnapshot(chamberSnapshot.data!!)
                     Log.d("CHAMBER", _chamberState.value.toString())
+                    for (member in chamberState.value!!.members) {
+                        firestore
+                            .collection("Accounts")
+                            .document(member)
+                            .get()
+                            .addOnSuccessListener { memberSnapshot ->
+                                memberNames[member] =
+                                    memberSnapshot.data?.get("Display_Name").toString()
+                            }
+                    }
                     removeNotificationKey(UID)
                     getMessages()
                 }
@@ -65,7 +77,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
         )
     }
 
-    fun getMessages() {
+    private fun getMessages() {
         val messagesQuery =
             realtimeDatabase
                 .getReference(_chamberState.value!!.chamberID)
@@ -119,6 +131,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                             }
                         }
                     } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
 
@@ -153,13 +166,12 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                 }
 
                 override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-
+                    // Not needed for now
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-
+                    // Not needed for now
                 }
-
             })
     }
 

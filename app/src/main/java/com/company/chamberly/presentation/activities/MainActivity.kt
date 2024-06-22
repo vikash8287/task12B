@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity() {
                             .collection("TopicIds")
                             .document(topic)
                             .get()
-                            .addOnSuccessListener {topicDocSnapshot ->
+                            .addOnSuccessListener { topicDocSnapshot ->
                                 userViewModel.pendingTopicTitles[topic] =
                                     topicDocSnapshot["TopicTitle"] as String? ?: ""
                             }

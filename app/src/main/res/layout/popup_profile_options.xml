@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     style="@style/Dialog"
-    android:layout_marginHorizontal="36dp"
+    android:layout_marginStart="36dp"
     android:orientation="vertical"
     android:paddingHorizontal="32dp"
     android:paddingVertical="8dp"

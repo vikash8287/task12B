@@ -23,11 +23,11 @@ import com.company.chamberly.R.color
 import com.company.chamberly.R.layout
 import com.company.chamberly.R.string
 import com.company.chamberly.R.style
+import com.company.chamberly.models.Topic
 import com.company.chamberly.presentation.adapters.PendingTopicsListAdapter
 import com.company.chamberly.presentation.adapters.TopicAdapter
-import com.company.chamberly.models.Topic
-import com.company.chamberly.utils.Role
 import com.company.chamberly.presentation.viewmodels.UserViewModel
+import com.company.chamberly.utils.Role
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
@@ -94,7 +94,6 @@ class TopicSearchFragment : Fragment(), KolodaListener {
                         titles.add(userViewModel.pendingTopicTitles[topic] ?: "")
                     }
                 }
-                Log.d("Topics", it.toString() + ":" + titles.toString())
                 pendingTopicsListAdapter.addItems(titles)
             }
             pendingTopicsRecyclerView!!.layoutManager = layoutManager
@@ -110,6 +109,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         joinButton.setOnClickListener { kolodaView.onClickRight() }
 
         backButton.setOnClickListener {  findNavController().popBackStack() }
+
         userViewModel.logEventToAnalytics("chamber_search")
         userViewModel.logEventToAnalytics("landed_on_cards_view")
         return view
@@ -142,13 +142,11 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         }
 
         super.onCardSwipedRight(position)
-        Log.d("SWIPE_RIGHT", fetchedTopics.value.toString())
     }
 
     override fun onCardSwipedLeft(position: Int) {
         fetchedTopics.value!!.remove(kolodaAdapter.getItem(position+1))
         userViewModel.dismissTopic()
-        Log.d("SWIPE_LEFT", fetchedTopics.value!!.map{ it.TopicTitle }.toString() + ":" + position.toString())
         super.onCardSwipedLeft(position)
     }
 

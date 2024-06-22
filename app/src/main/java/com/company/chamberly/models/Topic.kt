@@ -10,6 +10,8 @@ data class Topic(
     var forGender: String = "male",
     var lflWeight: Int = 15,
     var lfvWeight: Int = 15,
+    var lflCount: Int = 15,
+    var lfvCount: Int = 15,
     var timestamp:  Any = FieldValue.serverTimestamp(),
     var weight: Int = 60,
 )
