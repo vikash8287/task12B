@@ -1033,7 +1033,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     private fun stopWorking() {
-        // TODO: Stop working on all topics
+//        TODO: Stop working on all topics
 //        taskScheduler.invalidateAllTimers()
 //        for (topic in eligibleUsers.keys) {
 //            realtimeDatabase

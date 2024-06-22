@@ -5,12 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".presentation.fragments.CreateTopicFragment">
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/white">
-
         <TextView
             android:id="@+id/header"
             android:layout_width="wrap_content"
@@ -22,7 +20,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
         <EditText
             android:id="@+id/topic_title"
             android:layout_width="match_parent"
@@ -30,45 +27,40 @@
             android:layout_gravity="center_vertical"
             android:background="@drawable/rounded_edittext"
             android:hint="@string/enter_chamber_title"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
+            android:paddingHorizontal="10dp"
             android:inputType="text"
             android:autofillHints=""
             android:imeOptions="actionDone"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/header"
-            android:layout_marginTop="30dp"
-            android:layout_marginBottom="30dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"/>
-
+            android:layout_marginVertical="30dp"
+            android:layout_marginHorizontal="20dp"/>
         <Button
             android:id="@+id/create_button"
             android:layout_width="match_parent"
             android:layout_height="55dp"
             android:layout_marginTop="30dp"
-            android:background="@drawable/rounded_button"
+            android:background="@drawable/button_filled"
             android:text="@string/create_a_topic"
+            android:textAllCaps="false"
             android:layout_margin="20dp"
             android:textColor="#ffffff"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/topic_title"
             tools:ignore="TextContrastCheck" />
-
         <LinearLayout
             android:id="@+id/too_many_topics_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
+            android:layout_margin="24dp"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/create_button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:flow_horizontalAlign="center"
-
             android:orientation="vertical">
             <TextView
                 android:layout_width="match_parent"
@@ -78,16 +70,15 @@
                 android:textSize="18sp"/>
             <androidx.legacy.widget.Space
                 android:layout_width="wrap_content"
-                android:layout_height="20dp"/>
+                android:layout_height="12dp"/>
             <Button
                 android:id="@+id/clear_all_topics_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Clear all topics"
+                android:textAllCaps="false"
                 android:textColor="#fff"
-                android:background="@drawable/rounded_button"/>
+                android:background="@drawable/button_filled"/>
         </LinearLayout>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </FrameLayout>

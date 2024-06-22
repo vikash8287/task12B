@@ -8,8 +8,6 @@
     android:background="?android:attr/selectableItemBackground"
     android:orientation="horizontal"
     android:gravity="center">
-
-    <!-- Profile Picture Button -->
     <ImageButton
         android:id="@+id/btnChamberProfile"
         android:layout_width="48dp"
@@ -18,7 +16,6 @@
         android:background="@drawable/ic_couplechat"
         android:backgroundTint="#7A7AFF"
         android:contentDescription="@string/chamberly"/>
-
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -36,8 +33,6 @@
             app:layout_constraintTop_toTopOf="@id/btnChamberProfile"
             android:maxLines="1"
             android:ellipsize="end"/>
-
-        <!-- Last Message Preview -->
         <TextView
             android:id="@+id/tvLastMessage"
             android:layout_width="match_parent"
@@ -49,23 +44,4 @@
             android:maxLines="1"
             android:ellipsize="end" />
     </LinearLayout>
-
-    <!--
-    <TextView
-        android:id="@+id/tvNotificationBadge"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
-        android:background="@drawable/notification_badge"
-        android:text="2"
-        android:textSize="12sp"
-        android:layout_marginEnd="16dp"
-        android:textColor="#FFFFFF"
-        android:layout_marginTop="12dp"
-        android:gravity="center"
-        android:minWidth="24dp"
-        android:minHeight="24dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-        -->
-
 </LinearLayout>

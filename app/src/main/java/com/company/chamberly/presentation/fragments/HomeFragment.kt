@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
@@ -20,7 +21,7 @@ class HomeFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         val createTopicButton = view.findViewById<Button>(R.id.createTopicButton)
         val searchTopicButton = view.findViewById<Button>(R.id.findTopicButton)
-        val followUsButton = view.findViewById<Button>(R.id.followUs)
+        val followUsButton = view.findViewById<TextView>(R.id.followUs)
 
 //        createChamberButton.setOnClickListener {
 //            requireParentFragment()

@@ -50,11 +50,11 @@ class ChatFragment : Fragment() {
     private val replyingTo = MutableLiveData("")
     private val reactionEmojis: List<String> = listOf("👍", "💗", "😂", "😯", "😥", "😔", "+")
     private val chamberLeavingOptions: Map<String, String> = mapOf(
-        "DONE VENTING" to "\"I am done venting, thank you so much 💗\"",
-        "WRONG MATCH" to "\"Wrong match, sorry 😢\"",
-        "IN A HURRY" to "\"Sorry, I am in a hurry 😰\"",
-        "JUST CHECKING THE APP OUT" to "\"Just checking the app 🥰\"",
-        "NO ACTIVITY" to "\"There is no activity 😔\""
+        "Done Venting" to "\"I am done venting, thank you so much 💗\"",
+        "Wrong Match" to "\"Wrong match, sorry 😢\"",
+        "In a Hurry" to "\"Sorry, I am in a hurry 😰\"",
+        "Just checking the app out" to "\"Just checking the app 🥰\"",
+        "No activity" to "\"There is no activity 😔\""
     )
     private val reportReasons: List<String> = listOf(
         "Harassment",
@@ -63,6 +63,7 @@ class ChatFragment : Fragment() {
         "Spamming",
         "Annoying"
     )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         chamberViewModel.setChamber(
@@ -71,7 +72,6 @@ class ChatFragment : Fragment() {
         )
     }
 
-//    override fun on
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

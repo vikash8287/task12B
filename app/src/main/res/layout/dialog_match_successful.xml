@@ -37,6 +37,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/button_outlined"
         android:text="Open chat"
+        android:textAllCaps="false"
         android:textColor="@color/primary"/>
     <androidx.legacy.widget.Space
         android:layout_width="0dp"
@@ -48,5 +49,6 @@
         android:background="@drawable/button_outlined"
         android:backgroundTint="#C1C1C9"
         android:text="Cancel"
+        android:textAllCaps="false"
         android:textColor="#C1C1C9"/>
 </LinearLayout>

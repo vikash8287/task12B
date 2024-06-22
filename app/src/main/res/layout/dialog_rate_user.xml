@@ -43,6 +43,7 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="Cancel"
+            android:textAllCaps="false"
             android:textColor="#000"
             android:background="#0000"/>
 
@@ -52,6 +53,7 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="Rate"
+            android:textAllCaps="false"
             android:textColor="#22AB8C"
             android:background="#0000"/>
 

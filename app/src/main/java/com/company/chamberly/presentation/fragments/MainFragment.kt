@@ -25,7 +25,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.company.chamberly.R
 import com.company.chamberly.presentation.viewmodels.UserViewModel
-import com.company.chamberly.utils.Entitlement
 import com.company.chamberly.utils.Role
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
@@ -38,6 +37,7 @@ class MainFragment : Fragment() {
 
     private var homeButton: ImageButton? = null
     private var myChambersButton: ImageButton? = null
+    private var rightNavHostFragment: NavHostFragment? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,7 +49,7 @@ class MainFragment : Fragment() {
             childFragmentManager.findFragmentById(R.id.homeNavHostFragment) as? NavHostFragment
         val leftNavHostFragment =
             childFragmentManager.findFragmentById(R.id.leftNavHostFragment) as? NavHostFragment
-        val rightNavHostFragment =
+        rightNavHostFragment =
             childFragmentManager.findFragmentById(R.id.rightNavHostFragment) as? NavHostFragment
         val usernameTextView = view.findViewById<TextView>(R.id.usernameTextView)
         val profilePictureButton = view.findViewById<ImageButton>(R.id.profilePic)
@@ -66,14 +66,13 @@ class MainFragment : Fragment() {
 
         usernameTextView.text = userViewModel.userState.value?.displayName ?: "Anonymous"
 
-        userViewModel.userState.observe(viewLifecycleOwner) {
-            if(it.entitlement == Entitlement.CHAMBERLY_PLUS) {
-                // User is subscribed
-            }
-        }
+//        userViewModel.userState.observe(viewLifecycleOwner) {
+//            if(it.entitlement == Entitlement.CHAMBERLY_PLUS) {
+//                // User is subscribed
+//            }
+//        }
 
         profilePictureButton.setOnClickListener {
-//            Log.d("POSITION BUTTON", profilePictureButton.)
             showProfileOptionsPopup(it)
         }
         return view
@@ -136,6 +135,27 @@ class MainFragment : Fragment() {
                     }
                 }
             )
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val rightNavController = rightNavHostFragment?.navController
+
+        rightNavController?.let {
+            if (it.currentDestination?.id == R.id.homeFragment) {
+                it.navigate(
+                    R.id.activeChambersFragment,
+                    null,
+                    navOptions {
+                        apply {
+                            popUpTo(R.id.home_fragment) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                )
+            }
+        }
     }
 
     private fun showProfileOptionsPopup(buttonView: View) {
