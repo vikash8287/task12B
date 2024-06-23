@@ -95,7 +95,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     private var currentOffering: Offering? = null
     private val pInfo = application.packageManager.getPackageInfo(application.packageName, 0)
     private var versionName: String = pInfo.versionName
-    private val checkedUsers: MutableList<String> = mutableListOf()
+    private val checkedUsers: MutableSet<String> = mutableSetOf()
     private val eligibleUsers: MutableMap<String,MutableList<MutableMap<String, Any>>> =
         mutableMapOf()
     private lateinit var databaseManager: DatabaseManager
