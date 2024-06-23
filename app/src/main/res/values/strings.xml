@@ -27,7 +27,7 @@
     <string name="start_a_chat">Start a Chat</string>
     <string name="start_a_topic">Start a Topic</string>
     <string name="create_chamber">Create Chamber</string>
-    <string name="enter_chamber_title">Enter Chamber Title...</string>
+    <string name="enter_chamber_title">Type here... (For example: Study anxiety, Breakup, etc)</string>
     <string name="dislike">disliked</string>
     <string name="this_is_a_message">This is a Message</string>
     <string name="chat_icon">Chat Icon</string>

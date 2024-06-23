@@ -207,7 +207,7 @@ class MainFragment : Fragment() {
 
         deleteAccountButton.setOnClickListener {
             profileOptionsPopUp.dismiss()
-            userViewModel.deleteAccount()
+            showAccountDeleteDialog()
         }
 
         showPrivacyPolicyButton.setOnClickListener {
@@ -244,6 +244,23 @@ class MainFragment : Fragment() {
         params.y = buttonView.bottom
         profileOptionsPopUp.window?.attributes = params
         profileOptionsPopUp.show()
+    }
+
+    private fun showAccountDeleteDialog() {
+        val dialog = Dialog(requireActivity(), R.style.Dialog)
+
+        dialog.setContentView(R.layout.dialog_delete_account_confirmation)
+        val confirmButton = dialog.findViewById<TextView>(R.id.confirmButton)
+        val dismissButton = dialog.findViewById<TextView>(R.id.dismissButton)
+
+        confirmButton.setOnClickListener {
+            userViewModel.deleteAccount()
+            dialog.dismiss()
+        }
+
+        dismissButton.setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
     }
 
     private fun showPrivacyPolicy() {
