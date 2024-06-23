@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.company.chamberly.R
 import com.company.chamberly.models.Chamber
 import com.company.chamberly.models.Match
 import com.company.chamberly.models.Message
@@ -243,12 +244,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             setNotificationToken()
             getUserRestrictions()
             getUserRating()
-            for( topic in _pendingTopics.value ?: mutableListOf()) {
-                waitAsWorker(
-                    topicID = topic,
-                    topicTitle = pendingTopicTitles[topic] ?: ""
-                )
-            }
+            getUserChambers()
+            attachTopicRequestListeners()
             if (appState.value?.areExperimentalFeaturesEnabled == true) {
                 setPaywallStatus()
             }
@@ -262,7 +259,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             .child("UX_Android")
             .addValueEventListener(object: ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val data = snapshot.value as Map<String, Any>
+                    val data =
+                        try { snapshot.value as Map<String, Any> }
+                        catch (_: Exception) { emptyMap() }
                     val isAppEnabled =
                         try { data["shouldAuthenticateUser"] as Boolean }
                         catch (_: Exception) { true }
@@ -288,7 +287,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 override fun onCancelled(error: DatabaseError) {
                     TODO("Not yet implemented")
                 }
-
             })
     }
 
@@ -340,6 +338,34 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         })
     }
 
+    fun getUserChambers(
+        callback: (List<Chamber>) -> Unit = {}
+    ) {
+        firestore
+            .collection("GroupChatIds")
+            .whereArrayContains("members", userState.value!!.UID)
+            .limit(20)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val chambers = querySnapshot.documents.mapNotNull {
+                    it.toObject(Chamber::class.java)
+                }
+                for (chamber in chambers) {
+                    for (member in chamber.members) {
+                        if (member != userState.value!!.UID) {
+                            checkedUsers.add(member)
+                        }
+                    }
+                }
+                _userState.postValue(
+                    _userState.value!!.copy(
+                        chambers = chambers.toMutableList()
+                    )
+                )
+                Log.d("Chambers", chambers.toString() + "\n" + checkedUsers.toString())
+            }
+    }
+
     fun createChamber(
         chamberTitle: String,
         callback: (String) -> Unit = {}
@@ -363,8 +389,24 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     realtimeDatabase.getReference(chamber.groupChatId)
 
                 chamberDataRef.child("host").setValue(chamber.AuthorUID)
+                chamberDataRef.child("title").setValue(chamberTitle)
                 chamberDataRef.child("messages").push().setValue("")
                 chamberDataRef.child("timestamp").setValue(ServerValue.TIMESTAMP)
+
+                val messageId = chamberDataRef.child("messages").push().key
+
+                val welcomeMessage = Message(
+                    message_id = messageId.toString(),
+                    UID = "system",
+                    message_content = getApplication<Application>()
+                        .getString(R.string.welcome_message),
+                    message_type = "custom",
+                    sender_name = "system"
+                )
+
+                chamberDataRef
+                    .child("messages/$messageId")
+                    .setValue(welcomeMessage)
 
                 chamberRef.update("members", FieldValue.arrayUnion(userState.value!!.UID))
                 firestore
@@ -564,23 +606,29 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     return@addOnSuccessListener
                 }
                 val users = mutableListOf<Map<String, Any>>()
-                Log.d("WORKING", procrastinators.toString())
                 procrastinators.forEach { (uid, userData) ->
                     val userMap = (userData as Map<String, Any>).toMutableMap()
+                    val userCheckedBy =
+                        try { (userMap["checkedBy"] as List<String>).toMutableList() }
+                        catch (_: Exception) { mutableListOf() }
+                    Log.d("CHECKED BY", userCheckedBy.toString())
                     if(uid != userState.value!!.UID &&
                         (userMap["isReserved"] ?: false) == false &&
                         (userMap["restricted"] ?: false) == false &&
                         userMap[lookingFor] == true &&
                         (userMap["isWorker"] ?: false) == false &&
+                        userState.value!!.UID !in userCheckedBy &&
                         uid !in checkedUsers
                     ) {
-                            userMap["UID"] = uid
-                            users.add(userMap)
-                            if (eligibleUsers[topicID] == null) {
-                                eligibleUsers[topicID] = mutableListOf()
-                            }
-                            eligibleUsers[topicID]!!.add(userMap)
+                        userCheckedBy.add(userState.value!!.UID)
+                        userMap["UID"] = uid
+                        userMap["checkedBy"] = userCheckedBy
+                        users.add(userMap)
+                        if (eligibleUsers[topicID] == null) {
+                            eligibleUsers[topicID] = mutableListOf()
                         }
+                        eligibleUsers[topicID]!!.add(userMap)
+                    }
                 }
                 if (eligibleUsers[topicID] != null) {
                     eligibleUsers[topicID]!!
@@ -591,6 +639,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         .reference
                         .child("$topicID/users/${userState.value!!.UID}/isWorker")
                         .setValue(false)
+                    attachListenerForTopic(topicID = topicID)
                 }
             }
             .addOnFailureListener {
@@ -614,7 +663,11 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         }
     }
 
-    private suspend fun sendRequest(topicID: String, topicTitle: String, user: Map<String, Any>) {
+    private suspend fun sendRequest(
+        topicID: String,
+        topicTitle: String,
+        user: Map<String, Any>
+    ) {
         val reservedUserRef =
             realtimeDatabase
                 .reference
@@ -647,6 +700,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                     val updatedTopics = _pendingTopics.value!!
                                     updatedTopics.remove(topicID)
                                     _pendingTopics.postValue(updatedTopics)
+                                    getUserChambers()
                                 }
                             )
                         }
@@ -676,7 +730,10 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
 
                 reservedUserRef.updateChildren(
                     mapOf(
+                        "checkedBy" to
+                                (user["checkedBy"] ?: listOf(userState.value!!.UID)),
                         "isReserved" to true,
+                        "isReady" to false,
                         "reservedBy" to userState.value!!.UID
                     )
                 )
