@@ -1,20 +1,20 @@
 package com.company.chamberly.presentation.fragments
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
-import com.company.chamberly.presentation.adapters.ChambersRecyclerViewAdapter
 import com.company.chamberly.models.Chamber
 import com.company.chamberly.models.Message
+import com.company.chamberly.presentation.adapters.ChambersRecyclerViewAdapter
 import com.company.chamberly.presentation.viewmodels.UserViewModel
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
@@ -80,7 +80,9 @@ class ActiveChambersFragment : Fragment() {
         Tasks.whenAllSuccess<DataSnapshot>(lastMessageTasks)
             .addOnSuccessListener { lastMessages ->
                 lastMessages.forEachIndexed { index, dataSnapshot ->
-                    val lastMessage = try { dataSnapshot.children.firstOrNull()?.getValue(Message::class.java) } catch(_: Exception) { Message(message_content = "No messages") }
+                    val lastMessage =
+                        try { dataSnapshot.children.firstOrNull()?.getValue(Message::class.java) }
+                        catch(_: Exception) { Message(message_content = "No messages") }
                     chambers[index].lastMessage = getLastMessage(lastMessage)
                 }
                 callback(chambers)

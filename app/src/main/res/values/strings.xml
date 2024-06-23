@@ -19,7 +19,7 @@
     <string name="chamberly">CHAMBERLY</string>
     <string name="search">Search</string>
     <string name="create_a_chamber">Create a Chamber</string>
-    <string name="create_a_topic">Create a Topic</string>
+    <string name="create_a_topic">Start a chamber</string>
     <string name="todo">TODO</string>
     <string name="grouptitle">groupTitle</string>
     <string name="send">Send</string>
@@ -40,7 +40,7 @@
     <string name="follow_us_on_instagram">Follow us on Instagram!</string>
     <string name="_125">125</string>
     <string name="find_a_chamber">Find a Chamber</string>
-    <string name="find_a_topic">Find a Topic</string>
+    <string name="find_a_topic">Search</string>
     <string name="create_a_display_name">Create an account to start</string>
     <string name="username">Username</string>
     <string name="create_account">Create Account</string>
@@ -93,4 +93,6 @@
     <string name="procrastination_cancel_success_message">You can now swipe right on new topics</string>
     <string name="procrastination_cancel_success_title">Done!</string>
     <string name="welcome_to_chamberly">Welcome to Chamberly!</string>
+    <string name="welcome_message">🌟 Chamberly is a supportive space for venting and listening, not for dating.\nSay Hi 👋</string>
+    <string name="rate_user">Rate %1$s</string>
 </resources>

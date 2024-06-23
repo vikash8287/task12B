@@ -1,5 +1,6 @@
 package com.company.chamberly.presentation.states
 
+import com.company.chamberly.models.Chamber
 import com.company.chamberly.utils.Entitlement
 import com.company.chamberly.utils.Role
 
@@ -12,5 +13,6 @@ data class UserState(
     val userRating: Float = 0.0f,
     val isRestricted: Boolean = false,
     val numRatings: Int = 0,
-    var coins: Int = 0
+    var coins: Int = 0,
+    var chambers: MutableList<Chamber> = mutableListOf()
 )

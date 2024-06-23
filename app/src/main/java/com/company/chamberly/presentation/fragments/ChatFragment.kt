@@ -439,7 +439,7 @@ class ChatFragment : Fragment() {
         val cancelButton = dialog.findViewById<Button>(R.id.button_rating_cancel)
         val confirmButton = dialog.findViewById<Button>(R.id.button_rating_confirm)
 
-        heading.text = getString(R.string.report_user_title_text, userToRateName)
+        heading.text = getString(R.string.rate_user, userToRateName)
 
         cancelButton.setOnClickListener {
             callback()
