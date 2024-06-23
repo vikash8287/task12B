@@ -99,6 +99,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         mutableMapOf()
     private lateinit var databaseManager: DatabaseManager
     private val taskScheduler: TaskScheduler = TaskScheduler()
+    var completedMatches: MutableLiveData<Pair<String, String>> =
+        MutableLiveData(Pair("", ""))
 
     init {
         _pendingTopics.value =
@@ -641,6 +643,10 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                         )
                                     )
                                     eligibleUsers.remove(topicID)
+                                    completedMatches.postValue(Pair(chamberID, topicTitle))
+                                    val updatedTopics = _pendingTopics.value!!
+                                    updatedTopics.remove(topicID)
+                                    _pendingTopics.postValue(updatedTopics)
                                 }
                             )
                         }
@@ -1026,8 +1032,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         callback()
     }
 
-    fun stopWorking() {
-        // TODO: Stop working on all topics
+    private fun stopWorking() {
+//        TODO: Stop working on all topics
 //        taskScheduler.invalidateAllTimers()
 //        for (topic in eligibleUsers.keys) {
 //            realtimeDatabase

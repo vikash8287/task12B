@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".presentation.fragments.WelcomeFragment">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -39,7 +38,6 @@
                 android:textAlignment="center"
                 android:textSize="26sp"/>
         </LinearLayout>
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -60,6 +58,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:background="@drawable/rounded_edittext"
+                android:backgroundTint="@color/primary"
                 android:hint="@string/username"
                 android:imeOptions="actionDone"
                 android:inputType="textEmailAddress"
@@ -67,7 +66,6 @@
                 android:autofillHints="username"
                 android:textColorHint="#B0B0CA"
                 android:textSize="18sp"/>
-
             <androidx.legacy.widget.Space
                 android:layout_width="0dp"
                 android:layout_height="16dp"/>
@@ -76,16 +74,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="@string/feel_free_we_do_not_ask_your_real_name_but_it_must_comply_with_the_terms_conditions"
                 android:textColor="#2E2E5B"
                 android:textSize="14sp"
                 android:clickable="true"
                 android:focusable="true" />
-
             <androidx.legacy.widget.Space
                 android:layout_width="0dp"
                 android:layout_height="16dp"/>
-
             <RadioGroup
                 android:id="@+id/role_selector_group"
                 android:layout_width="match_parent"
@@ -94,7 +89,6 @@
                 android:gravity="center"
                 android:padding="4dp"
                 android:orientation="horizontal">
-
                 <RadioButton
                     android:id="@+id/role_ventor"
                     android:background="@drawable/toggle_switch_large_thumb"
@@ -106,7 +100,6 @@
                     android:gravity="center"
                     android:text="Ventor"
                     android:textColor="@color/white" />
-
                 <RadioButton
                     android:id="@+id/role_listener"
                     android:layout_width="0dp"
@@ -119,33 +112,27 @@
                     android:text="Listener"
                     android:textColor="@color/white" />
             </RadioGroup>
-
             <androidx.legacy.widget.Space
                 android:layout_width="0dp"
                 android:layout_height="16dp"/>
-
             <TextView
                 android:id="@+id/role_details"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:layout_constraintTop_toBottomOf="@id/role_selector_group"/>
-
             <androidx.legacy.widget.Space
                 android:layout_width="0dp"
                 android:layout_height="16dp"/>
-
             <Button
                 android:id="@+id/btnCreateAccount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:background="@drawable/rounded_button"
+                android:background="@drawable/button_filled"
                 android:text="@string/create_account"
                 android:textAllCaps="false"
                 android:textColor="#ffffff"
                 android:textSize="18sp"/>
-
         </LinearLayout>
     </LinearLayout>
-
 </FrameLayout>

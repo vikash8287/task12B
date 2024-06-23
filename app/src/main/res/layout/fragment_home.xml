@@ -4,93 +4,77 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingVertical="16dp"
+    android:paddingHorizontal="12dp"
     tools:context=".presentation.fragments.HomeFragment">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@android:color/white">
-
-        <ScrollView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
             android:paddingVertical="8dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent">
+            <ImageView
+                android:id="@+id/dolphinImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="36dp"
+                android:src="@drawable/dp"/>
+            <ImageView
+                android:id="@+id/chamberlyText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:src="@drawable/chamberly"/>
             <LinearLayout
+                android:id="@+id/actionButtons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:orientation="vertical">
-                <!-- Dolphin Image -->
-                <ImageView
-                    android:id="@+id/dolphinImage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="36dp"
-                    android:src="@drawable/dp"/>
-
-                <!-- Chamberly Text -->
-                <ImageView
-                    android:id="@+id/chamberlyText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:src="@drawable/chamberly"/>
-
-                <!-- Create a Chamber Button -->
-                <LinearLayout
-                    android:id="@+id/actionButtons"
+                android:orientation="vertical"
+                android:paddingVertical="30dp"
+                android:paddingHorizontal="16dp">
+                <Button
+                    android:id="@+id/createTopicButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingVertical="30dp"
-                    android:paddingHorizontal="16dp">
-
-                    <Button
-                        android:id="@+id/createTopicButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/white"
-                        android:text="@string/create_a_topic"
-                        android:background="@drawable/button_filled" />
-                    <androidx.legacy.widget.Space
-                        android:layout_width="0dp"
-                        android:layout_height="16dp" />
-                    <Button
-                        android:id="@+id/findTopicButton"
-                        android:layout_width="match_parent"
-                        android:textColor="@color/black"
-                        android:layout_height="wrap_content"
-                        android:text="@string/find_a_topic"
-                        android:background="@drawable/button_outlined" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:textColor="@color/white"
+                    android:text="@string/create_a_topic"
+                    android:textAllCaps="false"
+                    android:textSize="18sp"
+                    android:background="@drawable/button_filled" />
+                <androidx.legacy.widget.Space
+                    android:layout_width="0dp"
+                    android:layout_height="16dp" />
+                <Button
+                    android:id="@+id/findTopicButton"
+                    android:layout_width="match_parent"
+                    android:textColor="@color/black"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-                    <ImageButton
-                        android:id="@+id/instagramIcon"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@null"
-                        android:paddingTop="15dp"
-                        android:src="@drawable/insta"
-                        tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
-
-                    <Button
-                        android:id="@+id/followUs"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="3.5dp"
-                        android:background="@null"
-                        android:text="@string/follow_us_on_instagram"
-                        android:textAllCaps="false"
-                        android:textColor="#2E2E5B" />
-                </LinearLayout>
+                    android:text="@string/find_a_topic"
+                    android:textAllCaps="false"
+                    android:textSize="18sp"
+                    android:background="@drawable/button_outlined" />
             </LinearLayout>
-        </ScrollView>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/followUs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:background="@null"
+            android:drawableStart="@drawable/insta"
+            android:text="@string/follow_us_on_instagram"
+            android:textAllCaps="false"
+            android:textColor="#2E2E5B"
+            android:drawablePadding="4dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

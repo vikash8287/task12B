@@ -23,7 +23,6 @@
             android:textSize="16sp"
             android:layout_weight="1"
             android:text="Role:"/>
-
         <RadioGroup
             android:id="@+id/role_selector_group"
             android:layout_width="0dp"
@@ -34,7 +33,6 @@
             android:gravity="center"
             android:padding="4dp"
             android:orientation="horizontal">
-
             <RadioButton
                 android:id="@+id/role_ventor"
                 android:background="@drawable/role_selector_thumb"
@@ -46,7 +44,6 @@
                 android:gravity="center"
                 android:text="Ventor"
                 android:textColor="@color/white" />
-
             <RadioButton
                 android:id="@+id/role_listener"
                 android:layout_width="0dp"
@@ -60,7 +57,6 @@
                 android:textColor="@color/white" />
         </RadioGroup>
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/confirm_role_change_view"
         android:layout_width="match_parent"
@@ -72,7 +68,6 @@
             android:text="@string/confirm_role_change"
             android:textSize="16sp"
             android:textColor="@color/red"/>
-
         <TextView
             android:id="@+id/confirm_role_change_button"
             android:layout_width="wrap_content"
@@ -84,7 +79,6 @@
             android:paddingHorizontal="8dp"
             android:textColor="#7A7AFF"/>
     </LinearLayout>
-
     <TextView
         android:id="@+id/delete_account"
         android:layout_width="match_parent"
@@ -93,7 +87,6 @@
         android:textSize="16sp"
         android:paddingVertical="8dp"
         android:textColor="#000"/>
-
     <TextView
         android:id="@+id/show_privacy_policy"
         android:layout_width="match_parent"
@@ -102,7 +95,6 @@
         android:text="Show privacy policy"
         android:textSize="16sp"
         android:textColor="#000"/>
-
     <TextView
         android:id="@+id/submit_feedback"
         android:layout_width="match_parent"
@@ -111,7 +103,6 @@
         android:text="Submit Feedback"
         android:textSize="16sp"
         android:textColor="#000"/>
-
     <TextView
         android:id="@+id/subscribe_button"
         android:layout_width="match_parent"
@@ -121,6 +112,4 @@
         android:text="Subscribe"
         android:textSize="16sp"
         android:textColor="#000"/>
-
-
 </LinearLayout>

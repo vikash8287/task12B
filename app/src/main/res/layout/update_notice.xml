@@ -38,6 +38,7 @@
         android:layout_marginTop="30dp"
         android:background="@drawable/rounded_button"
         android:text="@string/update_app"
+        android:textAllCaps="false"
         android:layout_margin="20dp"
         android:textColor="#ffffff"
         android:textSize="16sp"

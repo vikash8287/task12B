@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/Dialog"
-    android:padding="14dp"
+    android:orientation="vertical"
+    android:padding="16dp"
     android:background="@drawable/dialog_background">
-
     <TextView
         android:id="@+id/topic_join_title"
         android:layout_width="match_parent"
@@ -15,18 +14,11 @@
         android:text="@string/topic_join_title"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="#000"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
-
+        android:textColor="#000"/>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/topic_requests"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingVertical="20dp"
-        android:scrollbars="vertical"
-        app:layout_constraintTop_toBottomOf="@id/topic_join_title"
-        app:layout_constraintLeft_toLeftOf="parent"/>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:scrollbars="vertical"/>
+</LinearLayout>
