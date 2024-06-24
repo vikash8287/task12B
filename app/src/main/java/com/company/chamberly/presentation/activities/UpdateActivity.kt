@@ -4,8 +4,6 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.PersistableBundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -26,14 +24,19 @@ class UpdateActivity: ComponentActivity() {
             updateTitle.text = "App down"
             updateBody.text = "We are currently facing some issues. Please try again later."
         } else {
-
-            val appId = "com.google.android.youtube"
+            val appId = application.packageName
             updateButton.setOnClickListener {
                 try {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$appId")))
+                    startActivity(Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("market://details?id=$appId")
+                    ))
                 } catch (e: ActivityNotFoundException) {
                     // If the Play Store is not installed, open the web browser
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$appId")))
+                    startActivity(Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://play.google.com/store/apps/details?id=$appId")
+                    ))
                 }
             }
         }

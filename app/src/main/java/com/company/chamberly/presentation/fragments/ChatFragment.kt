@@ -561,7 +561,7 @@ class ChatFragment : Fragment() {
         dismissButton.setOnClickListener { callback() }
         confirmButton.setOnClickListener {
             callback()
-            val appId = "com.google.android.youtube"
+            val appId = requireContext().packageName
             try {
                 startActivity(
                     Intent(
