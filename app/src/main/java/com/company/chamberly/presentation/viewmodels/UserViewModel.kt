@@ -771,7 +771,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     reservedUserRef
                         .child("isReady")
                         .removeEventListener(isReadyListener)
-                    addMissedMatch(topicID, topicTitle, user)
+                    if (user["isAndroid"] == null || user["isAndroid"] == false) {
+                        addMissedMatch(topicID, topicTitle, user)
+                    }
                     if (penalty == 1L) {
                         // User has accumulated too much penalty.
                         // Remove them as procrastinator in this topic.
