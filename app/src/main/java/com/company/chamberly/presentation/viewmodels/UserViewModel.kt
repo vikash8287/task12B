@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.company.chamberly.OkHttpHandler
 import com.company.chamberly.R
 import com.company.chamberly.models.Chamber
 import com.company.chamberly.models.Match
@@ -50,6 +51,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import org.json.JSONObject
 
 class UserViewModel(application: Application): AndroidViewModel(application = application) {
 
@@ -266,7 +268,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         try { data["shouldAuthenticateUser"] as Boolean }
                         catch (_: Exception) { true }
                     val latestAvailableVersion =
-                        try { data["latestAvailableAppVersion"] as String }
+                        try { data["latestAndroidAppVersion"] as String }
                         catch (_: Exception) { "1.0.0" }
                     _maxAllowedTopics.postValue(
                         try { data["pendingChambersNotSubbedLimit"] as Long }
@@ -347,9 +349,11 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             .limit(20)
             .get()
             .addOnSuccessListener { querySnapshot ->
+                Log.d("CHAMBERS CHECKING", querySnapshot.documents.toString())
                 val chambers = querySnapshot.documents.mapNotNull {
                     it.toObject(Chamber::class.java)
                 }
+                Log.d("CHAMBERS CHECKING", chambers.toString())
                 for (chamber in chambers) {
                     for (member in chamber.members) {
                         if (member != userState.value!!.UID) {
@@ -406,7 +410,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
 
                 chamberDataRef
                     .child("messages/$messageId")
-                    .setValue(welcomeMessage)
+                    .setValue(welcomeMessage.toMap())
 
                 chamberRef.update("members", FieldValue.arrayUnion(userState.value!!.UID))
                 firestore
@@ -481,6 +485,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         topicTitle: String,
         callback: () -> Unit = {}
     ) {
+        if (userState.value!!.isRestricted) {
+            return
+        }
         val topic = Topic(
             AuthorName = userState.value!!.displayName,
             AuthorUID = userState.value!!.UID,
@@ -689,6 +696,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             createChamber(
                                 chamberTitle = topicTitle,
                                 callback = { chamberID ->
+                                    reservedUserRef.onDisconnect().cancel()
+                                    currentUserRef.onDisconnect().cancel()
                                     currentUserRef.updateChildren(
                                         mapOf(
                                             "groupChatId" to chamberID,
@@ -715,8 +724,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     .onDisconnect()
                     .updateChildren(
                         mapOf(
-                            "isReserved" to null,
                             "reservedBy" to null,
+                            "isReserved" to false,
                         )
                     )
 
@@ -737,9 +746,12 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         "reservedBy" to userState.value!!.UID
                     )
                 )
+
                 reservedUserRef
                     .child("isReady")
                     .addValueEventListener(isReadyListener)
+
+                sendNotification(token = user["notificationKey"].toString())
 
                 currentUserRef
                     .updateChildren(
@@ -759,6 +771,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     reservedUserRef
                         .child("isReady")
                         .removeEventListener(isReadyListener)
+                    addMissedMatch(topicID, topicTitle, user)
                     if (penalty == 1L) {
                         // User has accumulated too much penalty.
                         // Remove them as procrastinator in this topic.
@@ -772,7 +785,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                     "isReserved" to false,
                                     "reservedBy" to null,
                                     "penalty" to (penalty + 1)
-                                )
+                               )
                             )
                     }
 
@@ -788,6 +801,29 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         } catch (e: Exception) {
             Log.d("An error occurred", "Error message: ${e.localizedMessage}")
         }
+    }
+
+    private fun addMissedMatch(topicID: String, topicTitle: String, user: Map<String, Any>) {
+        val ref =
+            realtimeDatabase
+                .reference
+                .child("missed_matches_${user["UID"]}")
+
+        ref.updateChildren(mapOf("checkedMissedMatches" to false))
+
+        val data = mapOf(
+            "UID" to userState.value!!.UID,
+            "avatarName" to (1..380).random().toString(),
+            "name" to userState.value!!.displayName,
+            "notificationKey" to userState.value!!.notificationKey,
+            "selectedRole" to userState.value!!.role.toString(),
+            "timestamp" to ServerValue.TIMESTAMP,
+            "topicID" to topicID,
+            "topicTitle" to topicTitle,
+        )
+
+        ref.child(userState.value!!.UID).setValue(data)
+
     }
 
     private fun attachTopicRequestListeners() {
@@ -855,19 +891,15 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     fun acceptMatch(match: Match) {
         val usersRef = realtimeDatabase
             .reference
-            .child(match.topicID)
-            .child("users")
+            .child("${match.topicID}/users")
         usersRef
-            .child(userState.value!!.UID)
-            .child("isReady")
+            .child("${userState.value!!.UID}/isReady")
             .setValue(true)
         usersRef
-            .child(match.reservedByUID)
-            .child("groupChatId")
+            .child("${match.reservedByUID}/groupChatId")
             .setValue("")
         usersRef
-            .child(match.reservedByUID)
-            .child("groupTitle")
+            .child("${match.reservedByUID}/groupTitle")
             .setValue(match.topicTitle)
         usersRef
             .child(match.reservedByUID)
@@ -1227,6 +1259,35 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             }
         }
         return false
+    }
+
+    private fun sendNotification(token: String) {
+        if(token.isBlank()) { return }
+        try {
+            val notificationPayload = JSONObject()
+            val dataPayload = JSONObject()
+            notificationPayload.put(
+                "title",
+                "New match!"
+            )
+            notificationPayload.put(
+                "body",
+                "You have upto $_timeForPenalty seconds to accept."
+            )
+            dataPayload.put(
+                "groupChatId",
+                "nil"
+            )
+
+            OkHttpHandler(
+                getApplication() as Context,
+                token,
+                notification = notificationPayload,
+                data = dataPayload
+            ).executeAsync()
+        } catch(e: Exception) {
+            Log.e("Error sending notification", e.message.toString())
+        }
     }
 
     fun logEventToAnalytics(eventName: String, params: HashMap<String, Any> = hashMapOf()) {

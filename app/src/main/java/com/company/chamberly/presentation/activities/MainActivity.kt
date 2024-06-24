@@ -110,6 +110,9 @@ class MainActivity : AppCompatActivity() {
 
         userViewModel.chamberID.observe(this) {
             if(!it.isNullOrBlank()) {
+                if(navController.currentDestination?.id == R.id.chat_fragment) {
+                    navController.popBackStack()
+                }
                 navController.navigate(
                     R.id.chat_fragment,
                     null,

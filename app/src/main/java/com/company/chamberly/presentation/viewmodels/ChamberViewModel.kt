@@ -403,7 +403,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
         UID: String,
         notificationKey: String
     ) {
-        if(chamberState.value != null) {
+        if(chamberState.value != null && chamberState.value!!.chamberID.isNotBlank()) {
             Log.d("CHAMBER ID", chamberState.value!!.toString())
             realtimeDatabase
                 .reference

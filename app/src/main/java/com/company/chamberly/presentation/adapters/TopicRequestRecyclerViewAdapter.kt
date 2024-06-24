@@ -41,6 +41,7 @@ class TopicRequestRecyclerViewAdapter(
         return topicsList.size
     }
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        if (position >= topicsList.size) { return }
         val topic = topicsList[position]
         val topicId = topic.topicID
         val topicTitle = topic.topicTitle
