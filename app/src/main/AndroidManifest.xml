@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.company.chamberly">
+    package="com.chamberly.chamberly">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -25,7 +25,7 @@
         <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token"/>
 
         <service
-            android:name=".MyFirebaseMessagingService"
+            android:name="com.chamberly.chamberly.MyFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
@@ -33,13 +33,13 @@
         </service>
 
         <activity
-            android:name=".presentation.activities.UpdateActivity"
+            android:name="com.chamberly.chamberly.presentation.activities.UpdateActivity"
             android:exported="false"
             android:label="@string/title_activity_update"
             android:theme="@style/Theme.Chamberly" />
 
         <activity
-            android:name=".presentation.activities.MainActivity"
+            android:name="com.chamberly.chamberly.presentation.activities.MainActivity"
             android:exported="true"
             android:theme="@style/AppTheme">
             <intent-filter>
