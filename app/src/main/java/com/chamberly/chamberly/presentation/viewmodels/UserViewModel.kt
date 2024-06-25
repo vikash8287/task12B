@@ -374,6 +374,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         chamberTitle: String,
         callback: (String) -> Unit = {}
     ) {
+        Log.d("HERRE", "CREATING CHAMBER $chamberTitle")
         val chamber = Chamber(
             AuthorName = userState.value!!.displayName,
             AuthorUID = userState.value!!.UID,
@@ -425,6 +426,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     .child("name")
                     .setValue(userState.value!!.displayName)
                     .addOnSuccessListener {
+                        Log.d("HERRE", "CHAMBER CREAETEDFDFDSSD: ${chamber.groupChatId}")
                         callback(chamber.groupChatId)
                     }
                     .addOnFailureListener {
@@ -659,55 +661,66 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         topicTitle: String,
     ) {
         CoroutineScope(Dispatchers.IO).launch {
-            for (user in eligibleUsers[topicID]!!) {
-                val job = launch { sendRequest(topicID, topicTitle, user, this) }
-                job.join()
-            }
+            val listOfUsers = eligibleUsers[topicID]!!
+            sendRequest(
+                topicID,
+                topicTitle,
+                listOfUsers,
+                this,
+                0
+            )
         }
-        val currUserRef =
-            realtimeDatabase
-                .reference
-                .child("$topicID/users/${userState.value!!.UID}")
-        currUserRef
-            .get()
-            .addOnSuccessListener {
-                if (it.exists()) {
-                    currUserRef
-                        .child("isWorker")
-                        .setValue(false)
-                    attachListenerForTopic(topicID)
-                }
-            }
     }
 
     private suspend fun sendRequest(
         topicID: String,
         topicTitle: String,
-        user: Map<String, Any>,
-        coroutineScope: CoroutineScope
+        listOfUsers: List<Map<String, Any>>,
+        coroutineScope: CoroutineScope,
+        index: Int,
     ) {
-        val reservedUserRef =
-            realtimeDatabase
-                .reference
-                .child("$topicID/users/${user["UID"]}")
         val currentUserRef =
             realtimeDatabase
                 .reference
                 .child("$topicID/users/${userState.value!!.UID}")
+        if (index >= listOfUsers.size) {
+            currentUserRef
+                .get()
+                .addOnSuccessListener {
+                    if (it.exists()) {
+                        currentUserRef
+                            .child("isWorker")
+                            .setValue(false)
+                        attachListenerForTopic(topicID)
+                    }
+                }
+            return
+        }
         try {
+            val user = listOfUsers[index]
+            val reservedUserRef =
+                realtimeDatabase
+                    .reference
+                    .child("$topicID/users/${user["UID"]}")
             val userSnapshot = reservedUserRef.get().await()
             val userData = userSnapshot.value as Map<String, Any>
-            val penalty = try { userData["penalty"] as Long } catch(_: Exception) { 0L }
-            if(userSnapshot.exists() && (userData["isReserved"] ?: false) == false) {
-                val isReadyListener = object : ValueEventListener {
+            val penalty = try { userData["penalty"] as Long } catch (_: Exception) { 0L }
+            if (userSnapshot.exists() && (userData["isReserved"] ?: false) == false) {
+                val isReadyListener = object: ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val isReady = snapshot.value as Boolean?
                         if (isReady == true) {
+                            // Procrastinator accepted the match
+                            Log.d("HERRE", "${user["UID"]} accepted the match")
+                            reservedUserRef.onDisconnect().cancel()
+                            currentUserRef.onDisconnect().cancel()
+                            val updatedTopics = _pendingTopics.value!!
+                            updatedTopics.remove(topicID)
+                            _pendingTopics.postValue(updatedTopics)
+                            taskScheduler.invalidateTimer(topicID)
                             createChamber(
                                 chamberTitle = topicTitle,
                                 callback = { chamberID ->
-                                    reservedUserRef.onDisconnect().cancel()
-                                    currentUserRef.onDisconnect().cancel()
                                     currentUserRef.updateChildren(
                                         mapOf(
                                             "groupChatId" to chamberID,
@@ -715,28 +728,29 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                         )
                                     )
                                     eligibleUsers.remove(topicID)
-                                    completedMatches.postValue(Pair(chamberID, topicTitle))
-                                    val updatedTopics = _pendingTopics.value!!
-                                    updatedTopics.remove(topicID)
-                                    _pendingTopics.postValue(updatedTopics)
+                                    completedMatches.postValue(
+                                        Pair(chamberID, topicTitle)
+                                    )
                                     getUserChambers()
-                                    taskScheduler.invalidateTimer(topicID)
                                 }
                             )
                         }
                     }
-
                     override fun onCancelled(error: DatabaseError) {
                         // Not required for now
                     }
                 }
 
                 reservedUserRef
+                    .child("isReady")
+                    .addValueEventListener(isReadyListener)
+
+                reservedUserRef
                     .onDisconnect()
                     .updateChildren(
                         mapOf(
                             "reservedBy" to null,
-                            "isReserved" to false,
+                            "isReserved" to false
                         )
                     )
 
@@ -745,48 +759,57 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     .updateChildren(
                         mapOf(
                             "reserving" to null,
-                            "isWorker" to false
+                            "isWorker" to false,
                         )
                     )
 
-                reservedUserRef.updateChildren(
-                    mapOf(
-                        "checkedBy" to
-                                (user["checkedBy"] ?: listOf(userState.value!!.UID)),
-                        "isReserved" to true,
-                        "isReady" to false,
-                        "reservedBy" to userState.value!!.UID
-                    )
-                )
-
                 reservedUserRef
-                    .child("isReserved")
-                    .addValueEventListener(object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            val isReserved = snapshot.value as Boolean? ?: false
-                            if (!isReserved) {
-                                reservedUserRef.removeEventListener(this)
-                                currentUserRef.onDisconnect().cancel()
-                                reservedUserRef.onDisconnect().cancel()
-                                currentUserRef
-                                    .child("reserving")
-                                    .setValue(null)
-                                taskScheduler.invalidateTimer(topicID)
-                                return
+                    .updateChildren(
+                        mapOf(
+                            "checkedBy" to
+                                    (user["checkedBy"] ?: listOf(userState.value!!.UID)),
+                            "isReserved" to true,
+                            "isReady" to false,
+                            "reservedBy" to userState.value!!.UID
+                        )
+                    )
+
+                val isReservedListener = object: ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val isReserved = snapshot.value as Boolean? ?: return
+                        if (!isReserved) {
+                            reservedUserRef
+                                .child("isReserved")
+                                .removeEventListener(this)
+                            currentUserRef.onDisconnect().cancel()
+                            reservedUserRef.onDisconnect().cancel()
+                            currentUserRef
+                                .child("reserving")
+                                .setValue(null)
+
+                            taskScheduler.invalidateTimer(topicID)
+                            CoroutineScope(Dispatchers.IO).launch {
+                                sendRequest(
+                                    topicID = topicID,
+                                    topicTitle = topicTitle,
+                                    listOfUsers = listOfUsers,
+                                    coroutineScope = coroutineScope,
+                                    index = index + 1
+                                )
                             }
                         }
+                    }
 
-                        override fun onCancelled(error: DatabaseError) {
-                            // Not needed for now
-                        }
+                    override fun onCancelled(error: DatabaseError) {
+                        // Not needed for now
+                    }
 
-                    })
-
+                }
                 reservedUserRef
-                    .child("isReady")
-                    .addValueEventListener(isReadyListener)
+                    .child("isReserved")
+                    .addValueEventListener(isReservedListener)
 
-                sendNotification(token = user["notificationKey"].toString())
+                sendNotification(user["notificationKey"].toString())
 
                 currentUserRef
                     .updateChildren(
@@ -802,17 +825,19 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     timeInterval = _timeForPenalty * 1000L,
                     repeats = false
                 ) {
+                    Log.d("HERRE", "Inside schedule task callback ${user["UID"]}")
                     reservedUserRef.onDisconnect().cancel()
                     currentUserRef.onDisconnect().cancel()
                     reservedUserRef
                         .child("isReady")
                         .removeEventListener(isReadyListener)
-                    if (user["isAndroid"] == null || user["isAndroid"] == false) {
+                    if ((user["isAndroid"] ?: false) == false) {
                         addMissedMatch(topicID, topicTitle, user)
                     }
+
                     if (penalty == 1L) {
-                        // User has accumulated too much penalty.
-                        // Remove them as procrastinator in this topic.
+                        // User has accumulated too much penalty
+                        // Remove them as procrastinator in this topic
                         reservedUserRef
                             .removeValue()
                         return@scheduleTask
@@ -825,18 +850,16 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                     "penalty" to (penalty + 1)
                                 )
                             )
-                    }
 
-                    currentUserRef
-                        .updateChildren(
-                            mapOf(
-                                "reserving" to null
+                        currentUserRef
+                            .updateChildren(
+                                mapOf("reserving" to null)
                             )
-                        )
+                    }
                 }
             }
-        } catch (e: Exception) {
-            Log.d("An error occurred", "Error message: ${e.localizedMessage}")
+        } catch(e: Exception) {
+            Log.e("Sending requests", e.message.toString())
         }
     }
 
