@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace 'com.company.chamberly'
+    namespace 'com.chamberly.chamberly'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.company.chamberly"
+        applicationId "com.chamberly.chamberly"
         minSdk 24
         targetSdk 34
         versionCode 10
