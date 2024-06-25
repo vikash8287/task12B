@@ -32,23 +32,31 @@
         android:background="@drawable/rounded_edittext"
         android:hint="Enter your suggestions here"
         android:padding="12dp"
-        android:textColorHint="#B0B0CA"
-        android:textColor="#000"
+        android:maxLength="4000"
+        android:textColorHint="#8000"
+        android:textColor="@color/black"
         android:textSize="18sp"/>
+    <TextView
+        android:id="@+id/feedbackSize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:text="0/4000"
+        android:textColor="#8000"/>
     <TextView
         android:id="@+id/feedback_success_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/feedback_success_string"
         android:textColor="#000"
-        android:layout_marginTop="16dp"
+        android:layout_marginVertical="16dp"
         android:visibility="gone"/>
 
     <TableRow
         android:id="@+id/buttons_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="0dp"
         android:divider="@color/primary"
         android:showDividers="middle">
         <Button
