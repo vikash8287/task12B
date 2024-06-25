@@ -640,8 +640,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     }
                 }
                 if (eligibleUsers[topicID] != null) {
-                    eligibleUsers[topicID]!!
-                        .sortBy { if(it["isSubscribed"] == true) 0 else 1 }
                     sendRequestsSequentially(topicID, title)
                 } else {
                     realtimeDatabase
@@ -661,7 +659,11 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         topicTitle: String,
     ) {
         CoroutineScope(Dispatchers.IO).launch {
-            val listOfUsers = eligibleUsers[topicID]!!
+            val listOfUsers = eligibleUsers[topicID]!!.sortedWith(compareBy<Map<String, Any>>(
+                { !(it["isSubscribed"] as Boolean) },
+                { it["penalty"] as Long },
+                { it["timestamp"] as Long }
+            ))
             sendRequest(
                 topicID,
                 topicTitle,
@@ -753,6 +755,14 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             "isReserved" to false
                         )
                     )
+
+                reservedUserRef
+                    .onDisconnect()
+                    .removeValue { _, _ ->
+                        reservedUserRef
+                            .setValue(user)
+                        addMissedMatch(topicID, topicTitle, user)
+                    }
 
                 currentUserRef
                     .onDisconnect()
