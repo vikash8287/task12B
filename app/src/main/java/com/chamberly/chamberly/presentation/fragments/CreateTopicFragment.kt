@@ -2,13 +2,14 @@ package com.chamberly.chamberly.presentation.fragments
 
 import android.os.Bundle
 import android.text.InputFilter
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.LinearLayout
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.chamberly.chamberly.R
@@ -32,6 +33,7 @@ class CreateTopicFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_create_topic, container, false)
         val topicTitleField = view.findViewById<EditText>(R.id.topic_title)
         val createButton = view.findViewById<Button>(R.id.create_button)
+        val backButton = view.findViewById<ImageButton>(R.id.backButton)
         tooManyTopicsView = view.findViewById(R.id.too_many_topics_layout)
         clearButton = view.findViewById(R.id.clear_all_topics_button)
         val maxLength = 50
@@ -58,6 +60,10 @@ class CreateTopicFragment : Fragment() {
                     callback = { findNavController().popBackStack() }
                 )
             }
+        }
+
+        backButton.setOnClickListener {
+            findNavController().popBackStack()
         }
         return view
     }

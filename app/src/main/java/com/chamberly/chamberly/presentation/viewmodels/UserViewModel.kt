@@ -121,47 +121,55 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     ) {
         auth
             .signInAnonymously()
-            .addOnCompleteListener { task ->
-                if(task.isSuccessful) {
-                    val user = auth.currentUser
-                    with(sharedPreferences.edit()) {
-                        putBoolean("hasLoggedIn", true)
-                        putString("uid", user!!.uid)
-                        apply()
+            .addOnSuccessListener {
+                // User signed in anonymously
+                firestore
+                    .collection("Display_Names")
+                    .document(displayName)
+                    .get()
+                    .addOnCompleteListener {
+                        if (it.isSuccessful && it.result.exists()) {
+                            // Display Name already exists, do not register user
+                            showToast("This name is already in use. Please use another name $displayName")
+                        } else {
+                            val user = auth.currentUser
+                            if (user != null) {
+                                val isNewUser =
+                                    sharedPreferences.getBoolean("isNewUser", true)
+                                with(sharedPreferences.edit()) {
+                                    putBoolean("hasLoggedIn", true)
+                                    putString("uid", user.uid)
+                                    putString("displayName", displayName)
+                                    putBoolean("isListener", role == Role.LISTENER)
+                                    apply()
+                                }
+                                createDisplayNameDocument(
+                                    displayName = displayName,
+                                    uid = user.uid
+                                )
+                                createAccountDocument(
+                                    displayName = displayName,
+                                    uid = user.uid,
+                                    role = role
+                                )
+                                setRestriction(
+                                    uid = user.uid
+                                )
+                                if (isNewUser) {
+                                    logEventToAnalytics("first_time_user")
+                                } else {
+                                    logEventToAnalytics("account_recreated")
+                                }
+                                loginUser()
+                            }
+                        }
                     }
-                } else {
-                    showToast("Authentication failed")
-                }
-                val user = auth.currentUser
-                if(user != null) {
-                    val isNewUser = sharedPreferences.getBoolean("isNewUser", true)
-                    with(sharedPreferences.edit()) {
-                        putString("uid", user.uid)
-                        putString("displayName", displayName)
-                        putBoolean("isListener", role == Role.LISTENER)
-                        apply()
-                    }
-                    createDisplayNameDocument(
-                        displayName = displayName,
-                        uid = user.uid
-                    )
-                    createAccountDocument(
-                        displayName = displayName,
-                        uid = user.uid,
-                        role = role
-                    )
-                    setRestriction(
-                        uid = user.uid
-                    )
-                    if(isNewUser) {
-                        logEventToAnalytics("first_time_user")
-                    } else {
-                        logEventToAnalytics("account_recreated")
-                    }
-                    loginUser()
-                onComplete()
             }
-        }
+            .addOnFailureListener {
+                // User account cannot be created
+                showToast("Authentication failed")
+            }
+            onComplete()
     }
 
     private fun createDisplayNameDocument(
@@ -220,11 +228,13 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
 
     fun loginUser(): Boolean {
         val hasLoggedIn = sharedPreferences.getBoolean("hasLoggedIn", false)
+        Log.d("LOGGING IN", "TRYING TO LOGIN")
         return if(!hasLoggedIn || auth.currentUser == null) {
             false
         } else {
             val uid = sharedPreferences.getString("uid", "") ?: ""
             val displayName = sharedPreferences.getString("displayName", "") ?: ""
+            Log.d("LOGGING IN", uid + ":" + displayName)
             val role =
                 if (sharedPreferences.getBoolean("isListener", false)) Role.LISTENER
                 else Role.VENTOR
@@ -287,7 +297,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    TODO("Not yet implemented")
+
                 }
             })
     }
@@ -712,8 +722,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val isReady = snapshot.value as Boolean?
                         if (isReady == true) {
-                            // Procrastinator accepted the match
-                            Log.d("HERRE", "${user["UID"]} accepted the match")
+                            // Procrastinator accepted the match\
                             reservedUserRef.onDisconnect().cancel()
                             currentUserRef.onDisconnect().cancel()
                             val updatedTopics = _pendingTopics.value!!
@@ -835,7 +844,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     timeInterval = _timeForPenalty * 1000L,
                     repeats = false
                 ) {
-                    Log.d("HERRE", "Inside schedule task callback ${user["UID"]}")
                     reservedUserRef.onDisconnect().cancel()
                     currentUserRef.onDisconnect().cancel()
                     reservedUserRef
@@ -857,15 +865,14 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                 mapOf(
                                     "isReserved" to false,
                                     "reservedBy" to null,
-                                    "penalty" to (penalty + 1)
+                                    "penalty" to ServerValue.increment(1)
                                 )
                             )
-
-                        currentUserRef
-                            .updateChildren(
-                                mapOf("reserving" to null)
-                            )
                     }
+                    currentUserRef
+                        .updateChildren(
+                            mapOf("reserving" to null)
+                        )
                 }
             }
         } catch(e: Exception) {

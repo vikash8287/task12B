@@ -5,6 +5,8 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -274,9 +276,22 @@ class MainFragment : Fragment() {
         val submitButton = dialog.findViewById<Button>(R.id.submitFeedbackButton)
         val dismissButton = dialog.findViewById<Button>(R.id.dismissFeedbackDialogButton)
         val editText = dialog.findViewById<EditText>(R.id.feedback_text)
+        val feedbackSizeText = dialog.findViewById<TextView>(R.id.feedbackSize)
         dismissButton?.setOnClickListener {
             dialog.dismiss()
         }
+
+        editText.addTextChangedListener(object: TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // Not needed
+            }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // Not needed
+            }
+            override fun afterTextChanged(s: Editable?) {
+                feedbackSizeText.text = "${s.toString().length}/4000"
+            }
+        })
 
         submitButton?.setOnClickListener {
             val feedbackText = "Android: ${editText.text}"
