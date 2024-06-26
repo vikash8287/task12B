@@ -1028,6 +1028,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             .child("groupChatId")
             .addValueEventListener(object: ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    checkedUsers.add(match.reservedByUID)
                     usersRef
                         .child(userState.value!!.UID)
                         .child("reservedBy")
