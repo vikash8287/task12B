@@ -28,7 +28,9 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.MutableData
 import com.google.firebase.database.ServerValue
+import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
@@ -50,7 +52,6 @@ import com.revenuecat.purchases.purchaseWith
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 
 class UserViewModel(application: Application): AndroidViewModel(application = application) {
@@ -76,6 +77,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     val pendingTopics: LiveData<MutableList<String>> = _pendingTopics
 
     private var _timeForPenalty: Long = 15L
+    private var _penaltyLimit: Long = 1L
 
     private val _blockedUsers: MutableLiveData<MutableList<String>> =
         MutableLiveData(mutableListOf())
@@ -287,6 +289,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     _timeForPenalty =
                         try { data["timeForPenalty"] as Long }
                         catch (_: Exception) { 15L }
+                    _penaltyLimit =
+                        try { data["penalties"] as Long }
+                        catch (_: Exception) { 1L }
 
                     _appState.postValue(
                         _appState.value?.copy(
@@ -691,6 +696,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         coroutineScope: CoroutineScope,
         index: Int,
     ) {
+        Log.d("HERE", index.toString())
         val currentUserRef =
             realtimeDatabase
                 .reference
@@ -714,167 +720,206 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 realtimeDatabase
                     .reference
                     .child("$topicID/users/${user["UID"]}")
-            val userSnapshot = reservedUserRef.get().await()
-            val userData = userSnapshot.value as Map<String, Any>
-            val penalty = try { userData["penalty"] as Long } catch (_: Exception) { 0L }
-            if (userSnapshot.exists() && (userData["isReserved"] ?: false) == false) {
-                val isReadyListener = object: ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val isReady = snapshot.value as Boolean?
-                        if (isReady == true) {
-                            // Procrastinator accepted the match\
-                            reservedUserRef.onDisconnect().cancel()
-                            currentUserRef.onDisconnect().cancel()
-                            val updatedTopics = _pendingTopics.value!!
-                            updatedTopics.remove(topicID)
-                            _pendingTopics.postValue(updatedTopics)
-                            taskScheduler.invalidateTimer(topicID)
-                            createChamber(
-                                chamberTitle = topicTitle,
-                                callback = { chamberID ->
-                                    currentUserRef.updateChildren(
-                                        mapOf(
-                                            "groupChatId" to chamberID,
-                                            "groupTitle" to topicTitle
-                                        )
-                                    )
-                                    eligibleUsers.remove(topicID)
-                                    completedMatches.postValue(
-                                        Pair(chamberID, topicTitle)
-                                    )
-                                    getUserChambers()
-                                }
-                            )
-                        }
-                    }
-                    override fun onCancelled(error: DatabaseError) {
-                        // Not required for now
-                    }
-                }
-
-                reservedUserRef
-                    .child("isReady")
-                    .addValueEventListener(isReadyListener)
-
-                reservedUserRef
-                    .onDisconnect()
-                    .updateChildren(
-                        mapOf(
-                            "reservedBy" to null,
-                            "isReserved" to false
-                        )
-                    )
-
-                reservedUserRef
-                    .onDisconnect()
-                    .removeValue { _, _ ->
-                        reservedUserRef
-                            .setValue(user)
-                        addMissedMatch(topicID, topicTitle, user)
-                    }
-
-                currentUserRef
-                    .onDisconnect()
-                    .updateChildren(
-                        mapOf(
-                            "reserving" to null,
-                            "isWorker" to false,
-                        )
-                    )
-
-                reservedUserRef
-                    .updateChildren(
-                        mapOf(
-                            "checkedBy" to
-                                    (user["checkedBy"] ?: listOf(userState.value!!.UID)),
-                            "isReserved" to true,
-                            "isReady" to false,
-                            "reservedBy" to userState.value!!.UID
-                        )
-                    )
-
-                val isReservedListener = object: ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val isReserved = snapshot.value as Boolean? ?: return
-                        if (!isReserved) {
-                            reservedUserRef
-                                .child("isReserved")
-                                .removeEventListener(this)
-                            currentUserRef.onDisconnect().cancel()
-                            reservedUserRef.onDisconnect().cancel()
+            reservedUserRef
+                .runTransaction(object: Transaction.Handler {
+                    override fun doTransaction(currentData: MutableData): Transaction.Result {
+                        val reservedUserData = (currentData.value as MutableMap<String, Any>?)
+                            ?: return Transaction.success(currentData)
+                        return if ((reservedUserData["isReserved"] ?: false) == false) {
+                            //Procrastinator is still free, reserved them
+                            val checkedBy =
+                                try { reservedUserData["checkedBy"] as List<String> }
+                                catch (_: Exception) { emptyList() }.toMutableList()
+                            checkedBy.add(userState.value!!.UID)
+                            reservedUserData["isReserved"] = true
+                            reservedUserData["reservedBy"] = userState.value!!.UID
+                            reservedUserData["isReady"] = false
+                            reservedUserData["checkedBy"] = checkedBy
+                            currentData.value = reservedUserData
                             currentUserRef
                                 .child("reserving")
-                                .setValue(null)
+                                .setValue(user["UID"].toString())
+                            Transaction.success(currentData)
+                        } else {
+                            //Procrastinator reserved by someone else, move on to next one
+                            //Calling transaction.abort() will give committed as false to onComplete
+                            //We will use that to determine to move to next procrastinator
+                            Transaction.abort()
+                        }
+                    }
 
-                            taskScheduler.invalidateTimer(topicID)
+                    override fun onComplete(
+                        error: DatabaseError?,
+                        committed: Boolean,
+                        currentData: DataSnapshot?
+                    ) {
+                        if (committed) {
+                            //Procrastinator reserved successfully
+                            //Transactions shouldn't be needed now since, the user is reserved
+                            val isReadyListener = object: ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    val isReady =
+                                        try { snapshot.value as Boolean }
+                                        catch (_: Exception) { false }
+                                    if(isReady) {
+                                        //User has accepted the match,
+                                        //create chamber and clean up everything
+                                        currentUserRef.onDisconnect().cancel()
+                                        reservedUserRef.onDisconnect().cancel()
+                                        val updatedTopics = _pendingTopics.value!!
+                                        updatedTopics.remove(topicID)
+                                        _pendingTopics.postValue(updatedTopics)
+                                        taskScheduler.invalidateTimer(topicID)
+                                        createChamber(topicTitle) { chamberID ->
+                                            currentUserRef.updateChildren(
+                                                mapOf(
+                                                    "groupChatId" to chamberID,
+                                                    "groupTitle" to topicTitle
+                                                )
+                                            )
+                                            eligibleUsers.remove(topicID)
+                                            completedMatches.postValue(
+                                                Pair(chamberID, topicTitle)
+                                            )
+                                            getUserChambers()
+                                        }
+                                    }
+                                }
+                                override fun onCancelled(error: DatabaseError) {
+                                    //Not needed
+                                }
+                            }
+
+                            reservedUserRef
+                                .child("isReady")
+                                .addValueEventListener(isReadyListener)
+
+                            reservedUserRef
+                                .onDisconnect()
+                                .updateChildren(
+                                    mapOf(
+                                        "reservedBy" to null,
+                                        "isReserved" to false
+                                    )
+                                )
+                                .addOnSuccessListener {
+                                    addMissedMatch(topicID, topicTitle, user)
+                                }
+
+                            currentUserRef
+                                .onDisconnect()
+                                .updateChildren(
+                                    mapOf(
+                                        "reserving" to null,
+                                        "isWorker" to false,
+                                    )
+                                )
+
+                            val isReservedListener = object: ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    val isReserved =
+                                        try { snapshot.value as Boolean }
+                                        catch (_: Exception) { return }
+                                    if (!isReserved) {
+                                        reservedUserRef.removeEventListener(this)
+                                        currentUserRef.onDisconnect().cancel()
+                                        reservedUserRef.onDisconnect().cancel()
+                                        currentUserRef
+                                            .child("reserving").setValue(null)
+                                        taskScheduler.invalidateTimer(topicID)
+                                        Log.d("IsReservedListener", "Match skipped $index")
+                                        CoroutineScope(Dispatchers.IO).launch {
+                                            sendRequest(
+                                                topicID = topicID,
+                                                topicTitle = topicTitle,
+                                                listOfUsers = listOfUsers,
+                                                coroutineScope = coroutineScope,
+                                                index = index + 1
+                                            )
+                                        }
+                                    }
+                                }
+                                override fun onCancelled(error: DatabaseError) {
+                                    // Not needed for now
+                                }
+                            }
+                            reservedUserRef
+                                .child("isReserved")
+                                .addValueEventListener(isReservedListener)
+
+                            sendNotification(user["notificationKey"].toString())
+                            checkedUsers.add(user["UID"].toString())
+
+                            CoroutineScope(Dispatchers.IO).launch {
+                                taskScheduler.scheduleTask(
+                                    topicID = topicID,
+                                    forUID = user["UID"].toString(),
+                                    timeInterval = _timeForPenalty * 1000L,
+                                    repeats = false
+                                ) {
+                                    //Match has expired
+                                    reservedUserRef.onDisconnect().cancel()
+                                    currentUserRef.onDisconnect().cancel()
+                                    reservedUserRef
+                                        .child("isReady")
+                                        .removeEventListener(isReadyListener)
+                                    reservedUserRef
+                                        .child("isReserved")
+                                        .removeEventListener(isReservedListener)
+
+                                    if ((user["isAndroid"] ?: false) == false) {
+                                        addMissedMatch(topicID, topicTitle, user)
+                                    }
+
+                                    val userData =
+                                        try { currentData!!.value as Map<String, Any> }
+                                        catch (_: Exception) { mapOf() }
+                                    val penalty = (userData["penalty"] as? Long) ?: 0L
+                                    if (penalty == _penaltyLimit) {
+                                        // User has high penalty,
+                                        // Remove them
+                                        reservedUserRef
+                                            .removeValue()
+                                        return@scheduleTask
+                                    } else {
+                                        reservedUserRef
+                                            .updateChildren(
+                                                mapOf(
+                                                    "isReserved" to false,
+                                                    "reservedBy" to null,
+                                                    "penalty" to ServerValue.increment(1)
+                                                )
+                                            )
+                                    }
+                                    currentUserRef
+                                        .child("reserving")
+                                        .removeValue()
+
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        sendRequest(
+                                            topicID = topicID,
+                                            topicTitle = topicTitle,
+                                            listOfUsers = listOfUsers,
+                                            coroutineScope = this,
+                                            index = index + 1
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            //Procrastinator couldn't be reserved
                             CoroutineScope(Dispatchers.IO).launch {
                                 sendRequest(
                                     topicID = topicID,
                                     topicTitle = topicTitle,
                                     listOfUsers = listOfUsers,
-                                    coroutineScope = coroutineScope,
+                                    coroutineScope = this,
                                     index = index + 1
                                 )
                             }
                         }
                     }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        // Not needed for now
-                    }
-
-                }
-                reservedUserRef
-                    .child("isReserved")
-                    .addValueEventListener(isReservedListener)
-
-                sendNotification(user["notificationKey"].toString())
-
-                currentUserRef
-                    .updateChildren(
-                        mapOf(
-                            "reserving" to user["UID"].toString()
-                        )
-                    )
-
-                checkedUsers.add(user["UID"].toString())
-                taskScheduler.scheduleTask(
-                    topicID = topicID,
-                    forUID = user["UID"].toString(),
-                    timeInterval = _timeForPenalty * 1000L,
-                    repeats = false
-                ) {
-                    reservedUserRef.onDisconnect().cancel()
-                    currentUserRef.onDisconnect().cancel()
-                    reservedUserRef
-                        .child("isReady")
-                        .removeEventListener(isReadyListener)
-                    if ((user["isAndroid"] ?: false) == false) {
-                        addMissedMatch(topicID, topicTitle, user)
-                    }
-
-                    if (penalty == 1L) {
-                        // User has accumulated too much penalty
-                        // Remove them as procrastinator in this topic
-                        reservedUserRef
-                            .removeValue()
-                        return@scheduleTask
-                    } else {
-                        reservedUserRef
-                            .updateChildren(
-                                mapOf(
-                                    "isReserved" to false,
-                                    "reservedBy" to null,
-                                    "penalty" to ServerValue.increment(1)
-                                )
-                            )
-                    }
-                    currentUserRef
-                        .updateChildren(
-                            mapOf("reserving" to null)
-                        )
-                }
-            }
+                })
         } catch(e: Exception) {
             Log.e("Sending requests", e.message.toString())
         }
