@@ -1,12 +1,15 @@
 package com.company.chamberly.fragments
 
+import android.app.AlarmManager
 import android.app.Dialog
+import android.app.PendingIntent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -30,6 +33,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
 import com.company.chamberly.adapters.MessageAdapter
+import com.company.chamberly.notification.ReminderNotification
 import com.company.chamberly.models.Message
 import com.company.chamberly.models.toMap
 import com.company.chamberly.viewmodels.ChamberViewModel
@@ -65,6 +69,7 @@ class ChatFragment : Fragment() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        cancelNotificationAlarm(requireContext())
         chamberViewModel.setChamber(
             userViewModel.chamberID.value ?: "",
             userViewModel.userState.value!!.UID
@@ -544,6 +549,7 @@ class ChatFragment : Fragment() {
             userViewModel.userState.value!!.UID,
             userViewModel.userState.value!!.notificationKey
         )
+
     }
     override fun onPause() {
         super.onPause()
@@ -551,5 +557,38 @@ class ChatFragment : Fragment() {
             userViewModel.userState.value!!.UID,
             userViewModel.userState.value!!.notificationKey
         )
+        scheduleNotification(requireContext())
+
     }
+    private fun scheduleNotification(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(context, ReminderNotification::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+
+        val triggerAtMillis = System.currentTimeMillis() + 16 * 60 * 60 * 1000L
+if(hasScheduleExactAlarmPermission(context)){
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+
 }
+    }
+    private fun hasScheduleExactAlarmPermission(context: Context): Boolean {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                alarmManager.canScheduleExactAlarms()
+            } else {
+true
+            }
+        }
+    private fun cancelNotificationAlarm(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(context, ReminderNotification::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        alarmManager.cancel(pendingIntent)
+    }
+    }
+
+

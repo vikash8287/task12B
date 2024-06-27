@@ -6,20 +6,25 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import com.company.chamberly.constant.Gender
+import com.company.chamberly.models.Message
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class ProfileViewModel(application: Application): AndroidViewModel(application = application)  {
     private val firestore: FirebaseFirestore = Firebase.firestore
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val realtimeDatabase:FirebaseDatabase = FirebaseDatabase.getInstance()
     val uid = firebaseAuth.currentUser?.uid
     private val sharedPreferences: SharedPreferences = application.getSharedPreferences("cache", Context.MODE_PRIVATE)
+    private val cachedDir = application.cacheDir
     private var isListener: Boolean = false
-    init{
-
-    }
 
 
     data class UserInfo(
@@ -37,7 +42,7 @@ class ProfileViewModel(application: Application): AndroidViewModel(application =
         return sharedPreferences.getInt("age", 24)
 
     }
-     fun setGenderToDatabase(genderData: String,chosenGender:Int) {
+     fun setGenderToFirestore(genderData: String, chosenGender:Int) {
         val editor = sharedPreferences.edit()
 
         val currUserRef = firestore.collection("Accounts").document(uid!!)
@@ -60,7 +65,7 @@ class ProfileViewModel(application: Application): AndroidViewModel(application =
 
         }
     }
-    fun setAgeToDatabase(age: Int) {
+    fun setAgeToFirestore(age: Int) {
         val editor = sharedPreferences.edit()
 
         val currUserRef = firestore.collection("Accounts").document(uid!!)
@@ -74,7 +79,7 @@ class ProfileViewModel(application: Application): AndroidViewModel(application =
         }
 
     }
-    fun updateSectionInAccount(section:String, key:String, state:Boolean){
+    fun updateSectionInAccountFirestore(section:String, key:String, state:Boolean){
 
         val currUserRef = firestore.collection("Accounts").document(uid!!)
    val privacyChild=HashMap<String,Boolean>()
@@ -94,4 +99,106 @@ class ProfileViewModel(application: Application): AndroidViewModel(application =
         return sharedPreferences.getBoolean(key, false)
 
     }
+    fun setFeedbackToFirestore(feedback:String,afterTaskDone:()->Unit){
+        val feedbackText = "Android: ${feedback}"
+        val feedbackRef = firestore.collection("Feedback").document()
+        val uid =firebaseAuth.currentUser?.uid!!
+        val displayName = getNameFromSharePreference()
+        feedbackRef.set(mapOf(
+            "byName" to displayName,
+            "byUID" to uid,
+            "feedbackData" to feedbackText,
+            "timestamp" to FieldValue.serverTimestamp()
+        )).addOnSuccessListener {
+          Log.d("feedbackSent","Success")
+            afterTaskDone()
+
+        }.addOnFailureListener {
+            Log.d("feedbackSent","Failed")
+            afterTaskDone()
+
+
+        }
+    }
+    fun deleteAccount(){
+        val user = firebaseAuth.currentUser!!
+        val currUserAccountRef = firestore.collection("Accounts").document(uid!!)
+val displayCurrentUserDoc = firestore.collection("Display_Names").whereEqualTo("UID",uid)
+findChambersAndSendingLeaveMessage(currUserAccountRef,uid)
+        deleteAccountFromFirebaseAuth(user)
+deleteAccountFromFirestore(currUserAccountRef,displayCurrentUserDoc)
+      cachedDir.delete()
+    }
+  private  fun deleteAccountFromFirebaseAuth(user:FirebaseUser,){
+        user.delete().addOnSuccessListener {
+
+            Log.d("AccountDeletedFromFirebaseAuth","Success")
+
+        }.addOnFailureListener {
+            Log.d("AccountDeletedFromFirebaseAuth","Failed")
+            Log.d("AccountDeletedFromFirebaseAuth",it.message.toString())
+
+        }
+    }
+  private  fun deleteAccountFromFirestore(currentUserRef:DocumentReference,displayCurrentUserDoc:Query){
+        currentUserRef.delete().addOnSuccessListener {
+            Log.d("AccountInfoDeletedFromFirestore","Success")
+        }.addOnFailureListener {
+            Log.d("AccountInfoDeletedFromFirestore","Failed")
+
+        }
+        displayCurrentUserDoc.get().addOnSuccessListener {
+            for(doc in it){
+                doc.reference.delete().addOnSuccessListener {
+                    Log.d("DisplayInfoDeletedFromFirestore","Success")
+                }.addOnFailureListener {
+                    Log.d("DisplayInfoDeletedFromFirestore",it.message.toString())
+
+                }
+            }
+        }
+
+
+    }
+
+   private fun findChambersAndSendingLeaveMessage(currentUserRef:DocumentReference,UID:String){
+        currentUserRef.get().addOnSuccessListener {
+            val data =it.data?.get("chambers")
+            if(data==null) return@addOnSuccessListener
+val chambers = data as List<String>
+            for(chamber in chambers){
+             sendLeaveMessage(chamber,UID)
+            }
+        }.addOnFailureListener {
+            Log.d("FetchingChambers","")
+        }
+    }
+
+   private fun sendLeaveMessage(chamberID: String,UID:String) {
+        val chamberDataRef = realtimeDatabase
+            .reference
+            .child(chamberID)
+
+        val systemMessage = Message(
+            "Chamberly",
+            "Leave reason: Deleted their account",
+            "system",
+            "Chamberly"
+        )
+
+
+
+        chamberDataRef
+            .child("messages")
+            .push()
+            .setValue(systemMessage)
+            .addOnSuccessListener {
+             Log.d("LeaveMessageSend","Success")
+            }.addOnFailureListener {
+                Log.d("LeaveMessageSend","Failed")
+                Log.d("LeaveMessageSend", it.message.toString())
+
+            }
+    }
+
 }

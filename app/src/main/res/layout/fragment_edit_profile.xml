@@ -84,7 +84,7 @@ android:background="@color/edit_profile_background"
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
         android:text="Delete Account"
-
+android:id="@+id/delete_button"
         android:textAllCaps="false"
         android:textColor="@color/light_red"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -1,7 +1,6 @@
 package com.company.chamberly.fragments
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -32,7 +31,7 @@ val profileViewModel:ProfileViewModel by activityViewModels()
         val chambersSectionList   = arrayListOf<SettingSectionWithListAndSwitchButton.ListWithSwitchItem>(
             SettingSectionWithListAndSwitchButton.ListWithSwitchItem("Remainders","To check up on your chambers",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("ChamberReminders") ,switchStateListener = {
                 _,  check->
-                profileViewModel.updateSectionInAccount("notifications","ChamberReminders",check)
+                profileViewModel.updateSectionInAccountFirestore("notifications","ChamberReminders",check)
 
 
             }),
@@ -55,19 +54,19 @@ val profileViewModel:ProfileViewModel by activityViewModels()
         val promotionalAndOtherSectionList   = arrayListOf<SettingSectionWithListAndSwitchButton.ListWithSwitchItem>(
             SettingSectionWithListAndSwitchButton.ListWithSwitchItem("Coins","Daily reminders to collect your coins",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("DailyCoins")){
                     _,check->
-                profileViewModel.updateSectionInAccount("notifications","DailyCoins",check)
+                profileViewModel.updateSectionInAccountFirestore("notifications","DailyCoins",check)
             },
             SettingSectionWithListAndSwitchButton.ListWithSwitchItem("Discounts","When we offer discounts on purchases",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("Discounts")){
                     _,check->
-                profileViewModel.updateSectionInAccount("notifications","Discounts",check)
+                profileViewModel.updateSectionInAccountFirestore("notifications","Discounts",check)
             },
             SettingSectionWithListAndSwitchButton.ListWithSwitchItem("Exciting app updates","When Chamberly gets major updates",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("AppUpdates")){
                     _,check->
-                profileViewModel.updateSectionInAccount("notifications","AppUpdates",check)
+                profileViewModel.updateSectionInAccountFirestore("notifications","AppUpdates",check)
             },
             SettingSectionWithListAndSwitchButton.ListWithSwitchItem("Check up","Reminder to use Chamberly",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("Checkup")){
                     _,check->
-                profileViewModel.updateSectionInAccount("notifications","Checkup",check)
+                profileViewModel.updateSectionInAccountFirestore("notifications","Checkup",check)
             },
 
 

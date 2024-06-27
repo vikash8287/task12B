@@ -9,16 +9,20 @@ import android.content.Intent
 import android.media.RingtoneManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import com.company.chamberly.activities.MainActivity
 import com.company.chamberly.utils.channelID
 import com.company.chamberly.utils.channelName
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
+
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.i("token", token)
@@ -29,8 +33,14 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         if (userId != null) {
             // Define a reference to the Cloud Firestore
             val firestore = Firebase.firestore
+            val realtimeDB = FirebaseDatabase.getInstance()
             val userRef = firestore.collection("Accounts").document(userId)
+            val realtimeRefAppUpdatesNotificationKeys =realtimeDB.getReference("notificationKeys_appUpdates_Android")
+            val realtimeRefDiscountsNotificationKeys =realtimeDB.getReference("notificationKeys_discounts_Android")
+            val realtimeRefGlobalNotificationKeys =realtimeDB.getReference("notificationKeys_global_Android")
+
             val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
+
             val editor = sharedPreferences.edit()
             editor.putString("notificationKey", token)
             editor.apply()
@@ -42,6 +52,28 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 .addOnFailureListener {
                     Log.e("FCM Token Update Failed", it.message ?: "An error occurred while updating FCM token")
                 }
+            realtimeRefAppUpdatesNotificationKeys.child(userId).setValue(token)
+                .addOnSuccessListener {
+                    Log.i("FCM Token Updated", "Token updated successfully")
+                }
+                .addOnFailureListener {
+                    Log.e("FCM Token Update Failed", it.message ?: "An error occurred while updating FCM token")
+                }
+            realtimeRefDiscountsNotificationKeys.child(userId).setValue(token)
+                .addOnSuccessListener {
+                    Log.i("FCM Token Updated", "Token updated successfully")
+                }
+                .addOnFailureListener {
+                    Log.e("FCM Token Update Failed", it.message ?: "An error occurred while updating FCM token")
+                }
+            realtimeRefGlobalNotificationKeys.child(userId).setValue(token)
+                .addOnSuccessListener {
+                    Log.i("FCM Token Updated", "Token updated successfully")
+                }
+                .addOnFailureListener {
+                    Log.e("FCM Token Update Failed", it.message ?: "An error occurred while updating FCM token")
+                }
+
         }
     }
 

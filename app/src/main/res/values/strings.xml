@@ -102,4 +102,12 @@
     <string name="what_other_can_see">What other can see</string>
     <string name="terms_and_conditions">Terms and conditions</string>
     <string name="privacy_policy">Privacy policy</string>
+    <string name="important">IMPORTANT!</string>
+    <string name="tell_us_how_to_improve">Tell us how to improve 😛</string>
+    <string name="i_don_t_like_the_users_here">I don\'t like the users here</string>
+    <string name="no_matches">No matches</string>
+    <string name="i_don_t_receive_notifications">I don\'t receive notifications</string>
+    <string name="app_problem_bugs">App problem/bugs</string>
+    <string name="app_doesn_t_have_what_i_want">App doesn\'t have what I want</string>
+    <string name="other">Other</string>
 </resources>

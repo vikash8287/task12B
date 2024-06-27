@@ -283,13 +283,13 @@ rootView.setOnClickListener{
                     text = "Male"
                     icon = R.drawable.male_gender_icon
 
-                    profileViewModel.setGenderToDatabase("male",chosenGender)
+                    profileViewModel.setGenderToFirestore("male",chosenGender)
                 }
 
                 Gender.FEMALE_GENDER_INT -> {
                     text = "Female"
                     icon = R.drawable.female_gender_icon
-                    profileViewModel.setGenderToDatabase("female",chosenGender)
+                    profileViewModel.setGenderToFirestore("female",chosenGender)
 
 
                 }
@@ -297,7 +297,7 @@ rootView.setOnClickListener{
                 Gender.OTHER_GENDER_INT -> {
                     text = "Other"
                     icon = R.drawable.other_gender_icon
-                    profileViewModel.setGenderToDatabase("other",chosenGender)
+                    profileViewModel.setGenderToFirestore("other",chosenGender)
 
                 }
             }
@@ -353,7 +353,7 @@ rootView.setOnClickListener{
         val reviewCount = getReviewCountFromSharedPreference()
         numberOfPeopleView.setText("(${reviewCount.toString()})")
         ratingBar.rating = rating
-        getUserRatingFromDataBase(numberOfPeopleView,ratingBar)
+        getUserRatingFromFirestore(numberOfPeopleView,ratingBar)
 
     }
 
@@ -430,15 +430,17 @@ rootView.setOnClickListener{
         dialog.setCancelable(true)
         val agePicker = dialog.findViewById<NumberPicker>(R.id.age_picker)
         val save_button = dialog.findViewById<Button>(R.id.save_button)
-        agePicker.value = 18
+
         agePicker.maxValue = 90
-        agePicker.minValue = 23
+        agePicker.minValue = 0
         agePicker.setOnValueChangedListener { picker, oldVal, newVal ->
             if (newVal != age) {
                 age = newVal
             }
 
         }
+        agePicker.clearFocus()
+        agePicker.value  =getAgeFromSharePreference()
         save_button.setOnClickListener {
             updateAge(textView)
             dialog.dismiss()
@@ -451,7 +453,7 @@ rootView.setOnClickListener{
     private fun updateAge(textView: TextView) {
 
         textView.text = "$age y/o"
-        profileViewModel.setAgeToDatabase(age)
+        profileViewModel.setAgeToFirestore(age)
     }
 
     private fun getIsListenerFromSharedPreference(): Boolean {
@@ -494,7 +496,7 @@ rootView.setOnClickListener{
     }
 
 
-    private fun getUserRatingFromDataBase(numberOfPeopleView: TextView, ratingBar: RatingBar) {
+    private fun getUserRatingFromFirestore(numberOfPeopleView: TextView, ratingBar: RatingBar) {
         val editor = sharedPreferences.edit()
 
         firestore.collection("StarReviews").whereEqualTo("To",uid).orderBy("timestamp", Query.Direction.DESCENDING).limit(1).get().addOnSuccessListener {

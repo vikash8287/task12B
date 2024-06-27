@@ -5,6 +5,7 @@ import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,13 +17,15 @@ import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.company.chamberly.R
+import com.company.chamberly.viewmodels.ProfileViewModel
 
 
 class SettingFragment : Fragment() {
-
+val profileViewModel:ProfileViewModel by activityViewModels()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -33,10 +36,48 @@ val view = inflater.inflate(R.layout.fragment_setting,container,false)
         backButton.setOnClickListener {
           requireActivity().supportFragmentManager.popBackStack()
         }
+        val signOut = view.findViewById<Button>(R.id.sign_out)
+        signOut.setOnClickListener {
+            showSignOutDialogBox()
+        }
 
 settingUpList(view)
         return view
 
+    }
+
+    private fun showSignOutDialogBox() {
+        val dialog = Dialog(requireContext(),R.style.Dialog)
+        dialog.setContentView(R.layout.dialog_box_delete_account)
+        val heading = dialog.findViewById<TextView>(R.id.heading)
+        val description = dialog.findViewById<TextView>(R.id.description)
+        val deleteButton = dialog.findViewById<Button>(R.id.delete_button)
+        val cancelButton = dialog.findViewById<Button>(R.id.cancel_button)
+
+        heading.text = "Delete account and logout"
+        description.text = "OBS: You are currently logged in as a guest. This action will also delete your guest account and any data associated with it! Continue?"
+        deleteButton.text = "Delete account and logout"
+        deleteButton.setOnClickListener {
+            profileViewModel.deleteAccount()
+            dialog.dismiss()
+
+            requireParentFragment().findNavController().navigate(
+                R.id.welcome_fragment,
+                null,
+                navOptions {
+                    anim {
+                        enter = R.anim.slide_in
+                        exit = R.anim.slide_out
+                    }
+                }
+            )
+
+        }
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.setCancelable(true)
+        dialog.show()
     }
 
     private  fun settingUpList(view: View) {
@@ -75,6 +116,7 @@ when(listItems[position].action){
         )
     }
     SettingAction.FeedbackOrReport->{
+        showFeedbackOrReportDialogBox()
 
     }
     SettingAction.TermsAndCondition->{
@@ -87,6 +129,30 @@ when(listItems[position].action){
 
 }
         }
+    }
+
+    private fun showFeedbackOrReportDialogBox() {
+        val dialog = Dialog(requireContext(),R.style.Dialog)
+        dialog.setContentView(R.layout.dialog_box_feedback_and_report)
+        val buttons = listOf(dialog.findViewById<Button>(R.id.option1),dialog.findViewById<Button>(R.id.option2),dialog.findViewById<Button>(R.id.option3),
+            dialog.findViewById<Button>(R.id.option4),
+            dialog.findViewById<Button>(R.id.option5),
+            dialog.findViewById<Button>(R.id.option6),
+
+        )
+        val cancelButton = dialog.findViewById<Button>(R.id.cancel_button)
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+        for(button:Button in buttons){
+            button.setOnClickListener {
+                profileViewModel.setFeedbackToFirestore(button.text.toString()){
+                    dialog.dismiss()
+                }
+            }
+        }
+        dialog.setCancelable(true)
+        dialog.show()
     }
 
     private fun showTermsConditionAndPrivacyPolicyDialogBox() {

@@ -162,6 +162,17 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         putString("bio","")
                         putFloat("rating",0f)
                         putInt("reviewCount",0)
+                        putBoolean("seeAge",true)
+                        putBoolean("seeGender",true)
+                        putBoolean("seeAchievements",false)
+
+                        putBoolean("AppUpdates",true)
+                        putBoolean("ChamberReminders",true)
+                        putBoolean("Checkup",true)
+                        putBoolean("DailyCoins",false)
+                        putBoolean("Discounts",true)
+
+
                         apply()
                     }
                     createDisplayNameDocument(
@@ -223,6 +234,19 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             "firstGender" to "male",
             "bio" to "",
             "Coins" to 0,
+            "privacy" to mapOf(
+                "seeAge" to true,
+                "seeGender" to true,
+                "seeAchievements" to false,
+            ),
+        "notifications" to mapOf(
+            "AppUpdates" to true,
+            "ChamberReminders" to true,
+            "Checkup" to true,
+            "DailyCoins" to false,
+            "Discounts" to true,
+        ),
+
         )
 
         firestore

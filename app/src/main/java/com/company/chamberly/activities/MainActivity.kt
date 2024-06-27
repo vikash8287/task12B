@@ -1,8 +1,9 @@
 package com.company.chamberly.activities
 
-import android.annotation.SuppressLint
+import android.app.AlarmManager
 import android.app.Dialog
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -22,6 +23,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
 import com.company.chamberly.adapters.TopicRequestRecyclerViewAdapter
+import com.company.chamberly.notification.CheckUpNotification
+import com.company.chamberly.notification.ReminderNotification
 import com.company.chamberly.viewmodels.UserViewModel
 import com.facebook.FacebookSdk
 import com.facebook.FacebookSdk.setAutoLogAppEventsEnabled
@@ -37,6 +40,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity() {
     private val auth = Firebase.auth
@@ -52,6 +56,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setAutoLogAppEventsEnabled(false)
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
         firebaseAnalytics = FirebaseAnalytics.getInstance(this)
@@ -62,10 +67,10 @@ class MainActivity : AppCompatActivity() {
         appEventsLogger.logEvent("TestEvent")
 
         setContentView(R.layout.activity_main)
+startCheckUpNotificationService(this)
 
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
-
         userViewModel.appState.observe(this) {
             if(!it.isAppEnabled) {
                 val intent = Intent(applicationContext, UpdateActivity::class.java)
@@ -414,4 +419,32 @@ class MainActivity : AppCompatActivity() {
     private fun unbanUser(uid: String) {
 
     }
+
+    private fun startCheckUpNotificationService(context: Context) {
+        val backgroundTaskState:Boolean = sharedPreferences.getBoolean("checkUpNotification",false)
+        if(backgroundTaskState) return
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(context, CheckUpNotification::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+
+        if(hasScheduleExactAlarmPermission(context)){
+            alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),AlarmManager.INTERVAL_DAY, pendingIntent)
+
+        }
+        with(sharedPreferences.edit()){
+            putBoolean("checkUpNotification",true)
+            commit()
+        }
+    }
+    private fun hasScheduleExactAlarmPermission(context: Context): Boolean {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+    }
+
 }

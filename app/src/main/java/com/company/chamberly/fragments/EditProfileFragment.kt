@@ -20,6 +20,8 @@ import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import com.company.chamberly.R
 import com.company.chamberly.constant.Gender
 import com.company.chamberly.customview.SettingSectionWithListAndSwitchButton
@@ -42,12 +44,21 @@ class EditProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
       backButtonView(view)
+        deleteButtonView(view)
      list(view)
 whatOtherPersonCanSeeList(view)
 
 
     }
-private  fun backButtonView(view:View){
+
+    private fun deleteButtonView(view: View) {
+val deleteButton = view.findViewById<Button>(R.id.delete_button)
+        deleteButton.setOnClickListener { 
+            showDeleteDialogBox()
+        }
+    }
+
+    private  fun backButtonView(view:View){
     val backButton = view.findViewById<ImageButton>(R.id.back_button)
     backButton.setOnClickListener {
         requireActivity().supportFragmentManager.popBackStack()
@@ -88,20 +99,51 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
         val toggleList = arrayListOf<ListWithSwitchItem>(
             ListWithSwitchItem("Allow others to see your age", state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("seeAge")){
                                                                _,check->
-                                                              profileViewModel.updateSectionInAccount("privacy","seeAge",check)
+                                                              profileViewModel.updateSectionInAccountFirestore("privacy","seeAge",check)
             },
             ListWithSwitchItem("Allow others to see my gender",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("seeGender")){
                     _,check->
-                profileViewModel.updateSectionInAccount("privacy","seeGender",check)
+                profileViewModel.updateSectionInAccountFirestore("privacy","seeGender",check)
             },
             ListWithSwitchItem("Allow others to see your achievements",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("seeAchievements")){
                     _,check->
-                profileViewModel.updateSectionInAccount("privacy","seeAchievements",check)
+                profileViewModel.updateSectionInAccountFirestore("privacy","seeAchievements",check)
             },
 
             )
 
         whatOtherPersonSeeListView.setData(toggleList)
+    }
+    private fun showDeleteDialogBox() {
+        val dialog = Dialog(requireContext(),R.style.Dialog)
+        dialog.setContentView(R.layout.dialog_box_delete_account)
+        val heading = dialog.findViewById<TextView>(R.id.heading)
+        val description = dialog.findViewById<TextView>(R.id.description)
+        val deleteButton = dialog.findViewById<Button>(R.id.delete_button)
+        val cancelButton = dialog.findViewById<Button>(R.id.cancel_button)
+
+        heading.text = "Delete Accountt"
+        description.text = "Are you sure you want to continue with this action?"
+        deleteButton.text = "Delete account"
+        deleteButton.setOnClickListener {
+            profileViewModel.deleteAccount()
+            dialog.dismiss()
+            requireParentFragment().findNavController().navigate(
+                R.id.welcome_fragment,
+                null,
+                navOptions {
+                    anim {
+                        enter = R.anim.slide_in
+                        exit = R.anim.slide_out
+                    }
+                }
+            )
+        }
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.setCancelable(true)
+        dialog.show()
     }
     private fun showGenderPicker(
         genderInt: Int,
@@ -126,18 +168,18 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
                 Gender.MALE_GENDER_INT -> {
                     text = "Male"
 
-                    profileViewModel.setGenderToDatabase("male",chosenGender)
+                    profileViewModel.setGenderToFirestore("male",chosenGender)
                 }
 
                 Gender.FEMALE_GENDER_INT -> {
                     text = "Female"
-                    profileViewModel.setGenderToDatabase("female",chosenGender)
+                    profileViewModel.setGenderToFirestore("female",chosenGender)
 
                 }
 
                 Gender.OTHER_GENDER_INT -> {
                     text = "Other"
-                    profileViewModel.setGenderToDatabase("other",chosenGender)
+                    profileViewModel.setGenderToFirestore("other",chosenGender)
 
                 }
             }
@@ -252,7 +294,6 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
         dialog.setCancelable(true)
         val agePicker = dialog.findViewById<NumberPicker>(R.id.age_picker)
         val save_button = dialog.findViewById<Button>(R.id.save_button)
-        agePicker.value = 18
         agePicker.maxValue = 90
         agePicker.minValue = 23
         agePicker.setOnValueChangedListener { picker, oldVal, newVal ->
@@ -261,6 +302,8 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
             }
 
         }
+        agePicker.clearFocus()
+        agePicker.value  =profileViewModel.getAgeFromSharePreference()
         save_button.setOnClickListener {
             updateAge(textView)
             dialog.dismiss()
@@ -272,7 +315,7 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
     private fun updateAge(textView: TextView) {
 
         textView.text = "$age y/o"
-        profileViewModel.setAgeToDatabase(age)
+        profileViewModel.setAgeToFirestore(age)
     }
     class EditInfoListAdapter(
         val list: ArrayList<EditInfoListDataItem>,
