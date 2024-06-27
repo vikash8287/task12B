@@ -40,6 +40,8 @@ class CreateTopicFragment : Fragment() {
         val filterArray = arrayOf(InputFilter.LengthFilter(maxLength))
         topicTitleField.filters = filterArray
 
+        userViewModel.getUserChambers()
+
         userViewModel.pendingTopics.observe(viewLifecycleOwner) {
             if (it.size >= userViewModel.maxAllowedTopics.value!!) {
                 showTooManyTopicsMessage(

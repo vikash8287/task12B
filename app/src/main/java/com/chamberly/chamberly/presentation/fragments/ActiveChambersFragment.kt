@@ -40,24 +40,30 @@ class ActiveChambersFragment : Fragment() {
         val emptyStateView = view.findViewById<RelativeLayout>(R.id.emptyStateView)
         val layoutManager = LinearLayoutManager(requireContext())
         val recyclerView = view.findViewById<RecyclerView>(R.id.rvChambers)
-        val adapter = ChambersRecyclerViewAdapter { chamber ->
-            // Handle click, navigate to ChatActivity
-            userViewModel.openChamber(chamber.groupChatId)
-        }
+        val adapter =
+            ChambersRecyclerViewAdapter(userViewModel.userState.value!!.UID) { chamber ->
+                // Handle click, navigate to ChatActivity
+                userViewModel.openChamber(chamber.chamberID)
+            }
         recyclerView.adapter = adapter
         recyclerView.layoutManager = layoutManager
         val dividerItemDecoration = DividerItemDecoration(requireContext(), layoutManager.orientation)
         recyclerView.addItemDecoration(dividerItemDecoration)
 
-        fetchChambers { chambers ->
-            if (chambers.isNotEmpty()) {
-                adapter.updateChambers(chambers)
-                recyclerView.visibility = View.VISIBLE
-                emptyStateView.visibility = View.GONE
-            } else {
+        userViewModel.myChambers.observe(viewLifecycleOwner) { myChambers ->
+            if (myChambers.isEmpty()) {
                 recyclerView.visibility = View.GONE
                 emptyStateView.visibility = View.VISIBLE
+            } else {
+                adapter.updateChambers(myChambers.toList())
+                recyclerView.visibility = View.VISIBLE
+                emptyStateView.visibility = View.GONE
             }
+        }
+        userViewModel.getUserChambers { chambers ->
+//            for (chamber in chambers) {
+//                userViewModel.getChamberDetails(chamber["groupChatId"].toString())
+//            }
         }
         return view
     }

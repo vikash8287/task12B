@@ -67,6 +67,7 @@ class MainFragment : Fragment() {
         }
 
         usernameTextView.text = userViewModel.userState.value?.displayName ?: "Anonymous"
+        userViewModel.getUserChambers()
 
 //        userViewModel.userState.observe(viewLifecycleOwner) {
 //            if(it.entitlement == Entitlement.CHAMBERLY_PLUS) {

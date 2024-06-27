@@ -39,6 +39,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     private val sharedPreferences =
         application.getSharedPreferences("cache", Context.MODE_PRIVATE)
     val memberNames: MutableMap<String, String> = mutableMapOf()
+    var otherUserNotificationKey: String = ""
 
     fun setChamber(chamberID: String, UID: String) {
         Log.d("CHAMBER1", chamberID)
@@ -49,7 +50,6 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                 Log.d("CHAMBER1", chamberSnapshot.data.toString())
                 if(chamberSnapshot.data != null) {
                     _chamberState.value = getChamberFromSnapshot(chamberSnapshot.data!!)
-                    Log.d("CHAMBER", _chamberState.value.toString())
                     for (member in chamberState.value!!.members) {
                         firestore
                             .collection("Accounts")
@@ -59,6 +59,20 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                                 memberNames[member] =
                                     memberSnapshot.data?.get("Display_Name").toString()
                             }
+                        if (member != UID) {
+                            realtimeDatabase
+                                .reference
+                                .child("$chamberID/users/members/$member")
+                                .addValueEventListener(object: ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        val notificationKey = snapshot.value as? String
+                                        if(notificationKey != null) {
+                                            otherUserNotificationKey = notificationKey
+                                        }
+                                    }
+                                    override fun onCancelled(error: DatabaseError) {}
+                                })
+                        }
                     }
                     removeNotificationKey(UID)
                     getMessages()
@@ -191,7 +205,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             .setValue(message.toMap())
             .addOnSuccessListener {
                 successCallback()
-                sendNotificationToInactiveMembers()
+                updateChamberDataFields()
             }
 
         logEventToAnalytics(
@@ -356,47 +370,76 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
         )
     }
 
-    private fun sendNotificationToInactiveMembers() {
-        val notificationKey =
-            sharedPreferences
-                .getString("notificationKey", "") ?: ""
+    private fun sendNotification(token: String) {
         val notificationPayload = JSONObject()
         val dataPayload = JSONObject()
-        realtimeDatabase
-            .reference
-            .child(_chamberState.value!!.chamberID)
-            .child("users")
-            .child("members")
+        try {
+            notificationPayload.put(
+                "title",
+                sharedPreferences.getString("displayName", "")
+            )
+            notificationPayload.put(
+                "body",
+                "sent you a message"
+            )
+            dataPayload.put(
+                "groupChatId",
+                _chamberState.value!!.chamberID
+            )
+            OkHttpHandler(
+                getApplication() as Context,
+                token,
+                notification = notificationPayload,
+                data = dataPayload
+            ).executeAsync()
+        } catch (e: Exception) {
+            Log.e("Error sending notifications", e.message.toString())
+        }
+    }
+
+    private fun updateChamberDataFields() {
+        val members = chamberState.value!!.members
+        val selfUID = sharedPreferences.getString("uid", "") ?: ""
+        val otherUID =
+            if (members[0] == selfUID)  members[1]
+            else                        members[0]
+        val selfChambersRef =
+            firestore
+                .collection("MyChambers")
+                .document(selfUID)
+        selfChambersRef
             .get()
-            .addOnSuccessListener { membersSnapshot ->
-                for(snapshot in membersSnapshot.children) {
-                    val token = snapshot.child("notificationKey").value as String?
-                    if(!token.isNullOrBlank() && token != notificationKey) {
-                        try {
-                            notificationPayload.put(
-                                "title",
-                                sharedPreferences.getString("displayName", "")
-                            )
-                            notificationPayload.put(
-                                "body",
-                                "sent you a message"
-                            )
-                            dataPayload.put(
-                                "groupChatId",
-                                _chamberState.value!!.chamberID
-                            )
-                            OkHttpHandler(
-                                getApplication() as Context,
-                                token,
-                                notification = notificationPayload,
-                                data = dataPayload
-                            ).executeAsync()
-                        } catch (e: Exception) {
-                            Log.e("Error sending notifications", e.message.toString())
-                        }
-                    }
-                }
+            .addOnSuccessListener {
+                val data = it.data!!
+                val myChambers =
+                    (data["MyChambersN"] as Map<String, Map<String, Any>>).toMutableMap()
+                myChambers[chamberState.value!!.chamberID] = mapOf(
+                    "groupChatId" to chamberState.value!!.chamberID,
+                    "messageRead" to true,
+                    "timestamp" to FieldValue.serverTimestamp(),
+                )
             }
+        val otherChambersRef = firestore
+            .collection("MyChambers")
+            .document(otherUID)
+        otherChambersRef
+            .get()
+            .addOnSuccessListener {
+                val data = it.data!!
+                val myChambers =
+                    (data["MyChambersN"] as Map<String, Map<String, Any>>).toMutableMap()
+                myChambers[chamberState.value!!.chamberID] = mapOf(
+                    "groupChatId" to chamberState.value!!.chamberID,
+                    "messageRead" to otherUserNotificationKey.isNotBlank(),
+                    "timestamp" to FieldValue.serverTimestamp(),
+                )
+                otherChambersRef.update(
+                    "MyChambersN", myChambers
+                )
+            }
+        if(otherUserNotificationKey.isNotBlank()) {
+            sendNotification(otherUserNotificationKey)
+        }
     }
 
     fun addNotificationKey(

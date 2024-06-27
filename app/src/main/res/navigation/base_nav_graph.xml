@@ -3,12 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/base_nav_graph"
-    app:startDestination="@id/welcome_fragment">
+    app:startDestination="@id/authentication_fragment">
 
     <fragment
-        android:id="@+id/welcome_fragment"
-        android:name="com.chamberly.chamberly.presentation.fragments.WelcomeFragment"
-        android:label="WelcomeFragment"/>
+        android:id="@+id/authentication_fragment"
+        android:name="com.chamberly.chamberly.presentation.fragments.AuthenticationFragment"
+        android:label="AuthenticationFragment">
+        <navGraph app:navGraph="@navigation/auth_nav_graph" />
+    </fragment>
     <fragment
         android:id="@+id/main_fragment"
         android:name="com.chamberly.chamberly.presentation.fragments.MainFragment"
