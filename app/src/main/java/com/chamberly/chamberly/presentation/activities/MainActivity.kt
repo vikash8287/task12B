@@ -39,11 +39,13 @@ class MainActivity : AppCompatActivity() {
     private var isUserRestricted: Boolean = false
     private lateinit var appEventsLogger: AppEventsLogger
     private lateinit var userViewModel: UserViewModel
+//    private lateinit var chamberViewModel: ChamberViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setAutoLogAppEventsEnabled(false)
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
+//        chamberViewModel = ViewModelProvider(this)[ChamberViewModel::class.java]
         firebaseAnalytics = FirebaseAnalytics.getInstance(this)
         FacebookSdk.setIsDebugEnabled(true)
         FacebookSdk.addLoggingBehavior(LoggingBehavior.APP_EVENTS)

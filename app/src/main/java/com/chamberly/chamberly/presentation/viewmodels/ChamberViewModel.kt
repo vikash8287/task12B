@@ -44,10 +44,13 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
         application.getSharedPreferences("cache", Context.MODE_PRIVATE)
     val memberNames: MutableMap<String, String> = mutableMapOf()
     var otherUserNotificationKey: String = ""
-    private lateinit var messageUpdateListener: ChildEventListener
-    private lateinit var messagesQuery: com.google.firebase.database.Query
+    private var messageUpdateListener: ChildEventListener? = null
+    private var messagesQuery: com.google.firebase.database.Query? = null
 
     fun setChamber(chamberID: String, UID: String) {
+        if(chamberID.isBlank()) {
+            return
+        }
         realtimeDatabase
             .reference
             .child(chamberID)
@@ -62,7 +65,9 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                     members = members.keys.toList()
                 )
                 for (member in members) {
-                    memberNames[member.key] = member.value.toString()
+                    memberNames[member.key] =
+                        try { (member.value as Map<String, Any>)["name"].toString() }
+                        catch (_: Exception) { "User" }
                     if(member.key != UID) {
                         realtimeDatabase
                             .reference
@@ -99,7 +104,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                 .orderByKey()
                 .limitToLast(40)
 
-        messagesQuery.addListenerForSingleValueEvent(object: ValueEventListener {
+        messagesQuery!!.addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 _messages.value = mutableListOf()
                 for(childSnapshot in snapshot.children) {
@@ -187,8 +192,8 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             }
         }
 
-        messagesQuery
-            .addChildEventListener(messageUpdateListener)
+        messagesQuery!!
+            .addChildEventListener(messageUpdateListener!!)
     }
 
     fun sendMessage(
@@ -386,6 +391,10 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             firestore
                 .collection("MyChambers")
                 .document(UID)
+        realtimeDatabase
+            .reference
+            .child("${chamberState.value!!.chamberID}/users/members/$UID")
+            .removeValue()
         myChambersRef
             .get()
             .addOnSuccessListener { chamberSnapshot ->
@@ -408,7 +417,9 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             chamberID = "",
             chamberTitle = ""
         )
-        messagesQuery.removeEventListener(messageUpdateListener)
+        messageUpdateListener?.let {
+            messagesQuery?.removeEventListener(it)
+        }
     }
 
     private fun sendNotification(token: String) {
@@ -496,6 +507,9 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
         UID: String,
         notificationKey: String
     ) {
+        if(notificationKey.isBlank()) {
+            return
+        }
         if(chamberState.value != null && chamberState.value!!.chamberID.isNotBlank()) {
             Log.d("CHAMBER ID", chamberState.value!!.toString())
             realtimeDatabase

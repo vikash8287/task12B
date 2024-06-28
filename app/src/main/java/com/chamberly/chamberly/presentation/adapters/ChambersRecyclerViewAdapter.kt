@@ -60,6 +60,7 @@ class ChambersRecyclerViewAdapter(private val UID: String, private val onItemCli
     override fun getItemCount(): Int = dataList.size
 
     fun updateChambers(chambers: List<ChamberPreview>) {
+        Log.d("MyChambers", chambers.toString())
         dataList.clear()
         dataList.addAll(chambers)
         dataList = dataList.sortedWith(compareBy(
@@ -67,7 +68,7 @@ class ChambersRecyclerViewAdapter(private val UID: String, private val onItemCli
             { it.timestamp as? Timestamp ?: Timestamp.now() }
         )).reversed().toMutableList()
         for(chamber in chambers) {
-            Log.d("Timestamp", chamber.chamberTitle + ":" +(chamber.timestamp as Timestamp).toString())
+            Log.d("Timestamp", chamber.chamberTitle + ":" +(chamber.timestamp as? Timestamp).toString())
         }
         notifyDataSetChanged()
     }

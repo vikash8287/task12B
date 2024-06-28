@@ -64,10 +64,22 @@ class ChatFragment : Fragment() {
         "Annoying"
     )
 
+    override fun onResume() {
+        super.onResume()
+        chamberViewModel.removeNotificationKey(userViewModel.userState.value!!.UID)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (userViewModel.chamberID.value.isNullOrBlank()) {
+            userViewModel.closeChamber()
+        }
+        chamberViewModel.clear(
+            userViewModel.chamberID.value!!,
+            userViewModel.userState.value!!.UID
+        )
         chamberViewModel.setChamber(
-            userViewModel.chamberID.value ?: "",
+            userViewModel.chamberID.value!!,
             userViewModel.userState.value!!.UID
         )
     }
@@ -395,17 +407,14 @@ class ChatFragment : Fragment() {
                                     userToRateUID = userToRateUID,
                                     userToRateName = userToRateName,
                                     callback = {
+                                        Log.d("HERE", "INSIDE THE CALLBACK")
                                         dialog.dismiss()
                                         exitChamber()
-                                        userViewModel.getUserChambers()
-                                        userViewModel.closeChamber()
                                     }
                                 )
                             } else {
                                 dialog.dismiss()
                                 exitChamber()
-                                userViewModel.getUserChambers()
-                                userViewModel.closeChamber()
                             }
                         }
                     )
@@ -444,8 +453,8 @@ class ChatFragment : Fragment() {
         heading.text = getString(R.string.rate_user, userToRateName)
 
         cancelButton.setOnClickListener {
-            callback()
             dialog.dismiss()
+            callback()
         }
 
         confirmButton.setOnClickListener {
@@ -550,7 +559,7 @@ class ChatFragment : Fragment() {
 
     private fun exitChamber() {
         val uid = userViewModel.userState.value!!.UID
-
+        userViewModel.closeChamber()
         chamberViewModel.exitChamber(uid)
     }
 

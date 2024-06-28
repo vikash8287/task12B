@@ -18,19 +18,18 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.chamberly.chamberly.R
 import com.chamberly.chamberly.models.Topic
 import com.chamberly.chamberly.presentation.adapters.PendingTopicsListAdapter
 import com.chamberly.chamberly.presentation.adapters.TopicAdapter
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
 import com.chamberly.chamberly.utils.Role
-import com.chamberly.chamberly.R
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.yalantis.library.Koloda
 import com.yalantis.library.KolodaListener
-
 
 class TopicSearchFragment : Fragment(), KolodaListener {
 
@@ -70,12 +69,16 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         kolodaView.adapter = kolodaAdapter
 
         fetchedTopics.observe(viewLifecycleOwner) {
+            Log.d("fetched topics", it.toString())
             kolodaAdapter.updateTopics(it)
+            kolodaView.adapter = kolodaAdapter
+//            kolodaView.adapter.
 
             kolodaView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
             buttonsView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
             emptyStateView.visibility = if(kolodaAdapter.count == 0) View.VISIBLE else View.GONE
         }
+
         val layoutManager = LinearLayoutManager(requireContext())
 
         if (pendingTopicsRecyclerView != null) {
@@ -147,6 +150,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
     }
 
     override fun onEmptyDeck() {
+        Log.d("Empty Deck", "Deck is empty $areTopicsAvailable $isFirstTimeEmpty")
         if(isFirstTimeEmpty) { isFirstTimeEmpty = false }
         else if(areTopicsAvailable) { getTopics() }
         super.onEmptyDeck()
@@ -163,7 +167,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
                         roleField,
                         Query.Direction.DESCENDING
                     )
-                    .startAfter(lastDocumentSnapshot)
+                    .startAt(lastDocumentSnapshot)
                     .limit(8)
             } else {
                 firestore
@@ -176,6 +180,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
             }
         query.get()
             .addOnSuccessListener { querySnapshot ->
+                Log.d("GET TOPICS", querySnapshot.documents.toString())
                 if(querySnapshot.isEmpty) {
                     fetchedTopics.postValue(mutableListOf())
                     areTopicsAvailable = false
@@ -190,7 +195,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
                     }
                 }
                 fetchedTopics.postValue(updatedTopics)
-                lastDocumentSnapshot =  querySnapshot.documents.lastOrNull()?.get("timestamp")
+                lastDocumentSnapshot =  querySnapshot.documents.lastOrNull()
             }
             .addOnFailureListener { exception ->
                 Log.e("QUERY_ERROR", exception.toString())

@@ -4,6 +4,8 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
@@ -438,61 +440,64 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     ) {
         firestore
             .collection("MyChambers")
-            .document(userState.value?.UID ?: auth.currentUser!!.uid)
-            .get()
-            .addOnSuccessListener {
-                val data =
-                    if (it.exists()) { it.data as Map<String, Map<String, Any>> }
-                    else { mapOf() }
-                val myChambers = data["MyChambersN"]
-                if(myChambers == null) {
-                    callback(emptyList())
-                    return@addOnSuccessListener
+            .document(auth.currentUser!!.uid)
+            .addSnapshotListener { snapshot, error ->
+                if(snapshot == null) {
+                    _myChambers.postValue(mutableListOf())
                 } else {
-                    val updatedMyChambers = mutableListOf<ChamberPreview>()
-                    val chambers =
-                        try { myChambers.values.toList() as List<MutableMap<String, Any>> }
-                        catch (_: Exception) { emptyList() }.toMutableList()
-                    if(chambers.isEmpty()) {
-                        callback(emptyList())
-                        _myChambers.postValue(mutableListOf())
-                        return@addOnSuccessListener
-                    }
-                    for (chamber in chambers) {
-                        firestore
-                            .collection("GroupChatIds")
-                            .document(chamber["groupChatId"].toString())
-                            .get()
-                            .addOnSuccessListener { chamberSnapshot ->
-                                val chamberDetails = chamberSnapshot.toObject(Chamber::class.java)
-                                if(chamberDetails != null) {
-                                    for (member in chamberDetails.members) {
-                                        checkedUsers.add(member)
-                                    }
-                                    realtimeDatabase
-                                        .reference
-                                        .child(chamber["groupChatId"].toString())
-                                        .child("messages")
-                                        .orderByKey()
-                                        .limitToLast(1)
-                                        .get()
-                                        .addOnSuccessListener {  message ->
-                                            val lastMessage =
-                                                try { message.children.firstOrNull()?.getValue(Message::class.java) }
-                                                catch (_: Exception) { Message() }
-                                            val chamberPreview = ChamberPreview(
-                                                chamberID = chamber["groupChatId"].toString(),
-                                                chamberTitle = chamberDetails.groupTitle,
-                                                messageRead = chamber["messageRead"] as Boolean,
-                                                lastMessage = lastMessage,
-                                                timestamp = chamber["timestamp"]
-                                            )
-                                            updatedMyChambers.add(chamberPreview)
-                                            _myChambers.postValue(updatedMyChambers)
-                                            callback(updatedMyChambers)
+                    val data = snapshot.data
+                    val myChambers1 =
+                        try { data?.get("MyChambersN") as? Map<String, Any> }
+                        catch (_: Exception) { emptyMap() }
+                    if (myChambers1.isNullOrEmpty()) {
+                        Log.d("MyChambers", "Emptied the list")
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            _myChambers.postValue(mutableListOf())
+                        }, 500)
+                    } else {
+                        val updatedMyChambers = mutableListOf<ChamberPreview>()
+                        val chambers =
+                            try { myChambers1.values.toList() as List<MutableMap<String, Any>> }
+                            catch (_: Exception) { emptyList() }
+                        if (chambers.isEmpty()) {
+                            _myChambers.postValue(mutableListOf())
+                            return@addSnapshotListener
+                        }
+                        for (chamber in chambers) {
+                            firestore
+                                .collection("GroupChatIds")
+                                .document(chamber["groupChatId"].toString())
+                                .get()
+                                .addOnSuccessListener { chamberSnapshot ->
+                                    val chamberDetails = chamberSnapshot.toObject(Chamber::class.java)
+                                    if (chamberDetails != null) {
+                                        for (member in chamberDetails.members) {
+                                            checkedUsers.add(member)
                                         }
+                                        realtimeDatabase
+                                            .reference
+                                            .child(chamber["groupChatId"].toString())
+                                            .child("messages")
+                                            .orderByKey()
+                                            .limitToLast(1)
+                                            .get()
+                                            .addOnSuccessListener { message ->
+                                                val lastMessage =
+                                                    try { message.children.firstOrNull()?.getValue(Message::class.java) }
+                                                    catch (_: Exception) { Message() }
+                                                val chamberPreview = ChamberPreview(
+                                                    chamberID = chamber["groupChatId"].toString(),
+                                                    chamberTitle = chamberDetails.groupTitle,
+                                                    messageRead = chamber["messageRead"] as Boolean,
+                                                    lastMessage = lastMessage,
+                                                    timestamp = chamber["timestamp"]
+                                                )
+                                                updatedMyChambers.add(chamberPreview)
+                                                _myChambers.postValue(updatedMyChambers)
+                                            }
+                                    }
                                 }
-                            }
+                        }
                     }
                 }
             }
@@ -935,7 +940,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                     .updateChildren(
                                         mapOf(
                                             "checkedMissedMatches" to false,
-                                            "${user["UID"]}" to missedMatchMap
+                                            "${userState.value!!.UID}" to missedMatchMap
                                         )
                                     )
                             }

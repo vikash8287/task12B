@@ -1,5 +1,6 @@
 package com.chamberly.chamberly.presentation.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +12,7 @@ import com.chamberly.chamberly.models.Topic
 
 class TopicAdapter: BaseAdapter() {
 
-    val dataList = mutableListOf<Topic>()
+    private val dataList = mutableListOf<Topic>()
     override fun getCount(): Int = dataList.size
 
     override fun getItem(position: Int): Topic = dataList[position]
@@ -41,6 +42,7 @@ class TopicAdapter: BaseAdapter() {
     fun updateTopics(newTopics: List<Topic>) {
         dataList.clear()
         dataList.addAll(newTopics)
+        Log.d("Topics", dataList.toString())
         notifyDataSetChanged()
     }
 }
