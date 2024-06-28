@@ -438,7 +438,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     ) {
         firestore
             .collection("MyChambers")
-            .document(userState.value!!.UID)
+            .document(userState.value?.UID ?: auth.currentUser!!.uid)
             .get()
             .addOnSuccessListener {
                 val data =
@@ -544,7 +544,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     .child("messages/$messageId")
                     .setValue(welcomeMessage.toMap())
 
-                chamberRef.update("members", FieldValue.arrayUnion(userState.value!!.UID))
                 firestore
                     .collection("Accounts")
                     .document(userState.value!!.UID)
@@ -569,7 +568,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         val myChambersRef =
             firestore
                 .collection("MyChambers")
-                .document(userState.value!!.UID)
+                .document(auth.currentUser!!.uid)
         myChambersRef
             .get()
             .addOnSuccessListener {
@@ -586,8 +585,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         )
                 }
                 val myChambers =
-                    try { data["MyChambersN"] as Map<String, Map<String, Any>> }
+                    try { data["MyChambersN"] as Map<String, Any> }
                     catch (_: Exception) { emptyMap() }.toMutableMap()
+                Log.d("MyChambersOldCreating", myChambers.toString() + ":" + data["MyChambersN"].toString())
                 myChambers[groupChatID] = mapOf(
                     "groupChatId" to groupChatID,
                     "messageRead" to false,
@@ -609,14 +609,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             "system",
             "Chamberly"
         )
-
-        firestore
-            .collection("GroupChatIds")
-            .document(chamberID)
-            .update(
-                "locked", true,
-                "members", FieldValue.arrayUnion(userState.value!!.UID)
-            )
 
         chamberDataRef
             .child("messages")
@@ -723,7 +715,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             .reference
             .child(topicID)
             .child("users")
-            .child(userState.value!!.UID)
+            .child(auth.currentUser!!.uid)
             .setValue(userData)
         val updatedIDs = _pendingTopics.value!!
         updatedIDs.add(topicID)
@@ -1236,12 +1228,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                             FieldValue.arrayUnion(userState.value!!.UID)
                                         )
 
-                                    firestore
-                                        .collection("MyChambers")
-                                        .document(userState.value!!.UID)
-                                        .update(
-                                            "MyChambersN", FieldValue.arrayUnion()
-                                        )
+                                    addChamberToMyChambers(groupChatId)
 
                                     firestore
                                         .collection("GroupChatIds")
@@ -1364,7 +1351,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         .reference
                         .child(topic)
                         .child("users")
-                        .child(userState.value!!.UID)
+                        .child(auth.currentUser!!.uid)
                     userRef.get().addOnSuccessListener { userData ->
                         if (userData.exists()) {
                             userRef
@@ -1409,7 +1396,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     .reference
                     .child(topic)
                     .child("users")
-                    .child(_userState.value!!.UID)
+                    .child(auth.currentUser!!.uid)
                     .removeValue()
             }
         }
@@ -1434,13 +1421,15 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     try { it.data as Map<String, Any> }
                     catch (_: Exception) { mutableMapOf() }
                 val myChambers =
-                    try { data["MyChambersN"] as Map<String, Map<String, Any>> }
+                    try { data["MyChambersN"] as Map<String, Any> }
                     catch (_: Exception) { emptyMap() }.toMutableMap()
+                Log.d("MyChambersOld", myChambers.toString() + ":" + data["MyChambersN"])
                 myChambers[chamberID] = mapOf(
                     "groupChatId" to chamberID,
                     "messageRead" to true,
                     "timestamp" to FieldValue.serverTimestamp()
                 )
+                Log.d("MyChambersNew", myChambers.toString())
                 myChambersRef
                     .update("MyChambersN", myChambers)
             }
@@ -1452,7 +1441,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     fun blockUser(UID: String) {
-        if(UID == userState.value!!.UID) {
+        if(UID == userState.value!!.UID || UID == auth.currentUser!!.uid) {
             return
         }
         val topicsList =
@@ -1610,7 +1599,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     fun logEventToAnalytics(eventName: String, params: HashMap<String, Any> = hashMapOf()) {
-        params["UID"] = _userState.value!!.UID
+        params["UID"] = auth.currentUser!!.uid
         params["name"] = _userState.value!!.displayName
         logEvent(
             firebaseAnalytics = firebaseAnalytics,

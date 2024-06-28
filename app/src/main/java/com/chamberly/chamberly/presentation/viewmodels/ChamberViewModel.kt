@@ -44,6 +44,8 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
         application.getSharedPreferences("cache", Context.MODE_PRIVATE)
     val memberNames: MutableMap<String, String> = mutableMapOf()
     var otherUserNotificationKey: String = ""
+    private lateinit var messageUpdateListener: ChildEventListener
+    private lateinit var messagesQuery: com.google.firebase.database.Query
 
     fun setChamber(chamberID: String, UID: String) {
         Log.d("CHAMBER1", chamberID)
@@ -97,7 +99,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     }
 
     private fun getMessages() {
-        val messagesQuery =
+        messagesQuery =
             realtimeDatabase
                 .getReference(_chamberState.value!!.chamberID)
                 .child("messages")
@@ -131,67 +133,69 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             }
         })
 
+        messageUpdateListener = object: ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                try {
+                    val message = snapshot.getValue(Message::class.java)
+                    if (message != null) {
+                        if (
+                            message.message_type == "custom" &&
+                            message.message_content == "gameCard"
+                        ) {
+                            message.message_content = message.game_content
+                        } else if (message.message_type == "photo") {
+                            message.message_content = "Images are not available to display on Android."
+                        }
+                        if(!(messages.value!!.contains(message))) {
+                            addMessage(message = message)
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                try {
+                    val message = snapshot.getValue(Message::class.java)
+                    if (message != null) {
+                        if (
+                            message.message_type == "custom" &&
+                            message.message_content == "gameCard"
+                        ) {
+                            message.message_content = message.game_content
+                        } else if (message.message_type == "photo") {
+                            message.message_content = "Images are not available to display on Android"
+                        }
+                        changeMessage(message)
+                    }
+                } catch (e: Exception) {
+                    Log.e("Message update error", e.message.toString())
+                }
+            }
+
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                try {
+                    val message = snapshot.getValue(Message::class.java)
+                    if(message != null) {
+                        removeMessage(message)
+                    }
+                } catch (e: Exception) {
+                    Log.e("Message deletion error", e.message.toString())
+                }
+            }
+
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                // Not needed for now
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Not needed for now
+            }
+        }
+
         messagesQuery
-            .addChildEventListener(object: ChildEventListener {
-                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                    try {
-                        val message = snapshot.getValue(Message::class.java)
-                        if (message != null) {
-                            if (
-                                message.message_type == "custom" &&
-                                message.message_content == "gameCard"
-                            ) {
-                                message.message_content = message.game_content
-                            } else if (message.message_type == "photo") {
-                                message.message_content = "Images are not available to display on Android."
-                            }
-                            if(!(messages.value!!.contains(message))) {
-                                addMessage(message = message)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-
-                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                    try {
-                        val message = snapshot.getValue(Message::class.java)
-                        if (message != null) {
-                            if (
-                                message.message_type == "custom" &&
-                                message.message_content == "gameCard"
-                            ) {
-                                message.message_content = message.game_content
-                            } else if (message.message_type == "photo") {
-                                message.message_content = "Images are not available to display on Android"
-                            }
-                            changeMessage(message)
-                        }
-                    } catch (e: Exception) {
-                        Log.e("Message update error", e.message.toString())
-                    }
-                }
-
-                override fun onChildRemoved(snapshot: DataSnapshot) {
-                    try {
-                        val message = snapshot.getValue(Message::class.java)
-                        if(message != null) {
-                            removeMessage(message)
-                        }
-                    } catch (e: Exception) {
-                        Log.e("Message deletion error", e.message.toString())
-                    }
-                }
-
-                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-                    // Not needed for now
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    // Not needed for now
-                }
-            })
+            .addChildEventListener(messageUpdateListener)
     }
 
     fun sendMessage(
@@ -411,6 +415,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             chamberID = "",
             chamberTitle = ""
         )
+        messagesQuery.removeEventListener(messageUpdateListener)
     }
 
     private fun sendNotification(token: String) {
@@ -533,4 +538,6 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             params = params
         )
     }
+
+
 }
