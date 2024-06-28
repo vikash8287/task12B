@@ -1599,8 +1599,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     fun logEventToAnalytics(eventName: String, params: HashMap<String, Any> = hashMapOf()) {
-        params["UID"] = auth.currentUser!!.uid
-        params["name"] = _userState.value!!.displayName
+        params["UID"] = auth.currentUser?.uid ?: userState.value?.UID ?: ""
+        params["name"] = _userState.value?.displayName ?: ""
         logEvent(
             firebaseAnalytics = firebaseAnalytics,
             eventName = eventName,

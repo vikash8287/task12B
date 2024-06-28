@@ -70,7 +70,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                             .addValueEventListener(object: ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
                                     val notificationKey = snapshot.value as? String
-                                    otherUserNotificationKey = notificationKey.toString()
+                                    otherUserNotificationKey = notificationKey ?: ""
                                 }
 
                                 override fun onCancelled(error: DatabaseError) { }
