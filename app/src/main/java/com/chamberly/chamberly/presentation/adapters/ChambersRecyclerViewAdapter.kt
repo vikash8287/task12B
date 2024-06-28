@@ -1,6 +1,7 @@
 package com.chamberly.chamberly.presentation.adapters
 
 import android.graphics.Typeface
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,7 +14,7 @@ import com.google.firebase.Timestamp
 
 class ChambersRecyclerViewAdapter(private val UID: String, private val onItemClick: (ChamberPreview) -> Unit) : RecyclerView.Adapter<ChambersRecyclerViewAdapter.ViewHolder>() {
 
-    private val dataList = mutableListOf<ChamberPreview>()
+    private var dataList = mutableListOf<ChamberPreview>()
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val textTitle: TextView = view.findViewById(R.id.textTitle)
@@ -61,10 +62,13 @@ class ChambersRecyclerViewAdapter(private val UID: String, private val onItemCli
     fun updateChambers(chambers: List<ChamberPreview>) {
         dataList.clear()
         dataList.addAll(chambers)
-        dataList.sortedWith(compareBy(
-            { it.messageRead },
+        dataList = dataList.sortedWith(compareBy(
+            { !it.messageRead },
             { it.timestamp as Timestamp }
-        ))
+        )).reversed().toMutableList()
+        for(chamber in chambers) {
+            Log.d("Timestamp", chamber.chamberTitle + ":" +(chamber.timestamp as Timestamp).toString())
+        }
         notifyDataSetChanged()
     }
 

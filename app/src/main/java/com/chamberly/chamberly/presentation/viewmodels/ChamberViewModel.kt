@@ -48,52 +48,45 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     private lateinit var messagesQuery: com.google.firebase.database.Query
 
     fun setChamber(chamberID: String, UID: String) {
-        Log.d("CHAMBER1", chamberID)
-        firestore.collection("GroupChatIds")
-            .document(chamberID)
+        realtimeDatabase
+            .reference
+            .child(chamberID)
             .get()
             .addOnSuccessListener { chamberSnapshot ->
-                Log.d("CHAMBER1", chamberSnapshot.data.toString())
-                if(chamberSnapshot.data != null) {
-                    _chamberState.value = getChamberFromSnapshot(chamberSnapshot.data!!)
-                    for (member in chamberState.value!!.members) {
-                        firestore
-                            .collection("Accounts")
-                            .document(member)
-                            .get()
-                            .addOnSuccessListener { memberSnapshot ->
-                                memberNames[member] =
-                                    memberSnapshot.data?.get("Display_Name").toString()
-                            }
-                        if (member != UID) {
-                            realtimeDatabase
-                                .reference
-                                .child("$chamberID/users/members/$member/notificationKey")
-                                .addValueEventListener(object: ValueEventListener {
-                                    override fun onDataChange(snapshot: DataSnapshot) {
-                                        val notificationKey = snapshot.value as? String
-                                        Log.d("NOTIF KEY", notificationKey.toString())
-                                        if(notificationKey != null) {
-                                            otherUserNotificationKey = notificationKey
-                                        }
-                                    }
-                                    override fun onCancelled(error: DatabaseError) {}
-                                })
-                        }
+                val data = chamberSnapshot.value as Map<String, Any>
+                val users = data["users"] as Map<String, Any>
+                val members = users["members"] as Map<String, Any>
+                _chamberState.value = ChamberState(
+                    chamberID = chamberID,
+                    chamberTitle = data["title"].toString(),
+                    members = members.keys.toList()
+                )
+                for (member in members) {
+                    memberNames[member.key] = member.value.toString()
+                    if(member.key != UID) {
+                        realtimeDatabase
+                            .reference
+                            .child("$chamberID/users/members/${member.key}/notificationKey")
+                            .addValueEventListener(object: ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    val notificationKey = snapshot.value as? String
+                                    otherUserNotificationKey = notificationKey.toString()
+                                }
+
+                                override fun onCancelled(error: DatabaseError) { }
+
+                            })
                     }
-                    removeNotificationKey(UID)
-                    getMessages()
                 }
-            }
-            .addOnFailureListener {
-                Log.d("CHAMBEREXCEPTION", it.toString())
+                removeNotificationKey(UID)
+                getMessages()
             }
     }
 
     private fun getChamberFromSnapshot(chamberData: Map<String, Any>): ChamberState {
         return ChamberState(
             chamberID = chamberData["groupChatId"].toString(),
-            chamberTitle = chamberData["groupTitle"].toString(),
+            chamberTitle = chamberData["title"].toString(),
             members = chamberData["members"] as List<String>
         )
     }
@@ -472,6 +465,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                     "timestamp" to FieldValue.serverTimestamp(),
                 )
             }
+        Log.d("OTHER_UID", otherUID)
         if (otherUID.isNotBlank()) {
             val otherChambersRef = firestore
                 .collection("MyChambers")
