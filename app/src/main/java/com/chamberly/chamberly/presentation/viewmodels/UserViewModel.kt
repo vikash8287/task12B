@@ -448,6 +448,11 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     val chambers =
                         try { myChambers.values.toList() as List<MutableMap<String, Any>> }
                         catch (_: Exception) { emptyList() }.toMutableList()
+                    if(chambers.isEmpty()) {
+                        callback(emptyList())
+                        _myChambers.postValue(mutableListOf())
+                        return@addOnSuccessListener
+                    }
                     for (chamber in chambers) {
                         firestore
                             .collection("GroupChatIds")
@@ -455,6 +460,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             .get()
                             .addOnSuccessListener { chamberSnapshot ->
                                 val chamberDetails = chamberSnapshot.toObject(Chamber::class.java)
+                                Log.d("MyChambersObjects", chamberDetails.toString())
                                 if(chamberDetails != null) {
                                     for (member in chamberDetails.members) {
                                         checkedUsers.add(member)
@@ -479,6 +485,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                             )
                                             updatedMyChambers.add(chamberPreview)
                                             _myChambers.postValue(updatedMyChambers)
+                                            callback(updatedMyChambers)
                                         }
                                 }
                             }

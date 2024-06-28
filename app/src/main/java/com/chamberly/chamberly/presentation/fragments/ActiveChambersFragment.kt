@@ -1,6 +1,7 @@
 package com.chamberly.chamberly.presentation.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -49,21 +50,16 @@ class ActiveChambersFragment : Fragment() {
         recyclerView.layoutManager = layoutManager
         val dividerItemDecoration = DividerItemDecoration(requireContext(), layoutManager.orientation)
         recyclerView.addItemDecoration(dividerItemDecoration)
-
-        userViewModel.myChambers.observe(viewLifecycleOwner) { myChambers ->
-            if (myChambers.isEmpty()) {
+        userViewModel.getUserChambers { chambers ->
+            Log.d("MYChambers", chambers.toString())
+            if (chambers.isEmpty()) {
                 recyclerView.visibility = View.GONE
                 emptyStateView.visibility = View.VISIBLE
             } else {
-                adapter.updateChambers(myChambers.toList())
+                adapter.updateChambers(chambers)
                 recyclerView.visibility = View.VISIBLE
                 emptyStateView.visibility = View.GONE
             }
-        }
-        userViewModel.getUserChambers { chambers ->
-//            for (chamber in chambers) {
-//                userViewModel.getChamberDetails(chamber["groupChatId"].toString())
-//            }
         }
         return view
     }

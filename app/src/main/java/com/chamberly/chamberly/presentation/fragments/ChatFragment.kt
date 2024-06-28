@@ -397,12 +397,14 @@ class ChatFragment : Fragment() {
                                     callback = {
                                         dialog.dismiss()
                                         exitChamber()
+                                        userViewModel.getUserChambers()
                                         userViewModel.closeChamber()
                                     }
                                 )
                             } else {
                                 dialog.dismiss()
                                 exitChamber()
+                                userViewModel.getUserChambers()
                                 userViewModel.closeChamber()
                             }
                         }

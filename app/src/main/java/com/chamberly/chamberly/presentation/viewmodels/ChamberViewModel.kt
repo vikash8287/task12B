@@ -384,18 +384,19 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     }
 
     fun exitChamber(UID: String) {
-        firestore
-            .collection("GroupChatIds")
-            .document(chamberState.value!!.chamberID)
-            .update("members", FieldValue.arrayRemove(UID))
-            .addOnSuccessListener {
-                realtimeDatabase
-                    .reference
-                    .child(chamberState.value!!.chamberID)
-                    .child("users")
-                    .child("members")
-                    .child(UID)
-                    .removeValue()
+        val myChambersRef =
+            firestore
+                .collection("MyChambers")
+                .document(UID)
+        myChambersRef
+            .get()
+            .addOnSuccessListener { chamberSnapshot ->
+                val data = chamberSnapshot.data
+                if(data != null) {
+                    val myChambersN = (data["MyChambersN"] as Map<String, Any>).toMutableMap()
+                    myChambersN.remove(chamberState.value!!.chamberID)
+                    myChambersRef.update("MyChambersN", myChambersN)
+                }
             }
 
         logEventToAnalytics(eventName = "ended_chat")
