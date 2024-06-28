@@ -469,7 +469,7 @@ class ChatFragment : Fragment() {
         dialog: Dialog,
         against: String,
         againstName: String,
-        callback: () -> Unit = {}
+        callback: () -> Unit = { dialog.dismiss() }
     ) {
         dialog.setContentView(R.layout.dialog_report_options)
 
@@ -523,7 +523,7 @@ class ChatFragment : Fragment() {
             else members[0]
         val report = hashMapOf(
             "against" to (against ?: uid),
-            "by" to uid,
+            "by" to userViewModel.userState.value!!.UID,
             "groupChatId" to chamberViewModel.chamberState.value!!.chamberID,
             "realHost" to "",
             "messages" to chamberViewModel.messages.value!!.map {

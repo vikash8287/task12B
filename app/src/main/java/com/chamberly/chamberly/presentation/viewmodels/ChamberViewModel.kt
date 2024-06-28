@@ -2,6 +2,8 @@ package com.chamberly.chamberly.presentation.viewmodels
 
 import android.app.Application
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
@@ -24,6 +26,8 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import org.json.JSONObject
+import java.util.Calendar
+import java.util.Date
 
 class ChamberViewModel(application: Application): AndroidViewModel(application = application) {
 
@@ -326,6 +330,43 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                         Toast.LENGTH_SHORT
                     ).show()
                 }
+                if (report["reason"] == "Harassment") {
+                    //Restrict the other user
+                    //This reason won't be encountered in a self report so report["UID"] is to be banned
+                    Log.d("Harassment", "Banning the user")
+                    firestore
+                        .collection("Accounts")
+                        .document(report["by"].toString())
+                        .update("timestamp", FieldValue.serverTimestamp())
+                        .addOnSuccessListener {
+                            // This delay is to ensure that the timestamp is updated properly
+                            // in firestore, removing it may cause timestamp to be null
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                firestore
+                                    .collection("Accounts")
+                                    .document(report["by"].toString())
+                                    .get()
+                                    .addOnSuccessListener { snapshot ->
+                                        val timestamp =
+                                            try { snapshot.getDate("timestamp") as Date }
+                                            catch (_: Exception) { null }
+                                        if(timestamp != null) {
+                                            val calendar = Calendar.getInstance()
+                                            calendar.time = timestamp
+                                            calendar.add(Calendar.YEAR, 100)
+                                            val restrictedUntil = calendar.time
+                                            firestore
+                                                .collection("Restrictions")
+                                                .document(report["against"].toString())
+                                                .update("restrictedUntil", restrictedUntil)
+                                        }
+                                    }
+                            }, 500)
+                        }
+                }
+            }
+            .addOnFailureListener {
+                Log.d("REPORT FAILED", "${it.message}")
             }
     }
 
@@ -400,9 +441,14 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     private fun updateChamberDataFields() {
         val members = chamberState.value!!.members
         val selfUID = sharedPreferences.getString("uid", "") ?: ""
+
         val otherUID =
-            if (members[0] == selfUID)  members[1]
-            else                        members[0]
+            if(members.size > 1) {
+                if (members[0] == selfUID) members[1]
+                else members[0]
+            } else {
+                ""
+            }
         val selfChambersRef =
             firestore
                 .collection("MyChambers")
@@ -419,26 +465,28 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                     "timestamp" to FieldValue.serverTimestamp(),
                 )
             }
-        val otherChambersRef = firestore
-            .collection("MyChambers")
-            .document(otherUID)
-        otherChambersRef
-            .get()
-            .addOnSuccessListener {
-                val data = it.data!!
-                val myChambers =
-                    (data["MyChambersN"] as Map<String, Map<String, Any>>).toMutableMap()
-                myChambers[chamberState.value!!.chamberID] = mapOf(
-                    "groupChatId" to chamberState.value!!.chamberID,
-                    "messageRead" to otherUserNotificationKey.isNotBlank(),
-                    "timestamp" to FieldValue.serverTimestamp(),
-                )
-                otherChambersRef.update(
-                    "MyChambersN", myChambers
-                )
+        if (otherUID.isNotBlank()) {
+            val otherChambersRef = firestore
+                .collection("MyChambers")
+                .document(otherUID)
+            otherChambersRef
+                .get()
+                .addOnSuccessListener {
+                    val data = it.data!!
+                    val myChambers =
+                        (data["MyChambersN"] as Map<String, Map<String, Any>>).toMutableMap()
+                    myChambers[chamberState.value!!.chamberID] = mapOf(
+                        "groupChatId" to chamberState.value!!.chamberID,
+                        "messageRead" to otherUserNotificationKey.isNotBlank(),
+                        "timestamp" to FieldValue.serverTimestamp(),
+                    )
+                    otherChambersRef.update(
+                        "MyChambersN", myChambers
+                    )
+                }
+            if (otherUserNotificationKey.isNotBlank()) {
+                sendNotification(otherUserNotificationKey)
             }
-        if(otherUserNotificationKey.isNotBlank()) {
-            sendNotification(otherUserNotificationKey)
         }
     }
 

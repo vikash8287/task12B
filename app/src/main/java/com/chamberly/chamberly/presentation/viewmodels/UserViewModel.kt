@@ -129,32 +129,35 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         role: Role,
         onComplete: () -> Unit
     ) {
-        auth
-            .createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener {
-                firestore
-                    .collection("Display_Names")
-                    .document(displayName)
-                    .get()
-                    .addOnCompleteListener {
-                        if (it.isSuccessful && it.result.exists()) {
-                            //User with this display name already exists,
-                            //Ask them to pick another
-                            showToast("This name is already in use. Please use another name")
-                        } else {
+        firestore
+            .collection("Display_Names")
+            .document(displayName)
+            .get()
+            .addOnCompleteListener {
+                if (it.isSuccessful && it.result.exists()) {
+                    //User with this display name already exists,
+                    //Ask them to pick another
+                    showToast("This name is already in use. Please use another name")
+                } else {
+                    auth
+                        .createUserWithEmailAndPassword(email, password)
+                        .addOnSuccessListener {
+                            val uid = auth.currentUser!!.uid
                             createDisplayNameDocument(
                                 displayName = displayName,
-                                uid = auth.currentUser!!.uid
+                                uid = uid,
+                                email = email
                             )
                             createAccountDocument(
                                 displayName = displayName,
-                                uid = auth.currentUser!!.uid,
+                                uid = uid,
+                                email = email,
                                 role = role
                             )
-                            setRestriction(uid = auth.currentUser!!.uid)
+                            setRestriction(uid = uid)
                             with(sharedPreferences.edit()) {
                                 putBoolean("hasLoggedIn", true)
-                                putString("uid", auth.currentUser!!.uid)
+                                putString("uid", uid)
                                 putString("displayName", displayName)
                                 putString("email", email)
                                 putBoolean("isListener", role == Role.LISTENER)
@@ -162,7 +165,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             }
                             _userState.postValue(
                                 _userState.value!!.copy(
-                                    UID = auth.currentUser!!.uid,
+                                    UID = uid,
                                     displayName = displayName,
                                     role = role
                                 )
@@ -171,28 +174,25 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             setupUXListeners()
                             setNotificationToken()
                         }
-                        onComplete()
-                    }
-            }
-            .addOnFailureListener {
-                if (it.message == "The email address is already in use by another account") {
-                    showToast("A user with this email address already exists. Try logging in")
-                } else {
-                    showToast("Authentication failed, please try again.")
+                        .addOnFailureListener { error ->
+                            val errorMessage = error.localizedMessage
+                            if (!errorMessage.isNullOrBlank()) {
+                                showToast(errorMessage)
+                            }
+                        }
                 }
                 onComplete()
-                Log.d("AUTH FAILED", it.toString())
             }
-
     }
 
     private fun createDisplayNameDocument(
         displayName: String,
+        email: String,
         uid: String,
     ) {
         val displayNameData = mapOf(
             "Display_Name" to displayName,
-            "Email" to "$uid@chamberly.net",
+            "Email" to email,
             "UID" to uid
         )
         firestore
@@ -208,26 +208,35 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     private fun createAccountDocument(
         displayName: String,
         uid: String,
+        email: String,
         role: Role
     ) {
         val account = mapOf(
             "UID" to uid,
             "Display_Name" to displayName,
-            "Email" to "$uid@chamberly.net",
-            "platform" to "android",
-            "Coins" to 0,
-            "gender" to "male",
-            "age" to 0,
-            "biography" to "",
+            "Email" to email,
             "isModerator" to false,
-            "timestamp" to FieldValue.serverTimestamp(),
-            "selectedRole" to role.toString()
         )
 
         firestore
             .collection("Accounts")
             .document(uid)
             .set(account)
+
+        firestore
+            .collection("Accounts")
+            .document(uid)
+            .update(
+                mapOf(
+                    "platform" to "android",
+                    "Coins" to 0,
+                    "gender" to "male",
+                    "age" to 0,
+                    "biography" to "",
+                    "timestamp" to FieldValue.serverTimestamp(),
+                    "selectedRole" to role.toString()
+                )
+            )
     }
 
     private fun setRestriction(uid: String) {
@@ -240,40 +249,94 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             ))
     }
 
-    fun loginUser(): Boolean {
-        val hasLoggedIn = sharedPreferences.getBoolean("hasLoggedIn", false)
-        Log.d("LOGGING IN", "TRYING TO LOGIN")
-        return if(!hasLoggedIn || auth.currentUser == null) {
-            false
-        } else {
-            val uid = sharedPreferences.getString("uid", "") ?: ""
-            val displayName = sharedPreferences.getString("displayName", "") ?: ""
-            val role =
-                if (sharedPreferences.getBoolean("isListener", false)) Role.LISTENER
-                else Role.VENTOR
-            _userState.value = UserState(
-                UID = uid,
-                displayName = displayName,
-                role = role
-            )
-            databaseManager = DatabaseManager(uid, displayName)
-            firestore
-                .collection("Accounts")
-                .document(uid)
-                .get()
-                .addOnSuccessListener {
-                    val blockedUsers = it["blockedUsers"] as List<String>? ?: emptyList()
-                    _blockedUsers.postValue(blockedUsers.toMutableList())
-                }
-            setupUXListeners()
-            setNotificationToken()
-            getUserRestrictions()
-            getUserRating()
-            attachTopicRequestListeners()
-            if (appState.value?.areExperimentalFeaturesEnabled == true) {
-                setPaywallStatus()
+    fun loginUser(
+        email: String = "",
+        password: String = "",
+        onComplete: () -> Unit = {}
+    ){
+        if (email.isBlank() && password.isBlank()) {
+            // Login called automatically, try using cache here to keep user logged in
+            val user = auth.currentUser
+            val hasLoggedIn = sharedPreferences.getBoolean("hasLoggedIn", false)
+            if(user != null && hasLoggedIn) {
+                // Log in user
+                val uid = user.uid
+                val displayName = sharedPreferences.getString("displayName", "") ?: ""
+                val role =
+                    if (sharedPreferences.getBoolean("isListener", false)) Role.LISTENER
+                    else                                                                Role.VENTOR
+                Log.d("Logged In", "$uid:$displayName:$role")
+                _userState.postValue(
+                    UserState(
+                        UID = uid,
+                        displayName = displayName,
+                        role = role
+                    )
+                )
+                databaseManager = DatabaseManager(uid, displayName)
+                firestore
+                    .collection("Accounts")
+                    .document(uid)
+                    .get()
+                    .addOnSuccessListener {
+                        val blockedUsers = it["blockedUsers"] as List<String>? ?: emptyList()
+                        _blockedUsers.postValue(blockedUsers.toMutableList())
+                    }
+                setupUXListeners()
+                setNotificationToken()
+                getUserRestrictions(uid = uid)
+                getUserRating(uid = uid)
+                attachTopicRequestListeners()
+                onComplete()
+            } else {
+                Log.d("INSIDE VIEWMODEL FOR LOGIN", "${auth.currentUser}:$hasLoggedIn")
+                onComplete()
             }
-            true
+        } else {
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnSuccessListener {
+                    val uid = auth.currentUser!!.uid
+                    firestore
+                        .collection("Accounts")
+                        .document(uid)
+                        .get()
+                        .addOnSuccessListener { accountSnapshot ->
+                            val data = accountSnapshot.data!!
+                            val displayName = data["Display_Name"].toString()
+                            val role =
+                                if(data["selectedRole"].toString() == "ventor") Role.VENTOR
+                                else                                            Role.LISTENER
+                            val blockedUsers = data["blockedUsers"] as List<String>? ?: emptyList()
+                            _blockedUsers.postValue(blockedUsers.toMutableList())
+                            with(sharedPreferences.edit()) {
+                                putString("uid", uid)
+                                putString("displayName", displayName)
+                                putBoolean("isListener", role == Role.LISTENER)
+                                apply()
+                            }
+                            _userState.postValue(
+                                UserState(
+                                    UID = uid,
+                                    displayName = displayName,
+                                    role = role
+                                )
+                            )
+                            databaseManager = DatabaseManager(uid, displayName)
+                            setupUXListeners()
+                            setNotificationToken()
+                            getUserRestrictions(uid = uid)
+                            getUserRating(uid = uid)
+                            attachTopicRequestListeners()
+                            onComplete()
+                        }
+                }
+                .addOnFailureListener {
+                    val errorMessage = it.localizedMessage
+                    if(!errorMessage.isNullOrBlank()) {
+                        showToast(it.localizedMessage)
+                    }
+                    onComplete()
+                }
         }
     }
 
@@ -776,7 +839,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         coroutineScope: CoroutineScope,
         index: Int,
     ) {
-        Log.d("HERE", index.toString())
         val currentUserRef =
             realtimeDatabase
                 .reference
@@ -833,6 +895,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         committed: Boolean,
                         currentData: DataSnapshot?
                     ) {
+                        // Temporary workaround for missed_matches
+                        // being added even after accepting the match
+                        var isMatchAccepted = false
                         if (committed) {
                             //Procrastinator reserved successfully
                             //Transactions shouldn't be needed now since, the user is reserved
@@ -845,7 +910,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                     )
                                 )
                                 .addOnSuccessListener {
-                                    addMissedMatch(topicID, topicTitle, user)
+                                    Log.d("HERE", "Adding missed match doe to onDisconnect $isMatchAccepted")
+                                    if(!isMatchAccepted)
+                                        addMissedMatch(topicID, topicTitle, user)
                                 }
 
                             currentUserRef
@@ -859,12 +926,15 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
 
                             val isReadyListener = object: ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
+                                    Log.d("HERE", "Inside onReadyListener")
                                     val isReady =
                                         try { snapshot.value as Boolean }
                                         catch (_: Exception) { false }
                                     if(isReady) {
                                         //User has accepted the match,
                                         //create chamber and clean up everything
+                                        Log.d("HERE", "Inside onReadyListener: true")
+                                        isMatchAccepted = true
                                         currentUserRef.onDisconnect().cancel()
                                         reservedUserRef.onDisconnect().cancel()
                                         val updatedTopics = _pendingTopics.value!!
@@ -949,7 +1019,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                         .child("isReserved")
                                         .removeEventListener(isReservedListener)
 
-                                    if ((user["isAndroid"] ?: false) == false) {
+                                    if ((user["isAndroid"] ?: false) == false && !isMatchAccepted) {
+                                        Log.d("HERE", "Adding missed match in listener")
                                         addMissedMatch(topicID, topicTitle, user)
                                     }
 
@@ -1200,11 +1271,11 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         showToast("Match skipped")
     }
 
-    private fun getUserRating() {
+    private fun getUserRating(uid: String) {
         val isRestricted = sharedPreferences.getBoolean("isRestricted", false)
         firestore
             .collection("StarReviews")
-            .whereEqualTo("To", _userState.value!!.UID)
+            .whereEqualTo("To", uid)
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .limit(1)
             .get()
@@ -1233,10 +1304,10 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             }
     }
 
-    private fun getUserRestrictions() {
+    private fun getUserRestrictions(uid: String) {
         val userRef = firestore
             .collection("Accounts")
-            .document(userState.value!!.UID)
+            .document(uid)
         userRef
             .update(mapOf("timestamp" to FieldValue.serverTimestamp()))
         userRef
@@ -1246,7 +1317,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         ?: return@addSnapshotListener
                     firestore
                         .collection("Restrictions")
-                        .document(userState.value!!.UID)
+                        .document(uid)
                         .addSnapshotListener { value, _ ->
                             if (value != null && value.exists()) {
                                 val restrictedUntil = value.getTimestamp("restrictedUntil")

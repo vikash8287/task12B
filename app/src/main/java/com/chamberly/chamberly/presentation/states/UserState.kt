@@ -13,5 +13,5 @@ data class UserState(
     val isRestricted: Boolean = false,
     val numRatings: Int = 0,
     var coins: Int = 0,
-    var chambers: MutableList<MutableMap<String, Any>> = mutableListOf()
+    var chambers: MutableList<MutableMap<String, Any>> = mutableListOf(),
 )
