@@ -94,6 +94,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     // This map will contain the topic title corresponding to the topic ID
     val pendingTopicTitles = mutableMapOf<String, String>()
 
+    //This is to prevent users from clicking sign up login buttons while the loginuser function
+    //loads user data from cache
+    val authState: MutableLiveData<String> = MutableLiveData("LOADING")
 
     private val auth = Firebase.auth
     private val sharedPreferences: SharedPreferences =
@@ -286,10 +289,14 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 getUserRestrictions(uid = uid)
                 getUserRating(uid = uid)
                 attachTopicRequestListeners()
+                authState.postValue("COMPLETE")
                 onComplete()
             } else {
+                authState.postValue("COMPLETE")
                 onComplete()
             }
+            //This is where the login from cache is complete, either it succeeded or failed
+            //Enable the buttons now
         } else {
             auth.signInWithEmailAndPassword(email, password)
                 .addOnSuccessListener {
@@ -1128,7 +1135,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 .reference
                 .child(topicID)
                 .child("users")
-                .child(userState.value!!.UID)
+                .child(auth.currentUser!!.uid)
         userRef
             .addValueEventListener(object: ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -1141,7 +1148,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         return
                     }
                     val userData = snapshot.value as Map<String, Any>
-                    val isReserved = userData["isReserved"] as Boolean? ?: false
+                    Log.d("USER_DATA_IN_ISRESERVED", userData.toString())
+                    val isReserved = userData["isReserved"] as Boolean? ?: return
                     if (isReserved) {
                         // Start matching
                         if(matches.value!!.indexOfFirst { it.topicID == topicID } == -1) {

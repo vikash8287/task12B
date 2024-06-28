@@ -66,10 +66,11 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                         if (member != UID) {
                             realtimeDatabase
                                 .reference
-                                .child("$chamberID/users/members/$member")
+                                .child("$chamberID/users/members/$member/notificationKey")
                                 .addValueEventListener(object: ValueEventListener {
                                     override fun onDataChange(snapshot: DataSnapshot) {
                                         val notificationKey = snapshot.value as? String
+                                        Log.d("NOTIF KEY", notificationKey.toString())
                                         if(notificationKey != null) {
                                             otherUserNotificationKey = notificationKey
                                         }
@@ -476,9 +477,10 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                     val data = it.data!!
                     val myChambers =
                         (data["MyChambersN"] as Map<String, Map<String, Any>>).toMutableMap()
+                    Log.d("NOTIF", "messageRead:${otherUserNotificationKey.isNotBlank()}: $otherUserNotificationKey")
                     myChambers[chamberState.value!!.chamberID] = mapOf(
                         "groupChatId" to chamberState.value!!.chamberID,
-                        "messageRead" to otherUserNotificationKey.isNotBlank(),
+                        "messageRead" to otherUserNotificationKey.isBlank(),
                         "timestamp" to FieldValue.serverTimestamp(),
                     )
                     otherChambersRef.update(
