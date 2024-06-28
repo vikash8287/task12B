@@ -28,10 +28,12 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.company.chamberly.R
 import com.company.chamberly.constant.Gender
+import com.company.chamberly.models.ProfileInfo
 import com.company.chamberly.viewmodels.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -41,14 +43,27 @@ import com.google.firebase.ktx.Firebase
 
 
 class ProfileFragment: Fragment() {
-    var age: Int = 24
     private val profileViewModel:ProfileViewModel by activityViewModels()
-    private var chosenGender = Gender.MALE_GENDER_INT //MALE_GENDER_INT
     private val firestore: FirebaseFirestore = Firebase.firestore
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
     val uid = firebaseAuth.currentUser?.uid
     private lateinit var sharedPreferences: SharedPreferences
-    private var isListener: Boolean = false
+    lateinit var  nameTextView:TextView
+    lateinit var  roleSelectorButton:RadioGroup
+    lateinit var  genderContainer:LinearLayout
+    lateinit var chosenGenderTextView:TextView
+    lateinit var  chosenGenderImageView:ImageView
+    lateinit var agePickerTextView:TextView
+    lateinit var bioEditText:EditText
+    lateinit var bioSaveButtonContainer:ConstraintLayout
+    lateinit var  rootView:ConstraintLayout
+    lateinit var saveBioButton:Button
+lateinit var settingButton:ImageButton
+    lateinit var backButton:ImageButton
+    lateinit var coinText:TextView
+    lateinit var numberOfPeopleView :TextView
+    lateinit var ratingBar:RatingBar
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -56,21 +71,57 @@ class ProfileFragment: Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
         sharedPreferences = requireActivity().getSharedPreferences("cache", Context.MODE_PRIVATE)
+        profileViewModel.setUpProfileInfo()
 
-            isListener = getIsListenerFromSharedPreference()
-        age = profileViewModel.getAgeFromSharePreference()
-        val bioText = getBioTextFromSharePreference()
-        chosenGender = profileViewModel.getGenderFromSharePreference()
+        nameTextView = view.findViewById<TextView>(R.id.name_text)
+        roleSelectorButton = view.findViewById<RadioGroup>(R.id.role_selector_group)
+        genderContainer = view.findViewById<LinearLayout>(R.id.gender_container)
+        chosenGenderTextView = view.findViewById<TextView>(R.id.gender_text)
+        chosenGenderImageView = view.findViewById<ImageView>(R.id.gender_icon)
+        agePickerTextView = view.findViewById<TextView>(R.id.age_picker_button)
+        bioEditText= view.findViewById<EditText>(R.id.bio_edit_text)
+        bioSaveButtonContainer =  view.findViewById<ConstraintLayout>(R.id.save_button_container)
+        rootView =    view.findViewById<ConstraintLayout>(R.id.main)
+        saveBioButton= view.findViewById<Button>(R.id.save_button)
+        settingButton = view.findViewById<ImageButton>(R.id.setting_button)
+        backButton= view.findViewById<ImageButton>(R.id.back_button)
+        coinText = view.findViewById<TextView>(R.id.coins_number)
+         numberOfPeopleView = view.findViewById<TextView>(R.id.number_of_people)
+         ratingBar = view.findViewById<RatingBar>(R.id.rating_bar)
 
-        selectedRoleContainerLogic(view)
-        agePickerContainerLogic(view)
-        genderPickerContainerView(view)
-        nameTextView(view)
-        coinTextLogic(view)
-        backButtonLogic(view)
-        ratingLogic(view)
-        bioEditTextLogic(bioText = bioText.toString(), view = view)
-val settingButton = view.findViewById<ImageButton>(R.id.setting_button)
+        val roleSelectorButton = view.findViewById<RadioGroup>(R.id.role_selector_group)
+        val ventorButton = view.findViewById<RadioButton>(R.id.role_ventor)
+        val listenerButton = view.findViewById<RadioButton>(R.id.role_listener)
+        roleSetView(roleSelectorButton, ventorButton, listenerButton)
+        settingUpGenderContainerlistener(
+            genderContainer,
+            chosenGenderTextView,
+            chosenGenderImageView,
+            profileViewModel._profileInfo.value!!
+        )
+        agePickerClickListener()
+        bioEditTextListener(view)
+        settingButtonListener()
+        backButtonListener(view)
+
+
+
+        return view
+    }
+
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setValueOfView(profileViewModel._profileInfo.value, view.context)
+        val observer = Observer<ProfileInfo> { newProfileInfo ->
+            setValueOfView(
+                context = view.context,
+                value = profileViewModel._profileInfo.value,
+            )
+        }
+        profileViewModel._profileInfo.observe(requireActivity(), observer)
+    }
+    fun settingButtonListener(){
         settingButton.setOnClickListener {
             requireParentFragment().findNavController().navigate(
                 R.id.setting_fragment,
@@ -83,61 +134,84 @@ val settingButton = view.findViewById<ImageButton>(R.id.setting_button)
                 }
             )
         }
-
-
-
-        return view
     }
-
-
-    private fun coinTextLogic(view: View) {
-        val coinText = view.findViewById<TextView>(R.id.coins_number)
-        val coins = getCoinsFromSharePreference()
-        coinText.setText(coins.toString())
-        getUserInfoFromDatabase(coinText)
+private  fun settingUpGenderContainerlistener(genderContainer:LinearLayout, chosenGenderTextView: TextView, chosenGenderImageView: ImageView, value:ProfileInfo){
+    genderContainer.setOnClickListener {
+        showGenderPicker(
+            chosenGenderIcon = chosenGenderImageView,
+            chosenGenderText = chosenGenderTextView,
+            value = profileViewModel._profileInfo.value!!,
+        )
     }
-
-    private fun nameTextView(view: View) {
-        val nameText = view.findViewById<TextView>(R.id.name_text)
-        nameText.setText(profileViewModel.getNameFromSharePreference())
+}
+    private fun agePickerClickListener() {
+        agePickerTextView.setOnClickListener {
+            showAgePicker()
+        }
     }
-    private fun getCoinsFromSharePreference(): Int {
-        return sharedPreferences.getInt("Coins", 0)
+    private fun setValueOfView(
+        value: ProfileInfo?,
+        context: Context
+    ) {
+
+        nameTextView.text =value?.name
+        roleSelectorButton.check(if (value?.isListener == true) R.id.role_listener else R.id.role_ventor)
+chosenGenderTextView.text = getGenderText(value?.gender!!)
+        chosenGenderImageView.setImageDrawable(AppCompatResources.getDrawable(context,getGenderIcon(value.gender)))
+        agePickerTextView.text = "${value.age} y/o"
+        bioEditText.setText(value.bio)
+        coinText.text = value.coins.toString()
+        numberOfPeopleView.text = "(${value.noOfPeople})"
+        ratingBar.rating = value.rating
 
     }
+    private fun getGenderIcon(gender:Int):Int{
+        return when(gender){
+            Gender.MALE_GENDER_INT->R.drawable.male_gender_icon
+                Gender.FEMALE_GENDER_INT->R.drawable.female_gender_icon
+                    Gender.OTHER_GENDER_INT-> R.drawable.other_gender_icon
+        else -> R.drawable.male_gender_icon
+        }
+    }
+    private fun getGenderText(gender:Int):String{
+        return when(gender){
+            Gender.MALE_GENDER_INT->"Male"
+            Gender.FEMALE_GENDER_INT->"Female"
+            Gender.OTHER_GENDER_INT-> "Other"
+            else -> "Male"
+        }
+    }
+    private fun roleSetView(
+        roleSelectorButton: RadioGroup,
+        ventorButton: RadioButton,
+        listenerButton: RadioButton
+    ) {
+        roleSelectorButton.setOnCheckedChangeListener { _, selectedButton ->
+         //   if (selectedButton == R.id.role_listener) isListener = true else isListener = false
+            listenerButton.setTextColor(if (selectedButton == R.id.role_listener) Color.BLACK else Color.WHITE)
+            ventorButton.setTextColor(if (selectedButton == R.id.role_ventor) Color.BLACK else Color.WHITE)
+            val listenerTypeface =
+                Typeface.defaultFromStyle(if (selectedButton == R.id.role_listener) Typeface.BOLD else Typeface.NORMAL)
+            val ventorTypeface =
+                Typeface.defaultFromStyle(if (selectedButton == R.id.role_ventor) Typeface.BOLD else Typeface.NORMAL)
+            listenerButton.setTypeface(listenerTypeface)
+            ventorButton.setTypeface(ventorTypeface)
 
-
-
-    private fun getUserInfoFromDatabase(coinText: TextView) {
-        val editor = sharedPreferences.edit()
-
-        val currUserRef = firestore.collection("Accounts").document(uid!!)
-        currUserRef.get().addOnSuccessListener { document ->
-            if (document != null) {
-                val doc = document.toObject(UserInfo::class.java)!!
-                coinText.setText(doc.Coins.toString())
-                editor.putInt("Coins",doc.Coins!!)
-                editor.apply()
-            }
-        }.addOnFailureListener {
-            Log.d("getCoins", "Failed")
-            Log.d("getCoins", it.toString())
+            if (selectedButton == R.id.role_listener) profileViewModel.updateIsListener(true) else profileViewModel.updateIsListener(false)
 
         }
     }
 
 
 
-    private fun getBioTextFromSharePreference(): String {
-        return sharedPreferences.getString("bio", "default")!!
-    }
 
-    private fun getAgeFromSharePreference(): Int {
-        return sharedPreferences.getInt("age", 24)
 
-    }
 
-    private fun backButtonLogic(view: View) {
+
+
+
+
+    private fun backButtonListener(view: View) {
         val backButton = view.findViewById<ImageButton>(R.id.back_button)
         backButton.setOnClickListener {
             requireActivity().supportFragmentManager.popBackStack()
@@ -145,84 +219,39 @@ val settingButton = view.findViewById<ImageButton>(R.id.setting_button)
         }
     }
 
-    private fun genderPickerContainerView(view: View) {
-        val genderContainer = view.findViewById<LinearLayout>(R.id.gender_container)
-        val chosenGenderText =view.findViewById<TextView>(R.id.gender_text)
-        val chosenGenderIcon = view.findViewById<ImageView>(R.id.gender_icon)
-        var text = ""
-        var icon = R.drawable.male_gender_icon
-        when (chosenGender) {
-            Gender.MALE_GENDER_INT -> {
-                text = "Male"
-                icon = R.drawable.male_gender_icon
-            }
-
-            Gender.FEMALE_GENDER_INT -> {
-                text = "Female"
-                icon = R.drawable.female_gender_icon
 
 
-            }
 
-            Gender.OTHER_GENDER_INT -> {
-                text = "Other"
-                icon = R.drawable.other_gender_icon
+    private fun bioEditTextListener(view: View) {
 
-            }
-        }
-        chosenGenderText.setText(text)
-        chosenGenderIcon.setImageDrawable(AppCompatResources.getDrawable(requireContext(),icon))
-        genderContainer.setOnClickListener {
-            showGenderPicker(
-                genderInt = chosenGender,
-                chosenGenderText = chosenGenderText,
-                chosenGenderIcon = chosenGenderIcon
-            )
-        }
-    }
-
-    private fun agePickerContainerLogic(view: View) {
-        val agePickerButton = view.findViewById<TextView>(R.id.age_picker_button)
-        agePickerButton.setText(age.toString() + " y/o")
-        agePickerButton.setOnClickListener {
-            showAgePicker(agePickerButton)
-        }
-    }
-
-    private fun bioEditTextLogic(bioText: String, view: View) {
-        val bioEditText = view.findViewById<EditText>(R.id.bio_edit_text)
-        val bioSaveButtonContainer = view.findViewById<ConstraintLayout>(R.id.save_button_container)
-        val rootView = view.findViewById<ConstraintLayout>(R.id.main)
 rootView.setOnClickListener{
    bioEditText.clearFocus()
 }
-        bioEditText.setText(bioText)
-        bioEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                bioSaveButtonContainer.visibility = View.VISIBLE
+        bioEditText.onFocusChangeListener = onFocusChangeBioEditText(view)
+        bioSaveButtonListener(view)
 
-                showSaveBioContainer(bioEditText, view, bioSaveButtonContainer)
-            } else {
-                bioSaveButtonContainer.visibility = View.INVISIBLE
-                // hiding keyboard
-                val imm =
-                    requireActivity().getSystemService(AppCompatActivity.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(view.windowToken, 0)
-            }
+    }
+private fun onFocusChangeBioEditText(view: View):View.OnFocusChangeListener{
+    return View.OnFocusChangeListener { _, hasFocus ->
+        if (hasFocus) {
+            bioSaveButtonContainer.visibility = View.VISIBLE
+
+        } else {
+            bioSaveButtonContainer.visibility = View.INVISIBLE
+            // hiding keyboard
+            val imm =
+                requireActivity().getSystemService(AppCompatActivity.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
     }
-
-    private fun showSaveBioContainer(
-        bioEditText: EditText,
+}
+    private fun bioSaveButtonListener(
         view: View,
-        bioSaveButtonContainer: ConstraintLayout
     ) {
 
-        val saveButton:Button = view.findViewById<Button>(R.id.save_button)
-        saveButton.setOnClickListener {
+        saveBioButton.setOnClickListener {
             bioEditText.clearFocus()
-            val text = bioEditText.text.toString()
-            setBioToDatabase(text)
+            profileViewModel.updateBio(bioEditText.text.toString())
             val imm =requireActivity().getSystemService(AppCompatActivity.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(view.windowToken, 0)
             bioSaveButtonContainer.visibility = View.INVISIBLE
@@ -232,38 +261,15 @@ rootView.setOnClickListener{
 
     }
 
-    private fun selectedRoleContainerLogic(view: View) {
-        val roleSelectorButton = view.findViewById<RadioGroup>(R.id.role_selector_group)
-        val ventorButton = view.findViewById<RadioButton>(R.id.role_ventor)
-        val listenerButton = view.findViewById<RadioButton>(R.id.role_listener)
-
-        roleSelectorButton.setOnCheckedChangeListener { _, selectedButton ->
-            if (selectedButton == R.id.role_listener) isListener = true else isListener = false
-            listenerButton.setTextColor(if (selectedButton == R.id.role_listener) Color.BLACK else Color.WHITE)
-            ventorButton.setTextColor(if (selectedButton == R.id.role_ventor) Color.BLACK else Color.WHITE)
-            val listenerTypeface =
-                Typeface.defaultFromStyle(if (selectedButton == R.id.role_listener) Typeface.BOLD else Typeface.NORMAL)
-            val ventorTypeface =
-                Typeface.defaultFromStyle(if (selectedButton == R.id.role_ventor) Typeface.BOLD else Typeface.NORMAL)
-
-            listenerButton.setTypeface(listenerTypeface)
-            ventorButton.setTypeface(ventorTypeface)
-
-
-            if (isListener) setRoleToDatabase("listener") else setRoleToDatabase("ventor")
-
-        }
-        roleSelectorButton.check(if (isListener) R.id.role_listener else R.id.role_ventor)
-    }
 
 
     private fun showGenderPicker(
-        genderInt: Int,
+
         chosenGenderIcon: ImageView,
-        chosenGenderText: TextView
+        chosenGenderText: TextView,
+        value: ProfileInfo,
     ) {
         val dialog = Dialog(requireContext(), R.style.Dialog)
-        var selectedGenderInt = genderInt
         dialog.setContentView(R.layout.dialog_box_gender_picker)
         val window = dialog.window
         val wlp = window?.attributes
@@ -276,66 +282,33 @@ rootView.setOnClickListener{
         val otherGenderContainer = dialog.findViewById<LinearLayout>(R.id.other_gender_container)
         val saveButton = dialog.findViewById<Button>(R.id.save_button)
         saveButton.setOnClickListener {
-            var text = ""
-            var icon = R.drawable.male_gender_icon
-            when (chosenGender) {
-                Gender.MALE_GENDER_INT -> {
-                    text = "Male"
-                    icon = R.drawable.male_gender_icon
+            chosenGenderText.text =getGenderText(value.gender)
+            chosenGenderIcon.setImageDrawable(AppCompatResources.getDrawable(requireContext(),getGenderIcon(value.gender)))
+            profileViewModel.updateGender(profileViewModel._tempGender.value!!)
 
-                    profileViewModel.setGenderToFirestore("male",chosenGender)
-                }
-
-                Gender.FEMALE_GENDER_INT -> {
-                    text = "Female"
-                    icon = R.drawable.female_gender_icon
-                    profileViewModel.setGenderToFirestore("female",chosenGender)
-
-
-                }
-
-                Gender.OTHER_GENDER_INT -> {
-                    text = "Other"
-                    icon = R.drawable.other_gender_icon
-                    profileViewModel.setGenderToFirestore("other",chosenGender)
-
-                }
-            }
-            chosenGenderText.setText(text)
-            chosenGenderIcon.setImageDrawable(requireActivity().getDrawable(icon))
             dialog.dismiss()
         }
-        updateGenderCard(
-            genderInt,
-            dialog,
-            maleGenderContainer,
-            femaleGenderContainer,
-            otherGenderContainer
-        )
 
-        femaleGenderContainer.setOnClickListener {
             updateGenderCard(
-                Gender.FEMALE_GENDER_INT,
-                dialog,
-                maleGenderContainer,
-                femaleGenderContainer,
-                otherGenderContainer
-            )
-        }
-        maleGenderContainer.setOnClickListener {
-            updateGenderCard(
-                Gender.MALE_GENDER_INT,
+                value.gender,
                 dialog,
                 maleGenderContainer,
                 femaleGenderContainer,
                 otherGenderContainer
             )
 
-
+        femaleGenderContainer.setOnClickListener{
+            profileViewModel.updateTempGender(Gender.FEMALE_GENDER_INT)
         }
-        otherGenderContainer.setOnClickListener {
+        maleGenderContainer.setOnClickListener{
+            profileViewModel.updateTempGender(Gender.MALE_GENDER_INT)
+        }
+        otherGenderContainer.setOnClickListener{
+            profileViewModel.updateTempGender(Gender.OTHER_GENDER_INT)
+        }
+        val tempGenderObserver = Observer<Int> { newtempGender ->
             updateGenderCard(
-                Gender.OTHER_GENDER_INT,
+                newtempGender,
                 dialog,
                 maleGenderContainer,
                 femaleGenderContainer,
@@ -343,27 +316,13 @@ rootView.setOnClickListener{
             )
 
         }
+        profileViewModel._tempGender.observe(requireActivity(),tempGenderObserver)
         dialog.show()
     }
 
-    private fun ratingLogic(view: View) {
-        val numberOfPeopleView = view.findViewById<TextView>(R.id.number_of_people)
-        val ratingBar = view.findViewById<RatingBar>(R.id.rating_bar)
-        val rating = getRatingFromSharePreference()
-        val reviewCount = getReviewCountFromSharedPreference()
-        numberOfPeopleView.setText("(${reviewCount.toString()})")
-        ratingBar.rating = rating
-        getUserRatingFromFirestore(numberOfPeopleView,ratingBar)
 
-    }
 
-    private fun getReviewCountFromSharedPreference(): Int {
-        return sharedPreferences.getInt("reviewCount", 0)
-    }
 
-    private fun getRatingFromSharePreference(): Float {
-        return sharedPreferences.getFloat("rating",0f)
-    }
 
     private fun updateGenderCard(
         selectedGenderInt: Int,
@@ -372,7 +331,6 @@ rootView.setOnClickListener{
         femaleGenderContainer: LinearLayout,
         otherGenderContainer: LinearLayout
     ) {
-        chosenGender = selectedGenderInt
         val maleGenderIcon = dialog.findViewById<ImageView>(R.id.male_gender_icon)
         val maleGenderText = dialog.findViewById<TextView>(R.id.male_gender_text)
         val femaleGenderIcon = dialog.findViewById<ImageView>(R.id.female_gender_icon)
@@ -419,7 +377,7 @@ rootView.setOnClickListener{
     }
 
 
-    private fun showAgePicker(textView: TextView) {
+    private fun showAgePicker() {
         val dialog = Dialog(requireContext(), R.style.Dialog)
         val window = dialog.window
         val wlp = window?.attributes
@@ -433,16 +391,16 @@ rootView.setOnClickListener{
 
         agePicker.maxValue = 90
         agePicker.minValue = 0
-        agePicker.setOnValueChangedListener { picker, oldVal, newVal ->
-            if (newVal != age) {
-                age = newVal
+        agePicker.setOnValueChangedListener { _, _, newVal ->
+            if (newVal != profileViewModel._tempAge.value) {
+              profileViewModel.updateTempAge(newVal)
             }
 
         }
         agePicker.clearFocus()
-        agePicker.value  =getAgeFromSharePreference()
+        agePicker.value  =profileViewModel._profileInfo.value?.age!!
         save_button.setOnClickListener {
-            updateAge(textView)
+            profileViewModel.updateAge(profileViewModel._tempAge.value!!)
             dialog.dismiss()
         }
         dialog.show()
@@ -450,81 +408,13 @@ rootView.setOnClickListener{
 
     }
 
-    private fun updateAge(textView: TextView) {
-
-        textView.text = "$age y/o"
-        profileViewModel.setAgeToFirestore(age)
-    }
-
-    private fun getIsListenerFromSharedPreference(): Boolean {
-
-        val isListener = sharedPreferences.getBoolean("isListener", false)
-        return isListener
-
-
-    }
-
-    private fun setRoleToDatabase(role: String) {
-        val editor = sharedPreferences.edit()
-        val currUserRef = firestore.collection("Accounts").document(uid!!)
-        currUserRef.update("selectedRole", role).addOnSuccessListener {
-            editor.putBoolean("isListener", if (role.equals("ventor")) false else true)
-            Log.d("selectRoleUpdate", "Success")
-        }.addOnFailureListener {
-            Log.d("selectRoleUpdate", "Failure")
-
-        }
-        editor.apply()
-    }
 
 
 
-    private fun setBioToDatabase(bio: String) {
-        val editor = sharedPreferences.edit()
-
-        val currUserRef = firestore.collection("Accounts").document(uid!!)
-        currUserRef.update("bio", bio).addOnSuccessListener {
-            editor.putString("bio", bio)
-            editor.apply()
-
-            Log.d("bioUpdate", "Success")
-        }.addOnFailureListener {
-            Log.d("bioUpdate", "Failure")
-
-        }
-
-    }
 
 
-    private fun getUserRatingFromFirestore(numberOfPeopleView: TextView, ratingBar: RatingBar) {
-        val editor = sharedPreferences.edit()
-
-        firestore.collection("StarReviews").whereEqualTo("To",uid).orderBy("timestamp", Query.Direction.DESCENDING).limit(1).get().addOnSuccessListener {
-                document->
-            if(document.size()==0){
-                numberOfPeopleView.setText("(0)")
-                ratingBar.rating = 0f
-                return@addOnSuccessListener
-            }
-            val doc= document.documents[0].data
-            val averageRating =  doc?.get("AverageStars")
-            val numberOfPeople= doc?.get("ReviewsCount")
-
-            numberOfPeopleView.setText("(${numberOfPeople.toString()})")
-            ratingBar.rating = (averageRating as Double).toFloat()
-            editor.putInt("reviewCount",numberOfPeople.toString().toInt())
-            editor.putFloat("rating", (averageRating as Double).toFloat())
-            editor.apply()
-
-            Log.d("Data",doc.toString())
-        }.addOnFailureListener {
-            Log.d("FirestoreError",it.message.toString())
-        }
-    }
 
 
-    data class UserInfo(
-        var Coins: Int? = 0
-    )
+
 
 }

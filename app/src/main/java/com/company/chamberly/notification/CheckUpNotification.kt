@@ -24,11 +24,10 @@ class CheckUpNotification(): BroadcastReceiver() {
        notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 sharedPreferences =      context.getSharedPreferences("cache", Context.MODE_PRIVATE)
         Log.d("test","hi")
-a(context)
+pushingNotification(context)
     }
-    fun a(context: Context) {
+    fun pushingNotification(context: Context) {
  var noOfDays = sharedPreferences.getInt("dayCount",0)
-        Log.d("noOfDays",noOfDays.toString())
 settingUpNotification(context,noOfDays)
         if(
             noOfDays>maxNoOfDay

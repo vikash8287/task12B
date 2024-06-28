@@ -92,7 +92,7 @@ class MainFragment : Fragment() {
             }
 
             profilePictureButton.setOnClickListener {
-                showProfileOptionsPopup(it)
+               // showProfileOptionsPopup(it)
                 // TODO:change screen
                 requireParentFragment().findNavController().navigate(
                     R.id.profile_fragment,

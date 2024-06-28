@@ -76,7 +76,6 @@ class ChatFragment : Fragment() {
         )
     }
 
-//    override fun on
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
