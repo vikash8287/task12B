@@ -265,7 +265,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 val role =
                     if (sharedPreferences.getBoolean("isListener", false)) Role.LISTENER
                     else                                                                Role.VENTOR
-                Log.d("Logged In", "$uid:$displayName:$role")
                 _userState.postValue(
                     UserState(
                         UID = uid,
@@ -289,7 +288,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 attachTopicRequestListeners()
                 onComplete()
             } else {
-                Log.d("INSIDE VIEWMODEL FOR LOGIN", "${auth.currentUser}:$hasLoggedIn")
                 onComplete()
             }
         } else {
@@ -460,7 +458,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             .get()
                             .addOnSuccessListener { chamberSnapshot ->
                                 val chamberDetails = chamberSnapshot.toObject(Chamber::class.java)
-                                Log.d("MyChambersObjects", chamberDetails.toString())
                                 if(chamberDetails != null) {
                                     for (member in chamberDetails.members) {
                                         checkedUsers.add(member)
@@ -581,11 +578,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             )
                         )
                 }
-                Log.d("Chamber created", "Inside myChambersRef $data")
                 val myChambers =
                     try { data["MyChambersN"] as Map<String, Map<String, Any>> }
                     catch (_: Exception) { emptyMap() }.toMutableMap()
-                Log.d("Chamber created", "Inside myChambersRef $data")
                 myChambers[groupChatID] = mapOf(
                     "groupChatId" to groupChatID,
                     "messageRead" to false,
@@ -785,7 +780,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     val userCheckedBy =
                         try { (userMap["checkedBy"] as List<String>).toMutableList() }
                         catch (_: Exception) { mutableListOf() }
-                    Log.d("CHECKED BY", userCheckedBy.toString())
                     if(uid != userState.value!!.UID &&
                         (userMap["isReserved"] ?: false) == false &&
                         (userMap["restricted"] ?: false) == false &&
@@ -904,7 +898,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     ) {
                         // Temporary workaround for missed_matches
                         // being added even after accepting the match
-                        var isMatchAccepted = false
                         if (committed) {
                             //Procrastinator reserved successfully
                             //Transactions shouldn't be needed now since, the user is reserved
@@ -916,11 +909,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                         "isReserved" to false
                                     )
                                 )
-                                .addOnSuccessListener {
-                                    Log.d("HERE", "Adding missed match doe to onDisconnect $isMatchAccepted")
-                                    if(!isMatchAccepted)
-                                        addMissedMatch(topicID, topicTitle, user)
-                                }
 
                             currentUserRef
                                 .onDisconnect()
@@ -930,20 +918,39 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                         "isWorker" to false,
                                     )
                                 )
-
+                            val missedMatchMap = mapOf(
+                                "UID" to userState.value!!.UID,
+                                "avatarName" to (1..380).random().toString(),
+                                "name" to userState.value!!.displayName,
+                                "notificationKey" to userState.value!!.notificationKey,
+                                "selectedRole" to userState.value!!.role.toString(),
+                                "timestamp" to ServerValue.TIMESTAMP,
+                                "topicID" to topicID,
+                                "topicTitle" to topicTitle,
+                            )
+                            if((user["isAndroid"] ?: false) == false) {
+                                realtimeDatabase
+                                    .reference
+                                    .child("missed_matches_${user["UID"]}")
+                                    .onDisconnect()
+                                    .updateChildren(
+                                        mapOf(
+                                            "checkedMissedMatches" to false,
+                                            "${user["UID"]}" to missedMatchMap
+                                        )
+                                    )
+                            }
                             val isReadyListener = object: ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
-                                    Log.d("HERE", "Inside onReadyListener")
                                     val isReady =
                                         try { snapshot.value as Boolean }
                                         catch (_: Exception) { false }
                                     if(isReady) {
                                         //User has accepted the match,
                                         //create chamber and clean up everything
-                                        Log.d("HERE", "Inside onReadyListener: true")
-                                        isMatchAccepted = true
                                         currentUserRef.onDisconnect().cancel()
                                         reservedUserRef.onDisconnect().cancel()
+                                        realtimeDatabase.reference.child("missed_matches_${user["UID"]}").onDisconnect().cancel()
                                         val updatedTopics = _pendingTopics.value!!
                                         updatedTopics.remove(topicID)
                                         _pendingTopics.postValue(updatedTopics)
@@ -986,7 +993,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                         currentUserRef
                                             .child("reserving").setValue(null)
                                         taskScheduler.invalidateTimer(topicID)
-                                        Log.d("IsReservedListener", "Match skipped $index")
                                         CoroutineScope(Dispatchers.IO).launch {
                                             sendRequest(
                                                 topicID = topicID,
@@ -1026,8 +1032,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                         .child("isReserved")
                                         .removeEventListener(isReservedListener)
 
-                                    if ((user["isAndroid"] ?: false) == false && !isMatchAccepted) {
-                                        Log.d("HERE", "Adding missed match in listener")
+                                    if ((user["isAndroid"] ?: false) == false) {
                                         addMissedMatch(topicID, topicTitle, user)
                                     }
 
@@ -1420,7 +1425,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 val data =
                     try { it.data as Map<String, Any> }
                     catch (_: Exception) { mutableMapOf() }
-                Log.d("Chamber created", "Inside myChambersRef $data")
                 val myChambers =
                     try { data["MyChambersN"] as Map<String, Map<String, Any>> }
                     catch (_: Exception) { emptyMap() }.toMutableMap()
@@ -1527,7 +1531,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 )
             }
         } catch (e: Exception) {
-            Log.d("SUBSCRIPTION ERROR", e.message.toString())
         }
     }
 
