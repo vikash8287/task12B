@@ -1543,20 +1543,20 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             auth.signInWithEmailAndPassword(email, password)
                 .addOnSuccessListener {
                     user.delete().addOnCompleteListener { task ->
+                        firestore
+                            .collection("Display_Names")
+                            .document(displayName)
+                            .delete()
+                        firestore
+                            .collection("Accounts")
+                            .document(uid!!)
+                            .delete()
                         if (task.isSuccessful) {
                             with(sharedPreferences.edit()) {
                                 clear()
                                 putBoolean("isNewUser", false)
                                 apply()
                             }
-                            firestore
-                                .collection("Display_Names")
-                                .document(displayName)
-                                .delete()
-                            firestore
-                                .collection("Accounts")
-                                .document(uid!!)
-                                .delete()
                             showToast("Account deleted")
                         } else {
 //                    showToast("Failed to delete account")
