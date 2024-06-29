@@ -39,10 +39,16 @@ class TopicAdapter: BaseAdapter() {
         notifyDataSetChanged()
     }
 
-    fun updateTopics(newTopics: List<Topic>) {
+    fun updateTopics(newTopics: List<Topic>, callback: () -> Unit = {}) {
         dataList.clear()
         dataList.addAll(newTopics)
         Log.d("Topics", dataList.toString())
+        notifyDataSetChanged()
+        callback()
+    }
+
+    fun clear() {
+        dataList.clear()
         notifyDataSetChanged()
     }
 }
