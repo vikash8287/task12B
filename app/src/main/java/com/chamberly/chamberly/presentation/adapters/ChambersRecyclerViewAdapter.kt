@@ -67,9 +67,6 @@ class ChambersRecyclerViewAdapter(private val UID: String, private val onItemCli
             { !it.messageRead },
             { it.timestamp as? Timestamp ?: Timestamp.now() }
         )).reversed().toMutableList()
-        for(chamber in chambers) {
-            Log.d("Timestamp", chamber.chamberTitle + ":" +(chamber.timestamp as? Timestamp).toString())
-        }
         notifyDataSetChanged()
     }
 

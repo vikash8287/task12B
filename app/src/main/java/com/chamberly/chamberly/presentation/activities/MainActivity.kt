@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -75,7 +74,6 @@ class MainActivity : AppCompatActivity() {
         userViewModel.loginUser()
 
         userViewModel.userState.observe(this) {
-            Log.d("HERE", it.toString())
             if(it.UID.isBlank()) {
                 navController.popBackStack(R.id.main_fragment, true)
                 navController.navigate(
@@ -91,7 +89,6 @@ class MainActivity : AppCompatActivity() {
             } else if (navController.currentDestination?.id == R.id.authentication_fragment) {
                 checkRestrictions()
                 navController.popBackStack(R.id.authentication_fragment, true)
-                Log.d("HERE", "GOING TO MAIN FRAGMENT")
                 navController.navigate(
                     R.id.main_fragment,
                     null,
@@ -165,6 +162,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkAndOpenChat(groupChatId: String) {
+        if(userViewModel.userState.value?.UID.isNullOrBlank()) {
+            return
+        }
         if (groupChatId.isNotBlank() && groupChatId != "nil") {
             userViewModel.openChamber(groupChatId)
         }

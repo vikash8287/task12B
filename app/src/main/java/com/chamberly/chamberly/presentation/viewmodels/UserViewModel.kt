@@ -450,7 +450,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         try { data?.get("MyChambersN") as? Map<String, Any> }
                         catch (_: Exception) { emptyMap() }
                     if (myChambers1.isNullOrEmpty()) {
-                        Log.d("MyChambers", "Emptied the list")
                         Handler(Looper.getMainLooper()).postDelayed({
                             _myChambers.postValue(mutableListOf())
                         }, 500)
@@ -592,7 +591,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 val myChambers =
                     try { data["MyChambersN"] as Map<String, Any> }
                     catch (_: Exception) { emptyMap() }.toMutableMap()
-                Log.d("MyChambersOldCreating", myChambers.toString() + ":" + data["MyChambersN"].toString())
                 myChambers[groupChatID] = mapOf(
                     "groupChatId" to groupChatID,
                     "messageRead" to false,
@@ -1145,7 +1143,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         return
                     }
                     val userData = snapshot.value as Map<String, Any>
-                    Log.d("USER_DATA_IN_ISRESERVED", userData.toString())
                     val isReserved = userData["isReserved"] as Boolean? ?: return
                     if (isReserved) {
                         // Start matching
@@ -1174,7 +1171,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Log.d("MATCHING ERROR", error.toException().toString())
                 }
             })
     }
@@ -1348,6 +1344,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     private fun updateTopicRestrictions(isRestricted: Boolean) {
+        if (auth.currentUser != null) {
+            return
+        }
         val updatedTopics = _pendingTopics.value!!
         _pendingTopics.value?.let {
             for (topic in it) {
@@ -1428,13 +1427,11 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 val myChambers =
                     try { data["MyChambersN"] as Map<String, Any> }
                     catch (_: Exception) { emptyMap() }.toMutableMap()
-                Log.d("MyChambersOld", myChambers.toString() + ":" + data["MyChambersN"])
                 myChambers[chamberID] = mapOf(
                     "groupChatId" to chamberID,
                     "messageRead" to true,
                     "timestamp" to FieldValue.serverTimestamp()
                 )
-                Log.d("MyChambersNew", myChambers.toString())
                 myChambersRef
                     .update("MyChambersN", myChambers)
             }
@@ -1536,23 +1533,40 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         }
     }
 
-    fun deleteAccount() {
+    fun deleteAccount(password: String) {
         val user = auth.currentUser
+        val uid = user?.uid
+        val displayName = userState.value!!.displayName
         logEventToAnalytics(eventName = "account_deleted")
         if (user != null) {
-            user.delete().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    with(sharedPreferences.edit()) {
-                        clear()
-                        putBoolean("isNewUser", false)
-                        apply()
+            val email = user.email!!
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnSuccessListener {
+                    user.delete().addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            with(sharedPreferences.edit()) {
+                                clear()
+                                putBoolean("isNewUser", false)
+                                apply()
+                            }
+                            firestore
+                                .collection("Display_Names")
+                                .document(displayName)
+                                .delete()
+                            firestore
+                                .collection("Accounts")
+                                .document(uid!!)
+                                .delete()
+                            showToast("Account deleted")
+                        } else {
+//                    showToast("Failed to delete account")
+                        }
+                        _userState.value = UserState()
                     }
-                    showToast("Account deleted")
-                } else {
-                    showToast("Failed to delete account")
                 }
-                _userState.value = UserState()
-            }
+                .addOnFailureListener {
+                    showToast("Incorrect password")
+                }
         } else {
             showToast("Account deleted")
         }

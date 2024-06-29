@@ -1,7 +1,6 @@
 package com.chamberly.chamberly.presentation.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -52,7 +51,6 @@ class ActiveChambersFragment : Fragment() {
 //
 //        }
         userViewModel.myChambers.observe(viewLifecycleOwner) { chambers ->
-            Log.d("MyChambersScreenShot", chambers.toString())
             if (chambers.isEmpty()) {
                 recyclerView.visibility = View.GONE
                 emptyStateView.visibility = View.VISIBLE

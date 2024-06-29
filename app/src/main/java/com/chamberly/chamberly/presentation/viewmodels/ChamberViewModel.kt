@@ -16,6 +16,7 @@ import com.chamberly.chamberly.models.toMap
 import com.chamberly.chamberly.presentation.states.ChamberState
 import com.chamberly.chamberly.utils.logEvent
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -34,8 +35,8 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     private val _chamberState = MutableLiveData<ChamberState>()
     val chamberState: LiveData<ChamberState> = _chamberState
 
-    private val _messages = MutableLiveData<MutableList<Message>>()
-    val messages: LiveData<List<Message>> = _messages as LiveData<List<Message>>
+    private val _messages = MutableLiveData<MutableMap<String, MutableList<Message>>>()
+    val messages: LiveData<MutableMap<String, MutableList<Message>>> = _messages
 
     private val realtimeDatabase = Firebase.database
     private val firestore = Firebase.firestore
@@ -88,14 +89,6 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             }
     }
 
-    private fun getChamberFromSnapshot(chamberData: Map<String, Any>): ChamberState {
-        return ChamberState(
-            chamberID = chamberData["groupChatId"].toString(),
-            chamberTitle = chamberData["title"].toString(),
-            members = chamberData["members"] as List<String>
-        )
-    }
-
     private fun getMessages() {
         messagesQuery =
             realtimeDatabase
@@ -106,7 +99,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
 
         messagesQuery!!.addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                _messages.value = mutableListOf()
+                _messages.value = mutableMapOf()
                 for(childSnapshot in snapshot.children) {
                     if (childSnapshot.value is Map<*, *>) {
                         try {
@@ -120,14 +113,13 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                                 addMessage(message)
                             }
                         } catch (e: Exception) {
-                            Log.d("EXCEPTION", e.toString())
                         }
                     }
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // TODO: Network error, will handle later
+                //Network error, will handle later
             }
         })
 
@@ -144,7 +136,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                         } else if (message.message_type == "photo") {
                             message.message_content = "Images are not available to display on Android."
                         }
-                        if(!(messages.value!!.contains(message))) {
+                        if((messages.value!![chamberState.value!!.chamberID]?.contains(message)) != true) {
                             addMessage(message = message)
                         }
                     }
@@ -225,29 +217,35 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
 
     private fun addMessage(message: Message) {
         val updatedMessages = _messages.value!!
-        updatedMessages.add(message)
-        _messages.postValue(updatedMessages)
+        if(updatedMessages[chamberState.value!!.chamberID] == null) {
+            updatedMessages[chamberState.value!!.chamberID] = mutableListOf()
+        }
+        updatedMessages[chamberState.value!!.chamberID]?.add(message)
+        Handler(Looper.getMainLooper()).postDelayed({
+            _messages.postValue(updatedMessages)
+        }, 400)
+//        _messages.postValue(updatedMessages)
     }
 
     private fun changeMessage(message: Message) {
         val updatedMessages = _messages.value!!
-        val index = updatedMessages.indexOfFirst {
+        val index = updatedMessages[chamberState.value!!.chamberID]!!.indexOfFirst {
             it.message_id == message.message_id
         }
 
         if (index != -1) {
-            updatedMessages[index] = message
+            updatedMessages[chamberState.value!!.chamberID]!![index] = message
             _messages.postValue(updatedMessages)
         }
     }
 
     private fun removeMessage(message: Message) {
         val updatedMessages = _messages.value!!
-        val index = updatedMessages.indexOfFirst {
+        val index = updatedMessages[chamberState.value!!.chamberID]!!.indexOfFirst {
             it.message_id == message.message_id
         }
         if(index != -1) {
-            updatedMessages.removeAt(index)
+            updatedMessages[chamberState.value!!.chamberID]!!.removeAt(index)
             _messages.postValue(updatedMessages)
         }
     }
@@ -336,7 +334,6 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                 if (report["reason"] == "Harassment") {
                     //Restrict the other user
                     //This reason won't be encountered in a self report so report["UID"] is to be banned
-                    Log.d("Harassment", "Banning the user")
                     firestore
                         .collection("Accounts")
                         .document(report["by"].toString())
@@ -368,9 +365,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                         }
                 }
             }
-            .addOnFailureListener {
-                Log.d("REPORT FAILED", "${it.message}")
-            }
+            .addOnFailureListener { }
     }
 
     fun sendExitMessage(message: Message, callback: () -> Unit) {
@@ -387,13 +382,14 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     }
 
     fun exitChamber(UID: String) {
+        val chamberID = chamberState.value!!.chamberID
         val myChambersRef =
             firestore
                 .collection("MyChambers")
                 .document(UID)
         realtimeDatabase
             .reference
-            .child("${chamberState.value!!.chamberID}/users/members/$UID")
+            .child("${chamberID}/users/members/$UID")
             .removeValue()
         myChambersRef
             .get()
@@ -401,7 +397,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                 val data = chamberSnapshot.data
                 if(data != null) {
                     val myChambersN = (data["MyChambersN"] as Map<String, Any>).toMutableMap()
-                    myChambersN.remove(chamberState.value!!.chamberID)
+                    myChambersN.remove(chamberID)
                     myChambersRef.update("MyChambersN", myChambersN)
                 }
             }
@@ -411,7 +407,6 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
 
     fun clear(uid: String, notificationKey: String) {
         addNotificationKey(uid, notificationKey)
-        Log.d("HERE", "VIEWMODEL CLEARED")
         _messages.value?.clear()
         _chamberState.value = ChamberState(
             chamberID = "",
@@ -451,7 +446,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
 
     private fun updateChamberDataFields() {
         val members = chamberState.value!!.members
-        val selfUID = sharedPreferences.getString("uid", "") ?: ""
+        val selfUID = Firebase.auth.currentUser!!.uid
 
         val otherUID =
             if(members.size > 1) {
@@ -476,7 +471,6 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                     "timestamp" to FieldValue.serverTimestamp(),
                 )
             }
-        Log.d("OTHER_UID", otherUID)
         if (otherUID.isNotBlank()) {
             val otherChambersRef = firestore
                 .collection("MyChambers")
@@ -487,7 +481,6 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                     val data = it.data!!
                     val myChambers =
                         (data["MyChambersN"] as Map<String, Map<String, Any>>).toMutableMap()
-                    Log.d("NOTIF", "messageRead:${otherUserNotificationKey.isNotBlank()}: $otherUserNotificationKey")
                     myChambers[chamberState.value!!.chamberID] = mapOf(
                         "groupChatId" to chamberState.value!!.chamberID,
                         "messageRead" to otherUserNotificationKey.isBlank(),
@@ -511,7 +504,6 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             return
         }
         if(chamberState.value != null && chamberState.value!!.chamberID.isNotBlank()) {
-            Log.d("CHAMBER ID", chamberState.value!!.toString())
             realtimeDatabase
                 .reference
                 .child(chamberState.value!!.chamberID)
