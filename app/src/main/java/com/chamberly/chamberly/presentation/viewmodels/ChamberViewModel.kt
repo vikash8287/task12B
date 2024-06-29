@@ -331,7 +331,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                         Toast.LENGTH_SHORT
                     ).show()
                 }
-                if (report["reason"] == "Harassment") {
+                if (report["reason"] == "Sexual Behaviour") {
                     //Restrict the other user
                     //This reason won't be encountered in a self report so report["UID"] is to be banned
                     firestore
