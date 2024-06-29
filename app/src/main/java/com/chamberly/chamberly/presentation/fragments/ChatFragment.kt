@@ -57,7 +57,7 @@ class ChatFragment : Fragment() {
     )
     private val reportReasons: List<String> = listOf(
         "Harassment",
-        "Inappropriate Behavior",
+        "Sexual Behavior",
         "Unsupportive Behaviour",
         "Spamming",
         "Annoying"
@@ -539,7 +539,8 @@ class ChatFragment : Fragment() {
     ) {
         val members = chamberViewModel.chamberState.value!!.members
         val uid =
-            if(members[0] == userViewModel.userState.value!!.UID) members[1]
+            if (members.size == 1) ""
+            else if(members[0] == userViewModel.userState.value!!.UID) members[1]
             else members[0]
         val report = hashMapOf(
             "against" to (against ?: uid),

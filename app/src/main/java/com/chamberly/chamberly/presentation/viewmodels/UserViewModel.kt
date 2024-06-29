@@ -470,9 +470,17 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                 .addOnSuccessListener { chamberSnapshot ->
                                     val chamberDetails = chamberSnapshot.toObject(Chamber::class.java)
                                     if (chamberDetails != null) {
-                                        for (member in chamberDetails.members) {
-                                            checkedUsers.add(member)
-                                        }
+                                        realtimeDatabase
+                                            .reference
+                                            .child(chamber["groupChatId"].toString())
+                                            .child("users/members")
+                                            .get()
+                                            .addOnSuccessListener {
+                                                val members = it.value as Map<String, Any>
+                                                for (member in members.keys) {
+                                                    checkedUsers.add(member)
+                                                }
+                                            }
                                         realtimeDatabase
                                             .reference
                                             .child(chamber["groupChatId"].toString())

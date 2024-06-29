@@ -48,7 +48,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
     private var pendingTopicsRecyclerView: RecyclerView? = null
     private lateinit var buttonsView: LinearLayout
     private lateinit var emptyStateView: RelativeLayout
-    private var offset: Int = 0
+    private var shouldSearchAgain: Boolean = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -158,7 +158,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
     override fun onEmptyDeck() {
         Log.d("Empty Deck", "Deck is empty $areTopicsAvailable $isFirstTimeEmpty")
         if(isFirstTimeEmpty) { isFirstTimeEmpty = false }
-        else if(areTopicsAvailable) { fetchTopics() }
+        else if(areTopicsAvailable && shouldSearchAgain) { fetchTopics() }
         super.onEmptyDeck()
     }
 
@@ -285,8 +285,8 @@ class TopicSearchFragment : Fragment(), KolodaListener {
                         kolodaAdapter.setData(topic)
                     }
                 }
+                shouldSearchAgain = querySnapshot.documents.isNotEmpty()
                 lastDocumentSnapshot = querySnapshot.documents.lastOrNull()
-                Log.d("Last fetched", lastDocumentSnapshot.toString() + ":" + querySnapshot.documents.size.toString())
 
                 kolodaView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
                 buttonsView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
