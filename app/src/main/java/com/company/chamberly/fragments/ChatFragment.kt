@@ -13,7 +13,6 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,15 +26,16 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat.getColor
 import androidx.emoji2.emojipicker.EmojiPickerView
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
 import com.company.chamberly.adapters.MessageAdapter
-import com.company.chamberly.notification.ReminderNotification
 import com.company.chamberly.models.Message
 import com.company.chamberly.models.toMap
+import com.company.chamberly.notification.ReminderNotification
 import com.company.chamberly.viewmodels.ChamberViewModel
 import com.company.chamberly.viewmodels.UserViewModel
 import com.google.firebase.firestore.FieldValue
@@ -563,13 +563,21 @@ class ChatFragment : Fragment() {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val intent = Intent(context, ReminderNotification::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-
+        val pendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                1,
+                intent,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
         val triggerAtMillis = System.currentTimeMillis() + 16 * 60 * 60 * 1000L
 if(hasScheduleExactAlarmPermission(context)){
+    Log.d("AlarmManagerPermission","Success")
         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
 
+}else{
+    Log.d("AlarmManagerPermission","Denied")
 }
     }
     private fun hasScheduleExactAlarmPermission(context: Context): Boolean {
@@ -584,7 +592,12 @@ true
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val intent = Intent(context, ReminderNotification::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent =   PendingIntent.getBroadcast(
+            context,
+            1,
+            intent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
         alarmManager.cancel(pendingIntent)
     }

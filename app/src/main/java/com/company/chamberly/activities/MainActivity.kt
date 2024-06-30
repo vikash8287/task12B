@@ -419,6 +419,8 @@ startCheckUpNotificationService(this)
     private fun unbanUser(uid: String) {
 
     }
+    // TODO: backgroundTaskState to false
+
 
     private fun startCheckUpNotificationService(context: Context) {
         val backgroundTaskState:Boolean = sharedPreferences.getBoolean("checkUpNotification",false)
@@ -426,11 +428,20 @@ startCheckUpNotificationService(this)
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val intent = Intent(context, CheckUpNotification::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+      val pendingIntent =    PendingIntent.getBroadcast(
+                   context,
+                   0,
+                   intent,
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+               )
+
 
 
         if(hasScheduleExactAlarmPermission(context)){
             alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),AlarmManager.INTERVAL_DAY, pendingIntent)
+Log.d("AlarmManagerPermission","Success")
+        }else{
+            Log.d("AlarmManagerPermission","Denied")
 
         }
         with(sharedPreferences.edit()){

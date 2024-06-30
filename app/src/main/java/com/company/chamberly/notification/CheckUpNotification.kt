@@ -28,7 +28,6 @@ pushingNotification(context)
     }
     fun pushingNotification(context: Context) {
  var noOfDays = sharedPreferences.getInt("dayCount",0)
-settingUpNotification(context,noOfDays)
         if(
             noOfDays>maxNoOfDay
         ){
@@ -43,6 +42,7 @@ settingUpNotification(context,noOfDays)
             }
         }
 
+settingUpNotification(context,noOfDays)
 
     }
 private fun settingUpNotification(context: Context, noOfDays: Int) {
@@ -73,7 +73,8 @@ if (notification.dayOffset == noOfDays){
 }
     private fun scheduleNotification(context: Context,notificationItem: NotificationItem){
         val notificationIntent = Intent(context, MainActivity::class.java) // Replace with your main activity class
-        val pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getActivity(context, 3, notificationIntent,if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
 
 

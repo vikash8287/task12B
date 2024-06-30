@@ -189,7 +189,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application 
            // numberOfPeopleView.setText("(${numberOfPeople.toString()})")
            // ratingBar.rating = (averageRating as Double).toFloat()
 
-            updateNoOfPeople(numberOfPeople as Int)
+            updateNoOfPeople((numberOfPeople as Long).toInt())
             updateRating((averageRating as Double).toFloat())
 
             editor.putInt("reviewCount",numberOfPeople.toString().toInt())

@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 
 import com.company.chamberly.R
@@ -20,8 +21,10 @@ val channelID = "com.company.chamberly.broadcast_receiver.reminder"
     override fun onReceive(context: Context, intent: Intent) {
 
         val notificationIntent = Intent(context, MainActivity::class.java) // Replace with your main activity class
-        val pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getActivity(context, 2, notificationIntent,            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
+        Log.d("broadcast","works");
 
 
         val notification = NotificationCompat.Builder(context, channelID)
