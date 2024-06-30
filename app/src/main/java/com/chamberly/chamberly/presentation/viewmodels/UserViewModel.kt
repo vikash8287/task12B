@@ -824,9 +824,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             val listOfUsers = eligibleUsers[topicID]!!.sortedWith(compareBy<Map<String, Any>>(
-                { !(it["isSubscribed"] as Boolean) },
-                { it["penalty"] as Long },
-                { it["timestamp"] as Long }
+                { !(it["isSubscribed"] as? Boolean ?: false) },
+                { it["penalty"] as? Long ?: 0L },
+                { it["timestamp"] as? Long ?: 0L }
             ))
             sendRequest(
                 topicID,
