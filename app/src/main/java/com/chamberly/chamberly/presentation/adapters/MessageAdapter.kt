@@ -1,27 +1,57 @@
-package com.chamberly.chamberly.presentation.adapters
+package com.chamberly.chamberly.adapters
 
 
+import android.app.Activity
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.fragment.app.FragmentManager
+import androidx.navigation.findNavController
+import androidx.navigation.navOptions
 import androidx.recyclerview.widget.RecyclerView
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.models.Message
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.MultiTransformation
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.Target
+
+// import com.company.chamberly.activities.ViewPhotoActivity
+import jp.wasabeef.glide.transformations.BlurTransformation
+import jp.wasabeef.glide.transformations.CropSquareTransformation
 
 class MessageAdapter(private val uid: String) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val messages: MutableList<Message> = mutableListOf()
     private var onMessageLongClickListener: OnMessageLongClickListener? = null
-
+private lateinit var onPhotoMessageClickedListener :(photoUrl:String)->Unit
     fun setOnMessageLongClickListener(listener: OnMessageLongClickListener) {
         onMessageLongClickListener = listener
+    }
+    fun setOnPhotoMessageClickedListener(value:(photoUrl:String)->Unit){
+        onPhotoMessageClickedListener = value
     }
 
     companion object {
         private const val VIEW_TYPE_ME = 1
         private const val VIEW_TYPE_SYSTEM = 2
         private const val VIEW_TYPE_OTHER = 3
+        private  const val VIEW_TYPE_PHOTO_ME = 4
+        private  const val  VIEW_TYPE_PHOTO_OTHER =5
+
     }
 
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -45,7 +75,17 @@ class MessageAdapter(private val uid: String) :
         val reactedWithHolder: TextView = itemView.findViewById(R.id.reactedWith)
         val replyingToHolder: TextView = itemView.findViewById(R.id.replyingToHolder)
     }
+inner class MessagePhotoViewHolderSystemMe(itemView: View):RecyclerView.ViewHolder(itemView){
+    val imageView:ImageView = itemView.findViewById(R.id.image_preview)
+    val progressView :ProgressBar = itemView.findViewById(R.id.progressBar)
 
+}
+    inner class MessagePhotoViewHolderSystemOther(itemView: View):RecyclerView.ViewHolder(itemView){
+        val imageView:ImageView = itemView.findViewById(R.id.image_preview)
+      val progressView :ProgressBar = itemView.findViewById(R.id.progressBar)
+
+
+    }
     inner class MessageViewHolderSystem(itemView: View): RecyclerView.ViewHolder(itemView) {
         val message: TextView = itemView.findViewById(R.id.text_system_message)
     }
@@ -55,6 +95,14 @@ class MessageAdapter(private val uid: String) :
             VIEW_TYPE_ME -> {
                 val itemView = inflater.inflate(R.layout.item_chat_me, parent, false)
                 MessageViewHolderMe(itemView)
+            }
+            VIEW_TYPE_PHOTO_ME ->{
+                val itemView = inflater.inflate(R.layout.item_message_photo_me,parent,false)
+               MessagePhotoViewHolderSystemMe(itemView)
+            }
+            VIEW_TYPE_PHOTO_OTHER ->{
+               val itemView = inflater.inflate(R.layout.item_message_photo_other,parent,false)
+                MessagePhotoViewHolderSystemOther(itemView)
             }
             VIEW_TYPE_SYSTEM -> {
                 val itemView = inflater.inflate(R.layout.item_system_message, parent, false)
@@ -117,6 +165,141 @@ class MessageAdapter(private val uid: String) :
                 holder.replyingToHolder.visibility =
                     if(message.replyingTo.isNotBlank()) View.VISIBLE else View.GONE
             }
+            is MessagePhotoViewHolderSystemMe->{
+                val multi = MultiTransformation<Bitmap>(
+                    BlurTransformation(150),
+                    CropSquareTransformation()
+                )
+val image_view = holder.imageView
+                val Context = holder.imageView.context
+                val progressBar = holder.progressView
+                progressBar.visibility = View.VISIBLE
+                image_view.isClickable =false
+
+// Todo: Add Exception
+                Glide
+                    .with(Context)
+                    .load(message.message_content)
+                    .listener(
+                        object:RequestListener<Drawable>{
+                            override fun onLoadFailed(
+                                e: GlideException?,
+                                model: Any?,
+                                target: Target<Drawable>,
+                                isFirstResource: Boolean
+                            ): Boolean {
+                                image_view.isClickable =false
+                                return false
+                            }
+
+                            override fun onResourceReady(
+                                resource: Drawable,
+                                model: Any,
+                                target: Target<Drawable>?,
+                                dataSource: DataSource,
+                                isFirstResource: Boolean
+                            ): Boolean {
+                                progressBar.visibility = View.GONE
+                                image_view.isClickable =true
+
+                                return  false
+                            }
+
+                        }
+                    )
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+                    .apply(RequestOptions.bitmapTransform(multi))
+
+                    .into(image_view)
+                image_view.setOnClickListener{
+
+val context = image_view.context as Activity
+val navController = context.findNavController(R.id.navHostFragment)
+
+                    val dataBundle = Bundle().apply {
+                        putString("image_url", message.message_content)
+                    }
+                    navController.navigate(
+                        R.id.view_photo_fragment,
+                        dataBundle,
+                        navOptions = navOptions {
+                            anim {
+                                enter = R.anim.slide_in
+                                exit = R.anim.slide_out
+                                popEnter = R.anim.slide_in
+                                popExit = R.anim.slide_out
+                            }
+                        }
+                    )
+            }
+            }
+            is MessagePhotoViewHolderSystemOther->{
+                val multi = MultiTransformation<Bitmap>(
+                    BlurTransformation(150),
+                    CropSquareTransformation()
+                )
+                val image_view = holder.imageView
+                val Context = holder.imageView.context
+                val progressBar = holder.progressView
+                progressBar.visibility = View.VISIBLE
+                image_view.isClickable =false
+
+// Todo: Add Exception
+                Glide
+                    .with(Context)
+
+                    .load(message.message_content)
+                    .listener(
+                        object:RequestListener<Drawable>{
+                            override fun onLoadFailed(
+                                e: GlideException?,
+                                model: Any?,
+                                target: Target<Drawable>,
+                                isFirstResource: Boolean
+                            ): Boolean {
+image_view.isClickable = false
+                                return false
+                            }
+
+                            override fun onResourceReady(
+                                resource: Drawable,
+                                model: Any,
+                                target: Target<Drawable>?,
+                                dataSource: DataSource,
+                                isFirstResource: Boolean
+                            ): Boolean {
+                                progressBar.visibility = View.GONE
+                                image_view.isClickable =true
+                                return  false
+                            }
+
+                        }
+                    )
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+                    .apply(RequestOptions.bitmapTransform(multi))
+                    .into(image_view)
+                image_view.setOnClickListener{
+                    val context = image_view.context as Activity
+                    val navController = context.findNavController(R.id.navHostFragment)
+
+                    val dataBundle = Bundle().apply {
+                        putString("image_url", message.message_content)
+                    }
+                    navController.navigate(
+                        R.id.view_photo_fragment,
+                        dataBundle,
+                        navOptions = navOptions {
+                            anim {
+                                enter = R.anim.slide_in
+                                exit = R.anim.slide_out
+                                popEnter = R.anim.slide_in
+                                popExit = R.anim.slide_out
+                            }
+                        }
+                    )
+                }
+
+            }
             is MessageViewHolderSystem -> {
                 holder.message.text = message.message_content
             }
@@ -172,15 +355,23 @@ class MessageAdapter(private val uid: String) :
 
     override fun getItemViewType(position: Int): Int {
         val message = messages[position]
-        return if (message.UID == uid) {
+        return if (message.UID == uid && message.message_type!="photo") {
             VIEW_TYPE_ME
         } else if (
             message.message_type == "custom" ||
-            message.message_type == "system" ||
-            message.message_type == "photo"
+            message.message_type == "system"
         ) {
             VIEW_TYPE_SYSTEM
-        } else {
+        }
+
+        else if (message.message_type == "photo" && message.UID == uid){
+            VIEW_TYPE_PHOTO_ME
+        }
+        else if (message.message_type == "photo" ){
+            VIEW_TYPE_PHOTO_OTHER
+        }
+
+        else {
             VIEW_TYPE_OTHER
         }
     }

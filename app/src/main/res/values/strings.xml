@@ -95,4 +95,11 @@
     <string name="welcome_to_chamberly">Welcome to Chamberly!</string>
     <string name="welcome_message">🌟 Chamberly is a supportive space for venting and listening, not for dating.\nSay Hi 👋</string>
     <string name="rate_user">Rate %1$s</string>
+    <string name="dd_mmm_yyyy_hh_mm_ss_z">dd MMM yyyy HH:mm:ss z</string>
+    <string name="message_photo">message_photo</string>
+    <string name="preview">preview</string>
+    <string name="photo">Photo</string>
+    <string name="confirm">Confirm</string>
+    <string name="image_preview">image_preview</string>
+    <string name="back_button">back button</string>
 </resources>
