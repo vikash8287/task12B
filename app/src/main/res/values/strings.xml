@@ -102,4 +102,6 @@
     <string name="confirm">Confirm</string>
     <string name="image_preview">image_preview</string>
     <string name="back_button">back button</string>
+    <string name="chamber_info">Chamber info</string>
+    <string name="memberEntry">User 1</string>
 </resources>
