@@ -1,4 +1,4 @@
-package com.company.chamberly.notification
+package com.chamberly.chamberly.notification
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

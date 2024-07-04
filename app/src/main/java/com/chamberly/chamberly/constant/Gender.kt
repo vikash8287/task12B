@@ -1,4 +1,4 @@
-package com.company.chamberly.constant
+package com.chamberly.chamberly.constant
 
 class Gender {
     companion object{

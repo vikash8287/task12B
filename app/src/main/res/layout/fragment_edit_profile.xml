@@ -70,7 +70,7 @@ android:background="@color/edit_profile_background"
   />
 
 
-<com.company.chamberly.customview.SettingSectionWithListAndSwitchButton
+<com.chamberly.chamberly.customview.SettingSectionWithListAndSwitchButton
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:text="@string/what_other_can_see"

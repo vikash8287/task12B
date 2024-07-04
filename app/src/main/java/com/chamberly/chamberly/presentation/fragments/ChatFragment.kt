@@ -33,8 +33,6 @@ import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chamberly.chamberly.R
@@ -43,7 +41,7 @@ import com.chamberly.chamberly.models.Message
 import com.chamberly.chamberly.models.toMap
 import com.chamberly.chamberly.presentation.viewmodels.ChamberViewModel
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
-import com.company.chamberly.notification.ReminderNotification
+import com.chamberly.chamberly.notification.ReminderNotification
 
 import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.CoroutineScope

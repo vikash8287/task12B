@@ -152,40 +152,13 @@ class MainFragment : Fragment() {
                         apply {
                             popUpTo(R.id.home_fragment) {
                                 inclusive = true
-            profilePictureButton.setOnClickListener {
-               // showProfileOptionsPopup(it)
-                // TODO:change screen
-                requireParentFragment().findNavController().navigate(
-                    R.id.profile_fragment,
-                    null,
-                    navOptions {
-                        anim {
-                            enter = R.anim.slide_in
-                            exit = R.anim.slide_out
-                        }
-                    }
-                )
-            }
-            addChamberButton.setOnClickListener {
-                requireParentFragment()
-                    .findNavController()
-                    .navigate(
-                        R.id.topic_create_fragment,
-                        null,
-                        navOptions {
-                            anim {
-                                enter = R.anim.slide_in
-                                exit = R.anim.slide_out
-                            }
-
-                        })
-                    }
-
-            }
-        }
-        return view
     }
 
+    }
+                    })
+            }
+        }
+    }
     private fun showProfileOptionsPopup(buttonView: View) {
         val profileOptionsPopUp = Dialog(requireContext(), R.style.Dialog)
         profileOptionsPopUp.setContentView(R.layout.popup_profile_options)
@@ -339,6 +312,7 @@ class MainFragment : Fragment() {
             }
         }
     }
+
 
     private fun showBottomSheet() {
         val bottomSheet = SubscriptionBottomSheet()

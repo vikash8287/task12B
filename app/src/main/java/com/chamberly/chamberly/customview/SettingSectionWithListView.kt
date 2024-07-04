@@ -1,4 +1,4 @@
-package com.company.chamberly.customview
+package com.chamberly.chamberly.customview
 
 import android.app.Activity
 import android.content.Context

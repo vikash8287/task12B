@@ -23,8 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.company.chamberly.R
 import com.company.chamberly.adapters.TopicRequestRecyclerViewAdapter
-import com.company.chamberly.notification.CheckUpNotification
-import com.company.chamberly.notification.ReminderNotification
+import com.chamberly.chamberly.notification.CheckUpNotification
 import com.company.chamberly.viewmodels.UserViewModel
 import com.facebook.FacebookSdk
 import com.facebook.FacebookSdk.setAutoLogAppEventsEnabled
@@ -40,7 +39,6 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity() {
     private val auth = Firebase.auth

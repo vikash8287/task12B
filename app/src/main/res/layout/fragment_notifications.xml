@@ -63,14 +63,14 @@ android:background="@color/setting_background_color"
     android:orientation="vertical"
 android:paddingHorizontal="16dp"
     >
-<com.company.chamberly.customview.SettingSectionWithListAndSwitchButton
+<com.chamberly.chamberly.customview.SettingSectionWithListAndSwitchButton
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:text="Chamber"
     android:id="@+id/chamber_section"
 
     />
-        <com.company.chamberly.customview.SettingSectionWithListAndSwitchButton
+        <com.chamberly.chamberly.customview.SettingSectionWithListAndSwitchButton
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:text="Journal"
@@ -78,7 +78,7 @@ android:paddingHorizontal="16dp"
             />
 
 
-        <com.company.chamberly.customview.SettingSectionWithListAndSwitchButton
+        <com.chamberly.chamberly.customview.SettingSectionWithListAndSwitchButton
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:text="Promotional &amp; other"

@@ -1,15 +1,13 @@
-package com.company.chamberly.notification
+package com.chamberly.chamberly.notification
 
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.google.protobuf.Timestamp
 
 class CollectCoinNotification: Service() {
 val firestore = Firebase.firestore
