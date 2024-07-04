@@ -105,7 +105,6 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         joinButton.setOnClickListener { kolodaView.onClickRight() }
 
         backButton.setOnClickListener {  findNavController().popBackStack() }
-
         userViewModel.logEventToAnalytics("chamber_search")
         userViewModel.logEventToAnalytics("landed_on_cards_view")
         return view

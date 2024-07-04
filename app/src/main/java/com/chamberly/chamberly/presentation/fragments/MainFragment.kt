@@ -152,12 +152,38 @@ class MainFragment : Fragment() {
                         apply {
                             popUpTo(R.id.home_fragment) {
                                 inclusive = true
-                            }
+            profilePictureButton.setOnClickListener {
+               // showProfileOptionsPopup(it)
+                // TODO:change screen
+                requireParentFragment().findNavController().navigate(
+                    R.id.profile_fragment,
+                    null,
+                    navOptions {
+                        anim {
+                            enter = R.anim.slide_in
+                            exit = R.anim.slide_out
                         }
                     }
                 )
             }
+            addChamberButton.setOnClickListener {
+                requireParentFragment()
+                    .findNavController()
+                    .navigate(
+                        R.id.topic_create_fragment,
+                        null,
+                        navOptions {
+                            anim {
+                                enter = R.anim.slide_in
+                                exit = R.anim.slide_out
+                            }
+
+                        })
+                    }
+
+            }
         }
+        return view
     }
 
     private fun showProfileOptionsPopup(buttonView: View) {
@@ -207,6 +233,7 @@ class MainFragment : Fragment() {
         }
         roleSelectorButton.check(if(isListener) R.id.role_listener else R.id.role_ventor)
 
+
         deleteAccountButton.setOnClickListener {
             profileOptionsPopUp.dismiss()
             showAccountDeleteDialog()
@@ -216,11 +243,9 @@ class MainFragment : Fragment() {
             profileOptionsPopUp.dismiss()
             showPrivacyPolicy()
         }
-
         submitFeedbackButton.setOnClickListener {
             submitFeedback(profileOptionsPopUp)
         }
-
         subscribeButton.setOnClickListener {
             profileOptionsPopUp.dismiss()
             findNavController()
@@ -273,6 +298,7 @@ class MainFragment : Fragment() {
 
     private fun submitFeedback(dialog: Dialog) {
         dialog.setContentView(R.layout.dialog_feedback)
+        dialog.show()
         val submitButton = dialog.findViewById<Button>(R.id.submitFeedbackButton)
         val dismissButton = dialog.findViewById<Button>(R.id.dismissFeedbackDialogButton)
         val editText = dialog.findViewById<EditText>(R.id.feedback_text)
@@ -312,5 +338,10 @@ class MainFragment : Fragment() {
                 ).show()
             }
         }
+    }
+
+    private fun showBottomSheet() {
+        val bottomSheet = SubscriptionBottomSheet()
+        bottomSheet.show(childFragmentManager, bottomSheet.tag)
     }
 }

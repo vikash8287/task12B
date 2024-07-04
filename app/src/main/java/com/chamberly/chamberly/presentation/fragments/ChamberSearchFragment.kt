@@ -132,6 +132,7 @@ class ChamberSearchFragment : Fragment(), KolodaListener {
                 for (documentSnapshot in querySnapshot) {
                     val chamber = documentSnapshot.toObject(Chamber::class.java)
                         .copy(groupChatId = documentSnapshot.id)
+                    Log.d("CHAMBERS", chamber.toMap().toString())
                     if (isChamberVacant(chamber = chamber)) {
                         updatedChambers.add(chamber)
                     }

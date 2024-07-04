@@ -1,12 +1,15 @@
-package com.chamberly.chamberly.presentation.fragments
+package com.company.chamberly.fragments
 
+import android.app.AlarmManager
 import android.app.Dialog
+import android.app.PendingIntent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -40,6 +43,8 @@ import com.chamberly.chamberly.models.Message
 import com.chamberly.chamberly.models.toMap
 import com.chamberly.chamberly.presentation.viewmodels.ChamberViewModel
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
+import com.company.chamberly.notification.ReminderNotification
+
 import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -76,12 +81,14 @@ class ChatFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        cancelNotificationAlarm(requireContext())
         chamberViewModel.setChamber(
             userViewModel.chamberID.value ?: "",
             userViewModel.userState.value!!.UID
         )
     }
 
+//    override fun on
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -688,5 +695,51 @@ chamberViewModel.postImage(uri = uri,UID = userViewModel.userState.value!!.UID,s
             userViewModel.userState.value!!.UID,
             userViewModel.userState.value!!.notificationKey
         )
+        scheduleNotification(requireContext())
+
     }
+    private fun scheduleNotification(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(context, ReminderNotification::class.java)
+        val pendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                1,
+                intent,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
+        val triggerAtMillis = System.currentTimeMillis() + 16 * 60 * 60 * 1000L
+if(hasScheduleExactAlarmPermission(context)){
+    Log.d("AlarmManagerPermission","Success")
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+
+}else{
+    Log.d("AlarmManagerPermission","Denied")
 }
+    }
+    private fun hasScheduleExactAlarmPermission(context: Context): Boolean {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                alarmManager.canScheduleExactAlarms()
+            } else {
+true
+            }
+        }
+    private fun cancelNotificationAlarm(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(context, ReminderNotification::class.java)
+        val pendingIntent =   PendingIntent.getBroadcast(
+            context,
+            1,
+            intent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        alarmManager.cancel(pendingIntent)
+    }
+    }
+
+
