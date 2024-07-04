@@ -10,8 +10,8 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 
-import com.company.chamberly.R
-import com.company.chamberly.activities.MainActivity
+import com.chamberly.chamberly.R
+import com.chamberly.chamberly.presentation.activities.MainActivity
 
 const val notificationID = 1
 const val title = "Reminder"

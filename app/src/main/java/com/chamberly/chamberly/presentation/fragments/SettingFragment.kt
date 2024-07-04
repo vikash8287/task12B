@@ -1,11 +1,10 @@
-package com.chamberly.chamberly.fragments
+package com.chamberly.chamberly.presentation.fragments
 
 import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,11 +20,11 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.chamberly.chamberly.R
-import com.chamberly.chamberly.viewmodels.ProfileViewModel
+import com.chamberly.chamberly.presentation.viewmodels.ProfileViewModel
 
 
 class SettingFragment : Fragment() {
-val profileViewModel:ProfileViewModel by activityViewModels()
+val profileViewModel: ProfileViewModel by activityViewModels()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

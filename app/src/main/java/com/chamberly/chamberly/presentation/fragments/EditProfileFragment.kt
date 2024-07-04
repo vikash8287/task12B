@@ -1,4 +1,4 @@
-package com.chamberly.chamberly.fragments
+package com.chamberly.chamberly.presentation.fragments
 
 import android.app.Activity
 import android.app.Dialog
@@ -26,7 +26,7 @@ import com.chamberly.chamberly.R
 import com.chamberly.chamberly.constant.Gender
 import com.chamberly.chamberly.customview.SettingSectionWithListAndSwitchButton
 import com.chamberly.chamberly.customview.SettingSectionWithListAndSwitchButton.ListWithSwitchItem
-import com.chamberly.chamberly.viewmodels.ProfileViewModel
+import com.chamberly.chamberly.presentation.viewmodels.ProfileViewModel
 
 class EditProfileFragment : Fragment() {
 
@@ -97,7 +97,7 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
         val whatOtherPersonSeeListView =
             view.findViewById<SettingSectionWithListAndSwitchButton>(R.id.list_with_switch)
         val toggleList = arrayListOf<ListWithSwitchItem>(
-            ListWithSwitchItem("Allow others to see your age", state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("seeAge")){
+            ListWithSwitchItem("Allow others to see my age", state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("seeAge")){
                                                                _,check->
                                                               profileViewModel.updateSectionInAccountFirestore("privacy","seeAge",check)
             },
@@ -105,7 +105,7 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
                     _,check->
                 profileViewModel.updateSectionInAccountFirestore("privacy","seeGender",check)
             },
-            ListWithSwitchItem("Allow others to see your achievements",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("seeAchievements")){
+            ListWithSwitchItem("Allow others to see achievements",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("seeAchievements")){
                     _,check->
                 profileViewModel.updateSectionInAccountFirestore("privacy","seeAchievements",check)
             },

@@ -1,12 +1,12 @@
-package com.charmberly.chamberly.fragments
+package com.chamberly.chamberly.presentation.fragments
 
+import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -34,16 +34,15 @@ import androidx.navigation.navOptions
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.constant.Gender
 import com.chamberly.chamberly.models.ProfileInfo
-import com.chamberly.chamberly.viewmodels.ProfileViewModel
+import com.chamberly.chamberly.presentation.viewmodels.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 
 class ProfileFragment: Fragment() {
-    private val profileViewModel:ProfileViewModel by activityViewModels()
+    private val profileViewModel: ProfileViewModel by activityViewModels()
     private val firestore: FirebaseFirestore = Firebase.firestore
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
     val uid = firebaseAuth.currentUser?.uid
@@ -119,7 +118,7 @@ lateinit var settingButton:ImageButton
                 value = profileViewModel._profileInfo.value,
             )
         }
-        profileViewModel._profileInfo.observe(requireActivity(), observer)
+        profileViewModel._profileInfo.observe(viewLifecycleOwner, observer)
     }
     fun settingButtonListener(){
         settingButton.setOnClickListener {
@@ -316,7 +315,7 @@ private fun onFocusChangeBioEditText(view: View):View.OnFocusChangeListener{
             )
 
         }
-        profileViewModel._tempGender.observe(requireActivity(),tempGenderObserver)
+        profileViewModel._tempGender.observe(viewLifecycleOwner ,tempGenderObserver)
         dialog.show()
     }
 

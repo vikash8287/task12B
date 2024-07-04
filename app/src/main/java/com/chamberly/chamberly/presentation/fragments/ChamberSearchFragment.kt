@@ -1,6 +1,7 @@
 package com.chamberly.chamberly.presentation.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +15,7 @@ import androidx.navigation.fragment.findNavController
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.presentation.adapters.ChamberAdapter
 import com.chamberly.chamberly.models.Chamber
+import com.chamberly.chamberly.models.toMap
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore

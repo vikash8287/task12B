@@ -1,16 +1,12 @@
-package com.charmberly.chamberly.viewmodels
+package com.chamberly.chamberly.presentation.viewmodels
 
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import android.widget.RatingBar
-import android.widget.TextView
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.chamberly.chamberly.constant.Gender
-import com.chamberly.chamberly.fragments.ProfileFragment
 import com.chamberly.chamberly.models.Message
 import com.chamberly.chamberly.models.ProfileInfo
 import com.google.firebase.auth.FirebaseAuth

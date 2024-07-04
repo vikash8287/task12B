@@ -60,7 +60,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         kolodaView = view.findViewById(R.id.koloda)
         val dismissButton = view.findViewById<ImageButton>(R.id.ic_skip)
         val joinButton = view.findViewById<ImageButton>(R.id.ic_chat)
-        val backButton = view.findViewById<ImageButton>(R.id.backButton)
+        val backButton = view.findViewById<ImageButton>(R.id.back_button)
         val buttonsView = view.findViewById<LinearLayout>(R.id.buttonsLayout)
         val emptyStateView = view.findViewById<RelativeLayout>(R.id.emptyStateView)
         pendingTopicsRecyclerView = view.findViewById(R.id.pendingTopicsRecyclerView)

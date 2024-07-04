@@ -106,8 +106,7 @@
     <string name="memberEntry">User 1</string>
     <string name="procrastion_cancel_success_title">Done!</string>
     <string name="save">Save</string>
-    <string name="back_button">back button\n</string>
-    <string name="setting_button">setting_button\n</string>
+    <string name="setting_button">setting_button</string>
     <string name="setting">Setting</string>
     <string name="sign_out">Sign Out</string>
     <string name="edit_profile">Edit Profile</string>

@@ -1,4 +1,4 @@
-package com.company.chamberly.fragments
+package com.chamberly.chamberly.presentation.fragments
 
 import android.app.AlarmManager
 import android.app.Dialog
@@ -93,7 +93,7 @@ class ChatFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_chat, container, false)
         val groupTitle = view.findViewById<TextView>(R.id.groupTitle)
-        val backButton = view.findViewById<ImageButton>(R.id.backButton)
+        val backButton = view.findViewById<ImageButton>(R.id.back_button)
         val exitChamberButton = view.findViewById<ImageButton>(R.id.exitChatButton)
         recyclerView = view.findViewById(R.id.recyclerViewMessages)
         val sendButton = view.findViewById<Button>(R.id.buttonSend)
