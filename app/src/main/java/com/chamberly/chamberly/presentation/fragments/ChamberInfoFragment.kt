@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.models.ActiveChatInfoModel
 
@@ -32,12 +33,13 @@ val view = inflater.inflate(R.layout.fragment_chamber_info, container,false)
 
         val backButton1: ImageButton = view.findViewById(R.id.backButton)
         backButton1.setOnClickListener {
-//TODO:Add back function
+            findNavController().popBackStack()
         }
 
         val backButton2: ImageButton = view.findViewById(R.id.back_to_chamber)
         backButton2.setOnClickListener {
-            //TODO: Add back function
+
+            findNavController().popBackStack()
         }
 
         val listView: ListView = view.findViewById(R.id.chamberMembers)
