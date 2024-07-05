@@ -1,4 +1,4 @@
-package com.chamberly.chamberly.presentation.activities
+package com.chamberly.chamberly.presentation.fragments
 
 import android.content.Context
 import android.os.Bundle
