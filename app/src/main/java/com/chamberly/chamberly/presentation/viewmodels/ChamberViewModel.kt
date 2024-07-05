@@ -579,4 +579,76 @@ private val storage = Firebase.storage
             callback()
         }
     }
+     fun getChamberMetadata(callback: (result: List<List<String>>) -> Unit) {
+        val membersRef = realtimeDatabase.getReference().child(_chamberState.value!!.chamberID).child("users").child("members")
+        val result : MutableList<MutableList<String>> = mutableListOf()
+        membersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+
+                for (memberSnapshot in dataSnapshot.children) {
+                  Log.d("value",memberSnapshot.toString())
+                    val memberList : MutableList<String> = mutableListOf()
+                    val memberId = memberSnapshot.key
+                    val memberName = memberSnapshot.child("name").value as? String
+                    //result[memberName] = memberId
+                    Log.i("memberId",memberId.toString())
+                    memberList.add(memberId.toString())
+                    memberList.add(memberName.toString())
+                    result.add(memberList)
+                }
+                getChatMemberRatings(result, callback)
+
+
+            }
+            override fun onCancelled(databaseError: DatabaseError) {
+                println("Database error: ${databaseError.message}")
+            }
+        })
+
+    }
+
+    private fun getChatMemberRatings(chatMemberList: List<MutableList<String>>, callback: (result: List<List<String>>) ->Unit) {
+        var temp = chatMemberList
+        var count =0
+        for (memberInfo in temp) {
+            firestore.collection("StarReviews")
+                .whereEqualTo("To", memberInfo[0])
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .addOnSuccessListener { documents ->
+                    if (!documents.isEmpty) {
+                        val document = documents.documents[0]
+                        val averageStars = document.getDouble("AverageStars")
+                        if (averageStars != null)
+                            memberInfo.add(averageStars.toString())
+                        else
+                            memberInfo.add("0.0")
+
+                        val reviewsCount = document.getLong("ReviewsCount")
+                        if (reviewsCount != null)
+                            memberInfo.add(reviewsCount.toString())
+                        else
+                            memberInfo.add("0")
+
+                        Log.i("afterValue",count.toString())
+
+                    }else
+                    {
+                        memberInfo.add("0.0")
+                        memberInfo.add("0")
+
+                    }
+                    count++
+
+                       if(count==temp.size)callback(chatMemberList)
+                }
+                .addOnFailureListener { exception ->
+                    // Handle any errors here
+                    println("Error getting documents: $exception")
+                }
+        }
+    }
+
+
 }

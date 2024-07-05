@@ -24,6 +24,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
@@ -33,10 +34,15 @@ import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.adapters.MessageAdapter
+import com.chamberly.chamberly.models.ActiveChatInfoModel
 import com.chamberly.chamberly.models.Message
 import com.chamberly.chamberly.models.toMap
 import com.chamberly.chamberly.presentation.viewmodels.ChamberViewModel
@@ -237,6 +243,41 @@ class ChatFragment : Fragment() {
         addImageButton.setOnClickListener {
 
             launchPhotoPicker()
+        }
+//TODO: add click listener
+        groupTitle.setOnClickListener{
+            chamberViewModel.getChamberMetadata {
+                if (it.isNotEmpty()) {
+                    val chamberInfo = ActiveChatInfoModel(
+                        groupChatID = chamberViewModel.chamberState.value!!.chamberID,
+                        groupChatName = groupTitle.text as String,
+                        activeChatMemberLimit = 2,
+                        memberInfoList = it
+                    )
+                    val args = Bundle()
+                    args.putSerializable("chamberInfo", chamberInfo)
+                    val navController = requireActivity().findNavController(R.id.navHostFragment)
+                    Log.i("calledBefore", "is bbeing caLLED")
+
+                    navController.navigate(
+                        R.id.chamber_info_fragment,
+                        args = args,
+                        navOptions {
+                            anim {
+                                enter = R.anim.slide_in
+                                exit = R.anim.slide_out
+                                popEnter = R.anim.slide_in
+                                popExit = R.anim.slide_out
+                            }
+                        }
+
+                    )
+                    Log.i("called", "is bbeing caLLED")
+                } else {
+                    Toast.makeText(context, "Chamber info not available", Toast.LENGTH_SHORT).show()
+                }
+            }
+
         }
 
         return view
