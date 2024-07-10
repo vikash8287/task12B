@@ -14,7 +14,7 @@
         android:clipToPadding="false">
 
         <ImageButton
-            android:id="@+id/back_button"
+            android:id="@+id/backButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"

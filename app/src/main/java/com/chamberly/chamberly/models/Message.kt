@@ -19,6 +19,10 @@ data class Message @JvmOverloads constructor(
                 reactedWith == other.reactedWith &&
                 replyingTo == other.replyingTo
     }
+
+    override fun hashCode(): Int {
+        return message_id.hashCode()
+    }
 }
 
 fun Message.toMap(): Map<String, Any> {
@@ -40,3 +44,5 @@ fun Message.toMap(): Map<String, Any> {
     }
     return messageMap
 }
+
+//fun Message.e

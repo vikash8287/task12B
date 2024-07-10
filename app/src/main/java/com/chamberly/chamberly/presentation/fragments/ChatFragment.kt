@@ -77,17 +77,29 @@ class ChatFragment : Fragment() {
     )
     private val reportReasons: List<String> = listOf(
         "Harassment",
-        "Inappropriate Behavior",
+        "Sexual Behavior",
         "Unsupportive Behaviour",
         "Spamming",
         "Annoying"
     )
 
+    override fun onResume() {
+        super.onResume()
+        chamberViewModel.removeNotificationKey(userViewModel.userState.value!!.UID)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (userViewModel.chamberID.value.isNullOrBlank()) {
+            userViewModel.closeChamber()
+        }
+        chamberViewModel.clear(
+            userViewModel.chamberID.value!!,
+            userViewModel.userState.value!!.UID
+        )
         cancelNotificationAlarm(requireContext())
         chamberViewModel.setChamber(
-            userViewModel.chamberID.value ?: "",
+            userViewModel.chamberID.value!!,
             userViewModel.userState.value!!.UID
         )
     }
@@ -99,7 +111,7 @@ class ChatFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_chat, container, false)
         val groupTitle = view.findViewById<TextView>(R.id.groupTitle)
-        val backButton = view.findViewById<ImageButton>(R.id.back_button)
+        val backButton = view.findViewById<ImageButton>(R.id.backButton)
         val exitChamberButton = view.findViewById<ImageButton>(R.id.exitChatButton)
         recyclerView = view.findViewById(R.id.recyclerViewMessages)
         val sendButton = view.findViewById<Button>(R.id.buttonSend)
@@ -146,20 +158,24 @@ class ChatFragment : Fragment() {
         )
 
         chamberViewModel.messages.observe(viewLifecycleOwner) { messages ->
+            val chamberID = chamberViewModel.chamberState.value!!.chamberID
+            if(chamberID.isBlank() ||
+                messages[chamberID] == null) {
+                return@observe
+            }
             if(messageAdapter.itemCount == 0) {
                 messages?.let {
-                    messageAdapter.setMessages(it)
-                    recyclerView.scrollToPosition(it.size - 1)
+                    messageAdapter.setMessages(it[chamberID]!!)
+                    recyclerView.scrollToPosition(it[chamberID]!!.size - 1)
                 }
             } else {
-                val newSize = messages.size
+                val newSize = messages[chamberID]!!.size
                 val oldSize = messageAdapter.itemCount
-
                 if (newSize == oldSize) {
-                    if(newSize == 40 && messageAdapter.messageAt(0).message_id != messages[0].message_id) {
+                    if(newSize == 40 && messageAdapter.messageAt(0).message_id != messages[chamberID]!![0].message_id) {
                         // More than 40 messages & a new message received
                         messageAdapter.messageRemoved(messageAdapter.messageAt(0))
-                        messageAdapter.addMessage(messages[newSize - 1])
+                        messageAdapter.addMessage(messages[chamberID]!![newSize - 1])
                         recyclerView.smoothScrollToPosition(39)
                     } else {
                         // A message was modified, following cases are possible
@@ -168,10 +184,10 @@ class ChatFragment : Fragment() {
                         // Since there are only 40 message, we iterate over all and find the one
                         // that was modified.
                         for(index in 0 until newSize) {
-                            if (messages[index] != messageAdapter.messageAt(index)) {
+                            if (messages[chamberID]!![index] != messageAdapter.messageAt(index)) {
                                 messageAdapter.messageChanged(
-                                    messages[index],
-                                    messages[index].message_id
+                                    messages[chamberID]!![index],
+                                    messages[chamberID]!![index].message_id
                                 )
                                 recyclerView.smoothScrollBy(0, 20)
                             }
@@ -179,8 +195,8 @@ class ChatFragment : Fragment() {
                     }
                 } else if(newSize > oldSize) {
                     // A new message was received
-                    messageAdapter.addMessage(messages[newSize - 1])
-                    recyclerView.smoothScrollToPosition(messageAdapter.itemCount - 1)
+                    messageAdapter.addMessage(messages[chamberID]!![newSize - 1])
+                    recyclerView.smoothScrollToPosition(newSize - 1)
                 } else {
                     // A message was removed
                     // Will be handled later since there is no front-end functionality to delete
@@ -207,7 +223,7 @@ class ChatFragment : Fragment() {
                 successCallback = {
                     replyingTo.postValue("")
                     messageBox.setText("")
-                    recyclerView.smoothScrollToPosition(messageAdapter.itemCount - 1)
+//                    recyclerView.smoothScrollToPosition(messageAdapter.itemCount - 1)
                 }
             )
         }
@@ -389,7 +405,6 @@ class ChatFragment : Fragment() {
         val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("Message", messageContent)
         clipboard.setPrimaryClip(clip)
-        Log.d("Holder", "Message copied: $messageContent")
     }
 
     private fun showSelfMessageDialog(message: Message) {
@@ -466,13 +481,19 @@ class ChatFragment : Fragment() {
                                     callback = {
                                         dialog.dismiss()
                                         exitChamber()
-                                        userViewModel.closeChamber()
+                                        chamberViewModel.clear(
+                                            userViewModel.userState.value!!.UID,
+                                            ""
+                                        )
                                     }
                                 )
                             } else {
                                 dialog.dismiss()
                                 exitChamber()
-                                userViewModel.closeChamber()
+                                chamberViewModel.clear(
+                                    userViewModel.userState.value!!.UID,
+                                    ""
+                                )
                             }
                         }
                     )
@@ -511,8 +532,8 @@ class ChatFragment : Fragment() {
         heading.text = getString(R.string.rate_user, userToRateName)
 
         cancelButton.setOnClickListener {
-            callback()
             dialog.dismiss()
+            callback()
         }
 
         confirmButton.setOnClickListener {
@@ -538,7 +559,7 @@ class ChatFragment : Fragment() {
         dialog: Dialog,
         against: String,
         againstName: String,
-        callback: () -> Unit = {}
+        callback: () -> Unit = { dialog.dismiss() }
     ) {
         dialog.setContentView(R.layout.dialog_report_options)
 
@@ -570,7 +591,6 @@ class ChatFragment : Fragment() {
             callback()
         }
         optionsLayout.addView(cancelButton)
-
     }
 
     private fun rateUser(userToRate: String, starRating: Double) {
@@ -589,14 +609,15 @@ class ChatFragment : Fragment() {
     ) {
         val members = chamberViewModel.chamberState.value!!.members
         val uid =
-            if(members[0] == userViewModel.userState.value!!.UID) members[1]
+            if (members.size == 1) ""
+            else if(members[0] == userViewModel.userState.value!!.UID) members[1]
             else members[0]
         val report = hashMapOf(
             "against" to (against ?: uid),
-            "by" to uid,
+            "by" to userViewModel.userState.value!!.UID,
             "groupChatId" to chamberViewModel.chamberState.value!!.chamberID,
             "realHost" to "",
-            "messages" to chamberViewModel.messages.value!!.map {
+            "messages" to chamberViewModel.messages.value!![chamberViewModel.chamberState.value!!.chamberID]!!.map {
                 it.toMap()
             },
             "reason" to reason,
@@ -618,7 +639,7 @@ class ChatFragment : Fragment() {
 
     private fun exitChamber() {
         val uid = userViewModel.userState.value!!.UID
-
+        userViewModel.closeChamber()
         chamberViewModel.exitChamber(uid)
     }
 

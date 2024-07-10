@@ -4,114 +4,69 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/screen_background_primary_gradient"
     tools:context=".presentation.fragments.WelcomeFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/relativeLayout"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#e6e6ff"
-        android:padding="20dp">
-        <TextView
-            android:id="@+id/create_a_di"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/create_a_display_name"
-            android:textColor="#2E2E5B"
-            android:textSize="29sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.6"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <EditText
-            android:id="@+id/etEmail"
+        android:orientation="vertical">
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/create_a_di"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/rounded_edittext"
-            android:backgroundTint="@color/primary"
-            android:hint="@string/username"
-            android:imeOptions="actionDone"
-            android:inputType="textEmailAddress"
-            android:padding="12dp"
-            android:textColorHint="#B0B0CA"
-            android:textSize="18sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/create_a_di" />
-
-        <TextView
-            android:id="@+id/tvTermsConditions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/feel_free_we_do_not_ask_your_real_name_but_it_must_comply_with_the_terms_conditions"
-            android:textColor="#2E2E5B"
-            android:textSize="14sp"
-            android:clickable="true"
-            android:focusable="true"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/etEmail" />
-
-        <RadioGroup
-            android:id="@+id/role_selector_group"
-            android:layout_width="match_parent"
-            android:layout_weight="2"
-            android:layout_height="wrap_content"
-            android:background="@drawable/toggle_switch_large_track"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
             android:gravity="center"
-            android:padding="4dp"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/tvTermsConditions"
-            app:layout_constraintBottom_toTopOf="@id/btnCreateAccount">
-
-            <RadioButton
-                android:id="@+id/role_ventor"
-                android:background="@drawable/toggle_switch_large_thumb"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:paddingVertical="4dp"
-                android:button="@null"
-                android:gravity="center"
-                android:text="Ventor"
-                android:textColor="@color/white" />
-
-            <RadioButton
-                android:id="@+id/role_listener"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@drawable/toggle_switch_large_thumb"
-                android:paddingVertical="4dp"
-                android:button="@null"
-                android:gravity="center"
-                android:text="Listener"
-                android:textColor="@color/white" />
-        </RadioGroup>
-
-        <TextView
-            android:id="@+id/role_details"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/dp"
+                android:scaleType="centerInside"/>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/chamberly"
+                android:scaleType="centerInside"
+                android:tint="@color/white" />
+        </LinearLayout>
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/role_selector_group"/>
-
-        <Button
-            android:id="@+id/btnCreateAccount"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/tvTermsConditions"
-            android:layout_marginStart="4dp"
-            android:background="@drawable/button_filled"
-            android:text="@string/create_account"
-            android:textAllCaps="false"
-            android:textColor="#ffffff"
-            android:textSize="18sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/role_details"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            android:orientation="vertical"
+            android:layout_gravity="center"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="16dp">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/welcome_text"
+                android:textAlignment="center"
+                android:textSize="18sp"
+                android:textColor="@color/white"/>
+            <androidx.legacy.widget.Space
+                android:layout_width="0dp"
+                android:layout_height="16dp" />
+            <Button
+                android:id="@+id/signUpButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sign Up"
+                android:textAllCaps="false"
+                android:background="@drawable/button_filled"
+                android:backgroundTint="@color/white"/>
+            <androidx.legacy.widget.Space
+                android:layout_width="0dp"
+                android:layout_height="16dp" />
+            <Button
+                android:id="@+id/loginButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Log In"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:background="@drawable/button_outlined"
+                android:backgroundTint="@color/white"/>
+        </LinearLayout>
+    </LinearLayout>
 </FrameLayout>

@@ -1,4 +1,4 @@
-package com.chamberly.chamberly.adapters
+package com.chamberly.chamberly.presentation.adapters
 
 
 import android.app.Activity
@@ -37,12 +37,9 @@ class MessageAdapter(private val uid: String) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val messages: MutableList<Message> = mutableListOf()
     private var onMessageLongClickListener: OnMessageLongClickListener? = null
-private lateinit var onPhotoMessageClickedListener :(photoUrl:String)->Unit
+
     fun setOnMessageLongClickListener(listener: OnMessageLongClickListener) {
         onMessageLongClickListener = listener
-    }
-    fun setOnPhotoMessageClickedListener(value:(photoUrl:String)->Unit){
-        onPhotoMessageClickedListener = value
     }
 
     companion object {
@@ -80,42 +77,47 @@ inner class MessagePhotoViewHolderSystemMe(itemView: View):RecyclerView.ViewHold
     val progressView :ProgressBar = itemView.findViewById(R.id.progressBar)
 
 }
-    inner class MessagePhotoViewHolderSystemOther(itemView: View):RecyclerView.ViewHolder(itemView){
-        val imageView:ImageView = itemView.findViewById(R.id.image_preview)
-      val progressView :ProgressBar = itemView.findViewById(R.id.progressBar)
+    inner class MessagePhotoViewHolderSystemOther(itemView: View):RecyclerView.ViewHolder(itemView) {
+        val imageView: ImageView = itemView.findViewById(R.id.image_preview)
+        val progressView: ProgressBar = itemView.findViewById(R.id.progressBar)
 
+        inner class MessageViewHolderSystem(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val message: TextView = itemView.findViewById(R.id.text_system_message)
+        }
 
-    }
-    inner class MessageViewHolderSystem(itemView: View): RecyclerView.ViewHolder(itemView) {
-        val message: TextView = itemView.findViewById(R.id.text_system_message)
-    }
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
-        return when (viewType) {
-            VIEW_TYPE_ME -> {
-                val itemView = inflater.inflate(R.layout.item_chat_me, parent, false)
-                MessageViewHolderMe(itemView)
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+            val inflater = LayoutInflater.from(parent.context)
+            return when (viewType) {
+                VIEW_TYPE_ME -> {
+                    val itemView = inflater.inflate(R.layout.item_chat_me, parent, false)
+                    MessageViewHolderMe(itemView)
+                }
+
+                VIEW_TYPE_PHOTO_ME -> {
+                    val itemView = inflater.inflate(R.layout.item_message_photo_me, parent, false)
+                    MessagePhotoViewHolderSystemMe(itemView)
+                }
+
+                VIEW_TYPE_PHOTO_OTHER -> {
+                    val itemView =
+                        inflater.inflate(R.layout.item_message_photo_other, parent, false)
+                    MessagePhotoViewHolderSystemOther(itemView)
+                }
+
+                VIEW_TYPE_SYSTEM -> {
+                    val itemView = inflater.inflate(R.layout.item_system_message, parent, false)
+                    MessageViewHolderSystem(itemView)
+                }
+
+                VIEW_TYPE_OTHER -> {
+                    val itemView = inflater.inflate(R.layout.item_chat_other, parent, false)
+                    MessageViewHolder(itemView)
+                }
+
+                else -> throw IllegalArgumentException("Invalid view type")
             }
-            VIEW_TYPE_PHOTO_ME ->{
-                val itemView = inflater.inflate(R.layout.item_message_photo_me,parent,false)
-               MessagePhotoViewHolderSystemMe(itemView)
-            }
-            VIEW_TYPE_PHOTO_OTHER ->{
-               val itemView = inflater.inflate(R.layout.item_message_photo_other,parent,false)
-                MessagePhotoViewHolderSystemOther(itemView)
-            }
-            VIEW_TYPE_SYSTEM -> {
-                val itemView = inflater.inflate(R.layout.item_system_message, parent, false)
-                MessageViewHolderSystem(itemView)
-            }
-            VIEW_TYPE_OTHER -> {
-                val itemView = inflater.inflate(R.layout.item_chat_other, parent, false)
-                MessageViewHolder(itemView)
-            }
-            else -> throw IllegalArgumentException("Invalid view type")
         }
     }
-
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = messages[position]
         when (holder) {

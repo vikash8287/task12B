@@ -18,9 +18,23 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="This action is irreversible!"
+        android:text="This action is irreversible!\nEnter your password to confirm"
         android:textSize="18sp"
+        android:textAlignment="center"
         android:textColor="#555"/>
+    <EditText
+        android:id="@+id/passwordField"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:layout_gravity="center_vertical"
+        android:background="@drawable/rounded_edittext"
+        android:hint="Password"
+        android:layout_marginHorizontal="4dp"
+        android:paddingHorizontal="10dp"
+        android:inputType="textPassword"
+        android:textColor="@color/black"
+        android:autofillHints=""
+        android:imeOptions="actionDone"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
