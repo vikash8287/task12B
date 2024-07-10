@@ -129,7 +129,7 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
             profileViewModel.deleteAccount()
             dialog.dismiss()
             requireParentFragment().findNavController().navigate(
-                R.id.welcome_fragment,
+                R.id.authentication_fragment,
                 null,
                 navOptions {
                     anim {

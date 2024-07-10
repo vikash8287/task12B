@@ -80,7 +80,7 @@ inner class MessagePhotoViewHolderSystemMe(itemView: View):RecyclerView.ViewHold
     inner class MessagePhotoViewHolderSystemOther(itemView: View):RecyclerView.ViewHolder(itemView) {
         val imageView: ImageView = itemView.findViewById(R.id.image_preview)
         val progressView: ProgressBar = itemView.findViewById(R.id.progressBar)
-
+    }
         inner class MessageViewHolderSystem(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val message: TextView = itemView.findViewById(R.id.text_system_message)
         }
@@ -117,7 +117,7 @@ inner class MessagePhotoViewHolderSystemMe(itemView: View):RecyclerView.ViewHold
                 else -> throw IllegalArgumentException("Invalid view type")
             }
         }
-    }
+
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = messages[position]
         when (holder) {

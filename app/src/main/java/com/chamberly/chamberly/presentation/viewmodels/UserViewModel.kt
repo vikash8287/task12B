@@ -5,6 +5,8 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
@@ -14,6 +16,7 @@ import com.chamberly.chamberly.OkHttpHandler
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.constant.Gender
 import com.chamberly.chamberly.models.Chamber
+import com.chamberly.chamberly.models.ChamberPreview
 import com.chamberly.chamberly.models.Match
 import com.chamberly.chamberly.models.Message
 import com.chamberly.chamberly.models.Topic
@@ -22,7 +25,6 @@ import com.chamberly.chamberly.presentation.states.AppState
 import com.chamberly.chamberly.presentation.states.UserState
 import com.chamberly.chamberly.utils.DatabaseManager
 import com.chamberly.chamberly.utils.Entitlement
-import com.chamberly.chamberly.utils.REVENUECAT_API_KEY
 import com.chamberly.chamberly.utils.Role
 import com.chamberly.chamberly.utils.TaskScheduler
 import com.chamberly.chamberly.utils.logEvent
@@ -89,9 +91,17 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
 
     private val _matches: MutableLiveData<MutableList<Match>> = MutableLiveData(mutableListOf())
     val matches: LiveData<MutableList<Match>> = _matches
+
+    private val _myChambers: MutableLiveData<MutableList<ChamberPreview>> =
+        MutableLiveData(mutableListOf())
+    val myChambers: LiveData<MutableList<ChamberPreview>> = _myChambers
+
     // This map will contain the topic title corresponding to the topic ID
     val pendingTopicTitles = mutableMapOf<String, String>()
 
+    //This is to prevent users from clicking sign up login buttons while the loginuser function
+    //loads user data from cache
+    val authState: MutableLiveData<String> = MutableLiveData("LOADING")
 
     private val auth = Firebase.auth
     private val sharedPreferences: SharedPreferences =
@@ -122,84 +132,90 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
 
     fun registerUser(
         displayName: String,
+        email: String,
+        password: String,
         role: Role,
         onComplete: () -> Unit
     ) {
-        auth
-            .signInAnonymously()
-            .addOnSuccessListener {
-                // User signed in anonymously
-                firestore
-                    .collection("Display_Names")
-                    .document(displayName)
-                    .get()
-                    .addOnCompleteListener {
-                        if (it.isSuccessful && it.result.exists()) {
-                            // Display Name already exists, do not register user
-                            showToast("This name is already in use. Please use another name $displayName")
-                        } else {
-                            val user = auth.currentUser
-                            if (user != null) {
-                                val isNewUser =
-                                    sharedPreferences.getBoolean("isNewUser", true)
-                                with(sharedPreferences.edit()) {
-                                    putBoolean("hasLoggedIn", true)
-                                    putString("uid", user.uid)
-                                    putString("displayName", displayName)
-                                    putBoolean("isListener", role == Role.LISTENER)
-                                    putInt("age",24)
-                                    putInt("gender", Gender.MALE_GENDER_INT)
-                                    putInt("firstGender", Gender.MALE_GENDER_INT)
-                                    putString("bio","")
-                                    putFloat("rating",0f)
-                                    putInt("reviewCount",0)
-                                    putBoolean("seeAge",true)
-                                    putBoolean("seeGender",true)
-                                    putBoolean("seeAchievements",false)
+        firestore
+            .collection("Display_Names")
+            .document(displayName)
+            .get()
+            .addOnCompleteListener {
+                if (it.isSuccessful && it.result.exists()) {
+                    //User with this display name already exists,
+                    //Ask them to pick another
+                    showToast("This name is already in use. Please use another name")
+                } else {
+                    auth
+                        .createUserWithEmailAndPassword(email, password)
+                        .addOnSuccessListener {
+                            val uid = auth.currentUser!!.uid
+                            createDisplayNameDocument(
+                                displayName = displayName,
+                                uid = uid,
+                                email = email
+                            )
+                            createAccountDocument(
+                                displayName = displayName,
+                                uid = uid,
+                                email = email,
+                                role = role
+                            )
+                            setRestriction(uid = uid)
+                            with(sharedPreferences.edit()) {
+                                putBoolean("hasLoggedIn", true)
+                                putString("uid", uid)
+                                putString("displayName", displayName)
+                                putString("email", email)
+                                putBoolean("isListener", role == Role.LISTENER)
+                                putInt("age",24)
+                                putInt("gender", Gender.MALE_GENDER_INT)
+                                putInt("firstGender", Gender.MALE_GENDER_INT)
+                                putString("bio","")
+                                putFloat("rating",0f)
+                                putInt("reviewCount",0)
+                                putBoolean("seeAge",true)
+                                putBoolean("seeGender",true)
+                                putBoolean("seeAchievements",false)
 
-                                    putBoolean("AppUpdates",true)
-                                    putBoolean("ChamberReminders",true)
-                                    putBoolean("Checkup",true)
-                                    putBoolean("DailyCoins",false)
-                                    putBoolean("Discounts",true)
-                                    apply()
-                                }
-                                createDisplayNameDocument(
+                                putBoolean("AppUpdates",true)
+                                putBoolean("ChamberReminders",true)
+                                putBoolean("Checkup",true)
+                                putBoolean("DailyCoins",false)
+                                putBoolean("Discounts",true)
+                                apply()
+                            }
+                            _userState.postValue(
+                                _userState.value!!.copy(
+                                    UID = uid,
                                     displayName = displayName,
-                                    uid = user.uid
-                                )
-                                createAccountDocument(
-                                    displayName = displayName,
-                                    uid = user.uid,
                                     role = role
                                 )
-                                setRestriction(
-                                    uid = user.uid
-                                )
-                                if (isNewUser) {
-                                    logEventToAnalytics("first_time_user")
-                                } else {
-                                    logEventToAnalytics("account_recreated")
-                                }
-                                loginUser()
+                            )
+                            databaseManager = DatabaseManager(auth.currentUser!!.uid, displayName)
+                            setupUXListeners()
+                            setNotificationToken()
+                        }
+                        .addOnFailureListener { error ->
+                            val errorMessage = error.localizedMessage
+                            if (!errorMessage.isNullOrBlank()) {
+                                showToast(errorMessage)
                             }
                         }
-                    }
+                }
+                onComplete()
             }
-            .addOnFailureListener {
-                // User account cannot be created
-                showToast("Authentication failed")
-            }
-            onComplete()
     }
 
     private fun createDisplayNameDocument(
         displayName: String,
+        email: String,
         uid: String,
     ) {
         val displayNameData = mapOf(
             "Display_Name" to displayName,
-            "Email" to "$uid@chamberly.net",
+            "Email" to email,
             "UID" to uid
         )
         firestore
@@ -215,12 +231,13 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     private fun createAccountDocument(
         displayName: String,
         uid: String,
+        email: String,
         role: Role
     ) {
         val account = mapOf(
             "UID" to uid,
             "Display_Name" to displayName,
-            "Email" to "$uid@chamberly.net",
+            "Email" to email,
             "platform" to "android",
             "Coins" to 0,
             "gender" to "male",
@@ -259,42 +276,96 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             ))
     }
 
-    fun loginUser(): Boolean {
-        val hasLoggedIn = sharedPreferences.getBoolean("hasLoggedIn", false)
-        Log.d("LOGGING IN", "TRYING TO LOGIN")
-        return if(!hasLoggedIn || auth.currentUser == null) {
-            false
-        } else {
-            val uid = sharedPreferences.getString("uid", "") ?: ""
-            val displayName = sharedPreferences.getString("displayName", "") ?: ""
-            Log.d("LOGGING IN", uid + ":" + displayName)
-            val role =
-                if (sharedPreferences.getBoolean("isListener", false)) Role.LISTENER
-                else Role.VENTOR
-            _userState.value = UserState(
-                UID = uid,
-                displayName = displayName,
-                role = role
-            )
-            databaseManager = DatabaseManager(uid, displayName)
-            firestore
-                .collection("Accounts")
-                .document(uid)
-                .get()
-                .addOnSuccessListener {
-                    val blockedUsers = it["blockedUsers"] as List<String>? ?: emptyList()
-                    _blockedUsers.postValue(blockedUsers.toMutableList())
-                }
-            setupUXListeners()
-            setNotificationToken()
-            getUserRestrictions()
-            getUserRating()
-            getUserChambers()
-            attachTopicRequestListeners()
-            if (appState.value?.areExperimentalFeaturesEnabled == true) {
-                setPaywallStatus()
+    fun loginUser(
+        email: String = "",
+        password: String = "",
+        onComplete: () -> Unit = {}
+    ){
+        if (email.isBlank() && password.isBlank()) {
+            // Login called automatically, try using cache here to keep user logged in
+            val user = auth.currentUser
+            val hasLoggedIn = sharedPreferences.getBoolean("hasLoggedIn", false)
+            if(user != null && hasLoggedIn) {
+                // Log in user
+                val uid = user.uid
+                val displayName = sharedPreferences.getString("displayName", "") ?: ""
+                val role =
+                    if (sharedPreferences.getBoolean("isListener", false)) Role.LISTENER
+                    else                                                                Role.VENTOR
+                _userState.postValue(
+                    UserState(
+                        UID = uid,
+                        displayName = displayName,
+                        role = role
+                    )
+                )
+                databaseManager = DatabaseManager(uid, displayName)
+                firestore
+                    .collection("Accounts")
+                    .document(uid)
+                    .get()
+                    .addOnSuccessListener {
+                        val blockedUsers = it["blockedUsers"] as List<String>? ?: emptyList()
+                        _blockedUsers.postValue(blockedUsers.toMutableList())
+                    }
+                setupUXListeners()
+                setNotificationToken()
+                getUserRestrictions(uid = uid)
+                getUserRating(uid = uid)
+                attachTopicRequestListeners()
+                authState.postValue("COMPLETE")
+                onComplete()
+            } else {
+                authState.postValue("COMPLETE")
+                onComplete()
             }
-            true
+            //This is where the login from cache is complete, either it succeeded or failed
+            //Enable the buttons now
+        } else {
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnSuccessListener {
+                    val uid = auth.currentUser!!.uid
+                    firestore
+                        .collection("Accounts")
+                        .document(uid)
+                        .get()
+                        .addOnSuccessListener { accountSnapshot ->
+                            val data = accountSnapshot.data!!
+                            val displayName = data["Display_Name"].toString()
+                            val role =
+                                if(data["selectedRole"].toString() == "ventor") Role.VENTOR
+                                else                                            Role.LISTENER
+                            val blockedUsers = data["blockedUsers"] as List<String>? ?: emptyList()
+                            _blockedUsers.postValue(blockedUsers.toMutableList())
+                            with(sharedPreferences.edit()) {
+                                putString("uid", uid)
+                                putString("displayName", displayName)
+                                putBoolean("isListener", role == Role.LISTENER)
+                                apply()
+                            }
+                            _userState.postValue(
+                                UserState(
+                                    UID = uid,
+                                    displayName = displayName,
+                                    role = role
+                                )
+                            )
+                            databaseManager = DatabaseManager(uid, displayName)
+                            setupUXListeners()
+                            setNotificationToken()
+                            getUserRestrictions(uid = uid)
+                            getUserRating(uid = uid)
+                            attachTopicRequestListeners()
+                            onComplete()
+                        }
+                }
+                .addOnFailureListener {
+                    val errorMessage = it.localizedMessage
+                    if(!errorMessage.isNullOrBlank()) {
+                        showToast(it.localizedMessage)
+                    }
+                    onComplete()
+                }
         }
     }
 
@@ -355,72 +426,117 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         messaging.isAutoInitEnabled = true
     }
 
-    private fun setPaywallStatus() {
-        Purchases.configure(
-            PurchasesConfiguration.Builder(
-                getApplication(),
-                REVENUECAT_API_KEY
-            )
-                .appUserID(userState.value!!.UID)
-                .build()
-        )
-        Purchases.sharedInstance.getOfferings(object: ReceiveOfferingsCallback {
-            override fun onError(error: PurchasesError) {
-                showToast("An error occurred while checking subscription status")
-            }
-            override fun onReceived(offerings: Offerings) {
-                currentOffering = offerings.current
-            }
-        })
-        Purchases.sharedInstance.getCustomerInfo(object: ReceiveCustomerInfoCallback {
-            override fun onError(error: PurchasesError) {
-                showToast("An error occurred while checking subscription status")
-            }
-            override fun onReceived(customerInfo: CustomerInfo) {
-                if(customerInfo.entitlements["ChamberlyPlus"]?.isActive == true) {
-                    _userState.postValue(
-                        _userState.value!!.copy(entitlement = Entitlement.CHAMBERLY_PLUS)
-                    )
-                }
-            }
-        })
-    }
+//    private fun setPaywallStatus() {
+//        Purchases.configure(
+//            PurchasesConfiguration.Builder(
+//                getApplication(),
+//                REVENUECAT_API_KEY
+//            )
+//                .appUserID(userState.value!!.UID)
+//                .build()
+//        )
+//        Purchases.sharedInstance.getOfferings(object: ReceiveOfferingsCallback {
+//            override fun onError(error: PurchasesError) {
+//                showToast("An error occurred while checking subscription status")
+//            }
+//            override fun onReceived(offerings: Offerings) {
+//                currentOffering = offerings.current
+//            }
+//        })
+//        Purchases.sharedInstance.getCustomerInfo(object: ReceiveCustomerInfoCallback {
+//            override fun onError(error: PurchasesError) {
+//                showToast("An error occurred while checking subscription status")
+//            }
+//            override fun onReceived(customerInfo: CustomerInfo) {
+//                if(customerInfo.entitlements["ChamberlyPlus"]?.isActive == true) {
+//                    _userState.postValue(
+//                        _userState.value!!.copy(entitlement = Entitlement.CHAMBERLY_PLUS)
+//                    )
+//                }
+//            }
+//        })
+//    }
 
     fun getUserChambers(
-        callback: (List<Chamber>) -> Unit = {}
+        callback: (List<ChamberPreview>) -> Unit = {}
     ) {
         firestore
-            .collection("GroupChatIds")
-            .whereArrayContains("members", userState.value!!.UID)
-            .limit(20)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                Log.d("CHAMBERS CHECKING", querySnapshot.documents.toString())
-                val chambers = querySnapshot.documents.mapNotNull {
-                    it.toObject(Chamber::class.java)
-                }
-                Log.d("CHAMBERS CHECKING", chambers.toString())
-                for (chamber in chambers) {
-                    for (member in chamber.members) {
-                        if (member != userState.value!!.UID) {
-                            checkedUsers.add(member)
+            .collection("MyChambers")
+            .document(auth.currentUser!!.uid)
+            .addSnapshotListener { snapshot, error ->
+                if(snapshot == null) {
+                    _myChambers.postValue(mutableListOf())
+                } else {
+                    val data = snapshot.data
+                    val myChambers1 =
+                        try { data?.get("MyChambersN") as? Map<String, Any> }
+                        catch (_: Exception) { emptyMap() }
+                    if (myChambers1.isNullOrEmpty()) {
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            _myChambers.postValue(mutableListOf())
+                        }, 500)
+                    } else {
+                        val updatedMyChambers = mutableListOf<ChamberPreview>()
+                        val chambers =
+                            try { myChambers1.values.toList() as List<MutableMap<String, Any>> }
+                            catch (_: Exception) { emptyList() }
+                        if (chambers.isEmpty()) {
+                            _myChambers.postValue(mutableListOf())
+                            return@addSnapshotListener
+                        }
+                        for (chamber in chambers) {
+                            firestore
+                                .collection("GroupChatIds")
+                                .document(chamber["groupChatId"].toString())
+                                .get()
+                                .addOnSuccessListener { chamberSnapshot ->
+                                    val chamberDetails = chamberSnapshot.toObject(Chamber::class.java)
+                                    if (chamberDetails != null) {
+                                        realtimeDatabase
+                                            .reference
+                                            .child(chamber["groupChatId"].toString())
+                                            .child("users/members")
+                                            .get()
+                                            .addOnSuccessListener {
+                                                val members = it.value as Map<String, Any>
+                                                for (member in members.keys) {
+                                                    checkedUsers.add(member)
+                                                }
+                                            }
+                                        realtimeDatabase
+                                            .reference
+                                            .child(chamber["groupChatId"].toString())
+                                            .child("messages")
+                                            .orderByKey()
+                                            .limitToLast(1)
+                                            .get()
+                                            .addOnSuccessListener { message ->
+                                                val lastMessage =
+                                                    try { message.children.firstOrNull()?.getValue(Message::class.java) }
+                                                    catch (_: Exception) { Message() }
+                                                val chamberPreview = ChamberPreview(
+                                                    chamberID = chamber["groupChatId"].toString(),
+                                                    chamberTitle = chamberDetails.groupTitle,
+                                                    messageRead = chamber["messageRead"] as Boolean,
+                                                    lastMessage = lastMessage,
+                                                    timestamp = chamber["timestamp"]
+                                                )
+                                                updatedMyChambers.add(chamberPreview)
+                                                _myChambers.postValue(updatedMyChambers)
+                                            }
+                                    }
+                                }
                         }
                     }
                 }
-                _userState.postValue(
-                    _userState.value!!.copy(
-                        chambers = chambers.toMutableList()
-                    )
-                )
-                Log.d("Chambers", chambers.toString() + "\n" + checkedUsers.toString())
             }
     }
 
     fun createChamber(
         chamberTitle: String,
+        topicID: String? = null,
         callback: (String) -> Unit = {}
     ) {
-        Log.d("HERRE", "CREATING CHAMBER $chamberTitle")
         val chamber = Chamber(
             AuthorName = userState.value!!.displayName,
             AuthorUID = userState.value!!.UID,
@@ -436,12 +552,15 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
 
         chamberRef.set(chamber.toMap())
             .addOnSuccessListener {
+                chamberRef
+                    .update("topicId", topicID)
+                addChamberToMyChambers(chamber.groupChatId)
+
                 val chamberDataRef =
                     realtimeDatabase.getReference(chamber.groupChatId)
 
                 chamberDataRef.child("host").setValue(chamber.AuthorUID)
                 chamberDataRef.child("title").setValue(chamberTitle)
-                chamberDataRef.child("messages").push().setValue("")
                 chamberDataRef.child("timestamp").setValue(ServerValue.TIMESTAMP)
 
                 val messageId = chamberDataRef.child("messages").push().key
@@ -459,7 +578,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     .child("messages/$messageId")
                     .setValue(welcomeMessage.toMap())
 
-                chamberRef.update("members", FieldValue.arrayUnion(userState.value!!.UID))
                 firestore
                     .collection("Accounts")
                     .document(userState.value!!.UID)
@@ -472,12 +590,44 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     .child("name")
                     .setValue(userState.value!!.displayName)
                     .addOnSuccessListener {
-                        Log.d("HERRE", "CHAMBER CREAETEDFDFDSSD: ${chamber.groupChatId}")
                         callback(chamber.groupChatId)
                     }
                     .addOnFailureListener {
                         it.printStackTrace()
                     }
+            }
+    }
+
+    private fun addChamberToMyChambers(groupChatID: String) {
+        val myChambersRef =
+            firestore
+                .collection("MyChambers")
+                .document(auth.currentUser!!.uid)
+        myChambersRef
+            .get()
+            .addOnSuccessListener {
+                val data =
+                    try { it.data as Map<String, Any> }
+                    catch (_: Exception) { mutableMapOf() }
+                if (!it.exists()) {
+                    myChambersRef
+                        .set(
+                            mapOf(
+                                "MyChambersN" to mapOf<String, Map<String, Any>>(),
+                                "UID" to userState.value!!.UID
+                            )
+                        )
+                }
+                val myChambers =
+                    try { data["MyChambersN"] as Map<String, Any> }
+                    catch (_: Exception) { emptyMap() }.toMutableMap()
+                myChambers[groupChatID] = mapOf(
+                    "groupChatId" to groupChatID,
+                    "messageRead" to false,
+                    "timestamp" to FieldValue.serverTimestamp()
+                )
+                myChambersRef
+                    .update("MyChambersN", myChambers)
             }
     }
 
@@ -492,14 +642,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             "system",
             "Chamberly"
         )
-
-        firestore
-            .collection("GroupChatIds")
-            .document(chamberID)
-            .update(
-                "locked", true,
-                "members", FieldValue.arrayUnion(userState.value!!.UID)
-            )
 
         chamberDataRef
             .child("messages")
@@ -534,6 +676,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         callback: () -> Unit = {}
     ) {
         if (userState.value!!.isRestricted) {
+            callback()
             return
         }
         val topic = Topic(
@@ -605,7 +748,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             .reference
             .child(topicID)
             .child("users")
-            .child(userState.value!!.UID)
+            .child(auth.currentUser!!.uid)
             .setValue(userData)
         val updatedIDs = _pendingTopics.value!!
         updatedIDs.add(topicID)
@@ -615,8 +758,11 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             putString("topics", pendingTopics.value!!.joinToString(","))
             apply()
         }
-        waitAsWorker(topicID, topicTitle)
-//        attachListenerForTopic(topicID = topicID)
+        if(userState.value!!.isRestricted) {
+            attachListenerForTopic(topicID)
+        } else {
+            waitAsWorker(topicID, topicTitle)
+        }
         logEventToAnalytics("swiped_right_${userState.value!!.role}")
         logEventToAnalytics("swiped_on_card")
         logEventToAnalytics("Started_Procrastinating")
@@ -666,7 +812,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     val userCheckedBy =
                         try { (userMap["checkedBy"] as List<String>).toMutableList() }
                         catch (_: Exception) { mutableListOf() }
-                    Log.d("CHECKED BY", userCheckedBy.toString())
                     if(uid != userState.value!!.UID &&
                         (userMap["isReserved"] ?: false) == false &&
                         (userMap["restricted"] ?: false) == false &&
@@ -706,9 +851,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             val listOfUsers = eligibleUsers[topicID]!!.sortedWith(compareBy<Map<String, Any>>(
-                { !(it["isSubscribed"] as Boolean) },
-                { it["penalty"] as Long },
-                { it["timestamp"] as Long }
+                { !(it["isSubscribed"] as? Boolean ?: false) },
+                { it["penalty"] as? Long ?: 0L },
+                { it["timestamp"] as? Long ?: 0L }
             ))
             sendRequest(
                 topicID,
@@ -727,7 +872,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         coroutineScope: CoroutineScope,
         index: Int,
     ) {
-        Log.d("HERE", index.toString())
         val currentUserRef =
             realtimeDatabase
                 .reference
@@ -784,9 +928,50 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         committed: Boolean,
                         currentData: DataSnapshot?
                     ) {
+                        // Temporary workaround for missed_matches
+                        // being added even after accepting the match
                         if (committed) {
                             //Procrastinator reserved successfully
                             //Transactions shouldn't be needed now since, the user is reserved
+                            reservedUserRef
+                                .onDisconnect()
+                                .updateChildren(
+                                    mapOf(
+                                        "reservedBy" to null,
+                                        "isReserved" to false
+                                    )
+                                )
+
+                            currentUserRef
+                                .onDisconnect()
+                                .updateChildren(
+                                    mapOf(
+                                        "reserving" to null,
+                                        "isWorker" to false,
+                                    )
+                                )
+                            val missedMatchMap = mapOf(
+                                "UID" to userState.value!!.UID,
+                                "avatarName" to (1..380).random().toString(),
+                                "name" to userState.value!!.displayName,
+                                "notificationKey" to userState.value!!.notificationKey,
+                                "selectedRole" to userState.value!!.role.toString(),
+                                "timestamp" to ServerValue.TIMESTAMP,
+                                "topicID" to topicID,
+                                "topicTitle" to topicTitle,
+                            )
+                            if((user["isAndroid"] ?: false) == false) {
+                                realtimeDatabase
+                                    .reference
+                                    .child("missed_matches_${user["UID"]}")
+                                    .onDisconnect()
+                                    .updateChildren(
+                                        mapOf(
+                                            "checkedMissedMatches" to false,
+                                            "${userState.value!!.UID}" to missedMatchMap
+                                        )
+                                    )
+                            }
                             val isReadyListener = object: ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
                                     val isReady =
@@ -797,11 +982,15 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                         //create chamber and clean up everything
                                         currentUserRef.onDisconnect().cancel()
                                         reservedUserRef.onDisconnect().cancel()
+                                        realtimeDatabase.reference.child("missed_matches_${user["UID"]}").onDisconnect().cancel()
                                         val updatedTopics = _pendingTopics.value!!
                                         updatedTopics.remove(topicID)
                                         _pendingTopics.postValue(updatedTopics)
                                         taskScheduler.invalidateTimer(topicID)
-                                        createChamber(topicTitle) { chamberID ->
+                                        createChamber(
+                                            chamberTitle = topicTitle,
+                                            topicID = topicID
+                                        ) { chamberID ->
                                             currentUserRef.updateChildren(
                                                 mapOf(
                                                     "groupChatId" to chamberID,
@@ -812,7 +1001,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                             completedMatches.postValue(
                                                 Pair(chamberID, topicTitle)
                                             )
-                                            getUserChambers()
                                         }
                                     }
                                 }
@@ -824,27 +1012,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             reservedUserRef
                                 .child("isReady")
                                 .addValueEventListener(isReadyListener)
-
-                            reservedUserRef
-                                .onDisconnect()
-                                .updateChildren(
-                                    mapOf(
-                                        "reservedBy" to null,
-                                        "isReserved" to false
-                                    )
-                                )
-                                .addOnSuccessListener {
-                                    addMissedMatch(topicID, topicTitle, user)
-                                }
-
-                            currentUserRef
-                                .onDisconnect()
-                                .updateChildren(
-                                    mapOf(
-                                        "reserving" to null,
-                                        "isWorker" to false,
-                                    )
-                                )
 
                             val isReservedListener = object: ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -858,7 +1025,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                         currentUserRef
                                             .child("reserving").setValue(null)
                                         taskScheduler.invalidateTimer(topicID)
-                                        Log.d("IsReservedListener", "Match skipped $index")
                                         CoroutineScope(Dispatchers.IO).launch {
                                             sendRequest(
                                                 topicID = topicID,
@@ -989,13 +1155,12 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     private fun attachListenerForTopic(topicID: String) {
-        Log.d("LISTENER", "HERE $topicID")
         val userRef =
             realtimeDatabase
                 .reference
                 .child(topicID)
                 .child("users")
-                .child(userState.value!!.UID)
+                .child(auth.currentUser!!.uid)
         userRef
             .addValueEventListener(object: ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -1008,7 +1173,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         return
                     }
                     val userData = snapshot.value as Map<String, Any>
-                    val isReserved = userData["isReserved"] as Boolean? ?: false
+                    val isReserved = userData["isReserved"] as Boolean? ?: return
                     if (isReserved) {
                         // Start matching
                         if(matches.value!!.indexOfFirst { it.topicID == topicID } == -1) {
@@ -1036,7 +1201,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Log.d("MATCHING ERROR", error.toException().toString())
                 }
             })
     }

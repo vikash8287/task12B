@@ -55,7 +55,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
 
     private val _messages = MutableLiveData<MutableMap<String, MutableList<Message>>>()
     val messages: LiveData<MutableMap<String, MutableList<Message>>> = _messages
-
+private val storage = Firebase.storage
     private val realtimeDatabase = Firebase.database
     private val firestore = Firebase.firestore
     private val firebaseAnalytics = FirebaseAnalytics.getInstance(getApplication())
@@ -137,7 +137,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                                 if (message.message_type == "custom" && message.message_content == "gameCard") {
                                     message.message_content = message.game_content
                                 } else if (message.message_type == "photo") {
-                                    message.message_content = "Images are not available to display on Android"
+                                 //   message.message_content = "Images are not available to display on Android"
                                 }
                                 addMessage(message)
                             }
@@ -163,7 +163,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                         ) {
                             message.message_content = message.game_content
                         } else if (message.message_type == "photo") {
-                            message.message_content = "Images are not available to display on Android."
+                         //   message.message_content = "Images are not available to display on Android."
                         }
                         if((messages.value!![chamberState.value!!.chamberID]?.contains(message)) != true) {
                             addMessage(message = message)
@@ -184,7 +184,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                         ) {
                             message.message_content = message.game_content
                         } else if (message.message_type == "photo") {
-                            message.message_content = "Images are not available to display on Android"
+                         //   message.message_content = "Images are not available to display on Android"
                         }
                         changeMessage(message)
                     }

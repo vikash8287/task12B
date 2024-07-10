@@ -41,7 +41,7 @@ import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chamberly.chamberly.R
-import com.chamberly.chamberly.adapters.MessageAdapter
+import com.chamberly.chamberly.presentation.adapters.MessageAdapter
 import com.chamberly.chamberly.models.ActiveChatInfoModel
 import com.chamberly.chamberly.models.Message
 import com.chamberly.chamberly.models.toMap

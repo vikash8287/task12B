@@ -61,7 +61,7 @@ settingUpList(view)
             dialog.dismiss()
 
             requireParentFragment().findNavController().navigate(
-                R.id.welcome_fragment,
+                R.id.authentication_fragment,
                 null,
                 navOptions {
                     anim {
