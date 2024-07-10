@@ -1,6 +1,5 @@
 package com.chamberly.chamberly.presentation.states
 
-import com.chamberly.chamberly.models.Chamber
 import com.chamberly.chamberly.utils.Entitlement
 import com.chamberly.chamberly.utils.Role
 

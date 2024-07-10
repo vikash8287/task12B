@@ -24,7 +24,6 @@ import com.chamberly.chamberly.presentation.adapters.PendingTopicsListAdapter
 import com.chamberly.chamberly.presentation.adapters.TopicAdapter
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
 import com.chamberly.chamberly.utils.Role
-import com.chamberly.chamberly.R
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore

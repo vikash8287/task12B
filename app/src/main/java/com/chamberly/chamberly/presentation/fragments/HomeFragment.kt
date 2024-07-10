@@ -23,24 +23,6 @@ class HomeFragment : Fragment() {
         val searchTopicButton = view.findViewById<Button>(R.id.findTopicButton)
         val followUsButton = view.findViewById<TextView>(R.id.followUs)
 
-//        createChamberButton.setOnClickListener {
-//            requireParentFragment()
-//                .requireParentFragment()
-//                .findNavController()
-//                .navigate(
-//                    R.id.action_main_fragment_to_create_chamber_fragment,
-//                    null,
-//                    navOptions {
-//                        anim {
-//                            enter = R.anim.slide_in
-//                            exit = R.anim.slide_out
-//                            popEnter = R.anim.slide_in
-//                            popExit = R.anim.slide_out
-//                        }
-//                    }
-//                )
-//        }
-
         createTopicButton.setOnClickListener {
             requireParentFragment()
                 .requireParentFragment()
@@ -58,24 +40,6 @@ class HomeFragment : Fragment() {
                     }
                 )
         }
-
-//        searchButton.setOnClickListener {
-//            requireParentFragment()
-//                .requireParentFragment()
-//                .findNavController()
-//                .navigate(
-//                    R.id.action_main_fragment_to_chamber_search_fragment,
-//                    null,
-//                    navOptions {
-//                        anim {
-//                            enter = R.anim.slide_in
-//                            exit = R.anim.slide_out
-//                            popEnter = R.anim.slide_in
-//                            popExit = R.anim.slide_out
-//                        }
-//                    }
-//                )
-//        }
 
         searchTopicButton.setOnClickListener {
             requireParentFragment()

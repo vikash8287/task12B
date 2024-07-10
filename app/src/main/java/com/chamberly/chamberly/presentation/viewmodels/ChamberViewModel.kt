@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.content.res.AssetFileDescriptor
 import android.net.Uri
+
 import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast

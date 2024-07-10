@@ -1073,7 +1073,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                 if (!groupChatId.isNullOrBlank()) {
                                     logEventToAnalytics("New_Match")
                                     logEventToAnalytics("accepted_match")
-
+                                    addChamberToMyChambers(groupChatId)
                                     realtimeDatabase
                                         .reference
                                         .child(groupChatId)
@@ -1094,6 +1094,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                             "members",
                                             FieldValue.arrayUnion(userState.value!!.UID)
                                         )
+
+                                    addChamberToMyChambers(groupChatId)
 
                                     firestore
                                         .collection("GroupChatIds")
@@ -1143,11 +1145,11 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         showToast("Match skipped")
     }
 
-    private fun getUserRating() {
+    private fun getUserRating(uid: String) {
         val isRestricted = sharedPreferences.getBoolean("isRestricted", false)
         firestore
             .collection("StarReviews")
-            .whereEqualTo("To", _userState.value!!.UID)
+            .whereEqualTo("To", uid)
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .limit(1)
             .get()
@@ -1176,10 +1178,10 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             }
     }
 
-    private fun getUserRestrictions() {
+    private fun getUserRestrictions(uid: String) {
         val userRef = firestore
             .collection("Accounts")
-            .document(userState.value!!.UID)
+            .document(uid)
         userRef
             .update(mapOf("timestamp" to FieldValue.serverTimestamp()))
         userRef
@@ -1189,7 +1191,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         ?: return@addSnapshotListener
                     firestore
                         .collection("Restrictions")
-                        .document(userState.value!!.UID)
+                        .document(uid)
                         .addSnapshotListener { value, _ ->
                             if (value != null && value.exists()) {
                                 val restrictedUntil = value.getTimestamp("restrictedUntil")
@@ -1208,6 +1210,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     private fun updateTopicRestrictions(isRestricted: Boolean) {
+        if (auth.currentUser != null) {
+            return
+        }
         val updatedTopics = _pendingTopics.value!!
         _pendingTopics.value?.let {
             for (topic in it) {
@@ -1216,7 +1221,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                         .reference
                         .child(topic)
                         .child("users")
-                        .child(userState.value!!.UID)
+                        .child(auth.currentUser!!.uid)
                     userRef.get().addOnSuccessListener { userData ->
                         if (userData.exists()) {
                             userRef
@@ -1254,7 +1259,6 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     fun stopProcrastination(callback: () -> Unit = {}) {
-        stopWorking()
         val topicsList = sharedPreferences.getString("topics", "")!!.split(",")
         for(topic in topicsList) {
             if(topic.isNotBlank()) {
@@ -1262,7 +1266,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     .reference
                     .child(topic)
                     .child("users")
-                    .child(_userState.value!!.UID)
+                    .child(auth.currentUser!!.uid)
                     .removeValue()
             }
         }
@@ -1275,19 +1279,28 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         callback()
     }
 
-    private fun stopWorking() {
-//        TODO: Stop working on all topics
-//        taskScheduler.invalidateAllTimers()
-//        for (topic in eligibleUsers.keys) {
-//            realtimeDatabase
-//                .reference
-//                .child("$topic/users/${userState.value!!.UID}/isWorker")
-//                .setValue(false)
-//
-//        }
-    }
-
     fun openChamber(chamberID: String) {
+        val myChambersRef =
+            firestore
+                .collection("MyChambers")
+                .document(userState.value!!.UID)
+        myChambersRef
+            .get()
+            .addOnSuccessListener {
+                val data =
+                    try { it.data as Map<String, Any> }
+                    catch (_: Exception) { mutableMapOf() }
+                val myChambers =
+                    try { data["MyChambersN"] as Map<String, Any> }
+                    catch (_: Exception) { emptyMap() }.toMutableMap()
+                myChambers[chamberID] = mapOf(
+                    "groupChatId" to chamberID,
+                    "messageRead" to true,
+                    "timestamp" to FieldValue.serverTimestamp()
+                )
+                myChambersRef
+                    .update("MyChambersN", myChambers)
+            }
         _chamberID.value = chamberID
     }
 
@@ -1296,7 +1309,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     fun blockUser(UID: String) {
-        if(UID == userState.value!!.UID) {
+        if(UID == userState.value!!.UID || UID == auth.currentUser!!.uid) {
             return
         }
         val topicsList =
@@ -1328,6 +1341,16 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                     }
                 }
             }
+        }
+    }
+
+    fun restrictUser(isRestricted: Boolean) {
+        _userState.postValue(
+            _userState.value!!.copy(isRestricted = isRestricted)
+        )
+        with(sharedPreferences.edit()) {
+            putBoolean("isRestricted", isRestricted)
+            apply()
         }
     }
 
@@ -1377,23 +1400,40 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         }
     }
 
-    fun deleteAccount() {
+    fun deleteAccount(password: String) {
         val user = auth.currentUser
+        val uid = user?.uid
+        val displayName = userState.value!!.displayName
         logEventToAnalytics(eventName = "account_deleted")
         if (user != null) {
-            user.delete().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    with(sharedPreferences.edit()) {
-                        clear()
-                        putBoolean("isNewUser", false)
-                        apply()
+            val email = user.email!!
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnSuccessListener {
+                    user.delete().addOnCompleteListener { task ->
+                        firestore
+                            .collection("Display_Names")
+                            .document(displayName)
+                            .delete()
+                        firestore
+                            .collection("Accounts")
+                            .document(uid!!)
+                            .delete()
+                        if (task.isSuccessful) {
+                            with(sharedPreferences.edit()) {
+                                clear()
+                                putBoolean("isNewUser", false)
+                                apply()
+                            }
+                            showToast("Account deleted")
+                        } else {
+//                    showToast("Failed to delete account")
+                        }
+                        _userState.value = UserState()
                     }
-                    showToast("Account deleted")
-                } else {
-                    showToast("Failed to delete account")
                 }
-                _userState.value = UserState()
-            }
+                .addOnFailureListener {
+                    showToast("Incorrect password")
+                }
         } else {
             showToast("Account deleted")
         }
@@ -1445,8 +1485,8 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     }
 
     fun logEventToAnalytics(eventName: String, params: HashMap<String, Any> = hashMapOf()) {
-        params["UID"] = _userState.value!!.UID
-        params["name"] = _userState.value!!.displayName
+        params["UID"] = auth.currentUser?.uid ?: userState.value?.UID ?: ""
+        params["name"] = _userState.value?.displayName ?: ""
         logEvent(
             firebaseAnalytics = firebaseAnalytics,
             eventName = eventName,
