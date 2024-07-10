@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".presentation.fragments.LoginFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/temporary_rounded_background"
+        android:backgroundTint="#FFFFFE"
+        android:padding="16dp"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Login"
+            android:textSize="28sp"
+            android:textColor="@color/lightTextColor"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="16dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Email"
+            android:textSize="18sp"
+            android:paddingHorizontal="4dp"
+            android:textColor="@color/lightTextColor"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="4dp" />
+        <EditText
+            android:id="@+id/emailField"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/rounded_edittext"
+            android:hint="Email"
+            android:layout_marginHorizontal="4dp"
+            android:paddingHorizontal="10dp"
+            android:inputType="textEmailAddress"
+            android:autofillHints=""
+            android:imeOptions="actionDone"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="16dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Password"
+            android:textSize="18sp"
+            android:paddingHorizontal="4dp"
+            android:textColor="@color/lightTextColor"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="4dp" />
+        <EditText
+            android:id="@+id/passwordField"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/rounded_edittext"
+            android:hint="Password"
+            android:layout_marginHorizontal="4dp"
+            android:paddingHorizontal="10dp"
+            android:inputType="textPassword"
+            android:autofillHints=""
+            android:imeOptions="actionDone"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="bottom"
+            android:orientation="vertical">
+            <Button
+                android:id="@+id/confirmLogIn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Login"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:background="@drawable/rounded_button"/>
+            <Button
+                android:id="@+id/goToSignUp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sign Up"
+                android:textAllCaps="false"
+                android:textColor="@color/primary"
+                android:background="@null"/>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

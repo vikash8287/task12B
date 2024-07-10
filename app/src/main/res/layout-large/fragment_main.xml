@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/temporary_rounded_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="@color/white">
+        android:orientation="vertical">
 
         <LinearLayout
             android:paddingHorizontal="10dp"
@@ -73,9 +73,13 @@
                     app:navGraph="@navigation/large_nav_graph"/>
             </FrameLayout>
 
-            <androidx.legacy.widget.Space
-                android:layout_width="16dp"
-                android:layout_height="0dp" />
+            <TextView
+                android:layout_width="4dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="fill_vertical"
+                android:layout_marginVertical="4dp"
+                android:backgroundTint="#AACCD0D2"
+                android:background="@drawable/dialog_background"/>
             <FrameLayout
                 android:id="@id/rightNavHostFragment"
                 android:layout_width="0dp"

@@ -4,7 +4,6 @@ import android.app.Dialog
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -28,30 +27,27 @@ import com.facebook.FacebookSdk.setAutoLogAppEventsEnabled
 import com.facebook.LoggingBehavior
 import com.facebook.appevents.AppEventsLogger
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class MainActivity : AppCompatActivity() {
-    private val auth = Firebase.auth
     private val firestore = Firebase.firestore
     private var isShowingJoinDialog: Boolean = false
-    private lateinit var sharedPreferences: SharedPreferences
     private lateinit var firebaseAnalytics: FirebaseAnalytics
     private var isUserRestricted: Boolean = false
     private lateinit var appEventsLogger: AppEventsLogger
     private lateinit var userViewModel: UserViewModel
+//    private lateinit var chamberViewModel: ChamberViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setAutoLogAppEventsEnabled(false)
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
+//        chamberViewModel = ViewModelProvider(this)[ChamberViewModel::class.java]
         firebaseAnalytics = FirebaseAnalytics.getInstance(this)
-        sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
-        FacebookSdk.setIsDebugEnabled(true);
-        FacebookSdk.addLoggingBehavior(LoggingBehavior.APP_EVENTS);
+        FacebookSdk.setIsDebugEnabled(true)
+        FacebookSdk.addLoggingBehavior(LoggingBehavior.APP_EVENTS)
         appEventsLogger = AppEventsLogger.Companion.newLogger(this)
         appEventsLogger.logEvent("TestEvent")
 
@@ -81,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             if(it.UID.isBlank()) {
                 navController.popBackStack(R.id.main_fragment, true)
                 navController.navigate(
-                    R.id.welcome_fragment,
+                    R.id.authentication_fragment,
                     null,
                     navOptions {
                         anim {
@@ -90,9 +86,9 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 )
-            } else if (navController.currentDestination?.id == R.id.welcome_fragment) {
+            } else if (navController.currentDestination?.id == R.id.authentication_fragment) {
                 checkRestrictions()
-                navController.popBackStack(R.id.welcome_fragment, true)
+                navController.popBackStack(R.id.authentication_fragment, true)
                 navController.navigate(
                     R.id.main_fragment,
                     null,
@@ -166,6 +162,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkAndOpenChat(groupChatId: String) {
+        if(userViewModel.userState.value?.UID.isNullOrBlank()) {
+            return
+        }
         if (groupChatId.isNotBlank() && groupChatId != "nil") {
             userViewModel.openChamber(groupChatId)
         }
@@ -221,14 +220,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkRestrictions() {
-        val uid = sharedPreferences.getString("uid", "") ?: auth.currentUser!!.uid
+        val uid = userViewModel.userState.value!!.UID
         val userRef = firestore.collection("Accounts").document(uid)
         userRef.update(mapOf(Pair("timestamp", FieldValue.serverTimestamp())))
-        userRef.addSnapshotListener { snapshot, error ->
+        userRef.addSnapshotListener { snapshot, _ ->
             if(snapshot != null && snapshot.exists()) {
                 val currentTime = snapshot.getTimestamp("timestamp")
                 val restrictionRef = firestore.collection("Restrictions").document(uid)
-                restrictionRef.addSnapshotListener { value, error ->
+                restrictionRef.addSnapshotListener { value, _ ->
                     if(value != null && value.exists()) {
                         val restrictedUntil = value.getTimestamp("restrictedUntil")
                         isUserRestricted = if(restrictedUntil != null && currentTime != null) {
@@ -283,51 +282,49 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkUserRating() {
-        val uid = userViewModel.userState.value!!.UID
-        val isRestricted = sharedPreferences.getBoolean("isRestricted", false)
-        firestore.collection("StarReviews")
-            .whereEqualTo("To", uid)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { documents ->
-                if(!documents.isEmpty) {
-                    val review = documents.documents[0]
-                    val userRating = review.getDouble("AverageStars")!!
-                    val ratingsCount = review.getLong("ReviewsCount")!!.toInt()
+//    private fun checkUserRating() {
+//        val uid = userViewModel.userState.value!!.UID
+//        val isRestricted = userViewModel.userState.value!!.isRestricted
+//        firestore.collection("StarReviews")
+//            .whereEqualTo("To", uid)
+//            .orderBy("timestamp", Query.Direction.DESCENDING)
+//            .limit(1)
+//            .get()
+//            .addOnSuccessListener { documents ->
+//                if(!documents.isEmpty) {
+//                    val review = documents.documents[0]
+//                    val userRating = review.getDouble("AverageStars")!!
+//                    val ratingsCount = review.getLong("ReviewsCount")!!.toInt()
+//
+//                    if(shouldBanUser(userRating = userRating, ratingsCount = ratingsCount)) {
+//                        // Ban user
+//                        userViewModel.logEventToAnalytics("star_reviews_auto_restriction")
+//                        if(!isRestricted) {
+//                            userViewModel.restrictUser(true)
+//                            banUser(uid)
+//                        }
+//                    } else if(isRestricted){
+//                        unbanUser(uid)
+//                    }
+//                }
+//            }
+//    }
 
-                    if(shouldBanUser(userRating = userRating, ratingsCount = ratingsCount)) {
-                        // Ban user
-                        userViewModel.logEventToAnalytics("star_reviews_auto_restriction")
-                        if(!isRestricted) {
-                            val editor = sharedPreferences.edit()
-                            editor.putBoolean("isRestricted", true)
-                            editor.apply()
-                            banUser(uid)
-                        }
-                    } else if(isRestricted){
-                        unbanUser(uid)
-                    }
-                }
-            }
-    }
-
-    private fun shouldBanUser(userRating: Double, ratingsCount: Int): Boolean {
-        return userRating <= 3.5 && ratingsCount >= 6
-    }
-
-    private fun banUser(uid: String) {
-        val topicsList =
-            sharedPreferences.getString("topics", "")!!.split(",")
-                    as MutableList<String>
-
+//    private fun shouldBanUser(userRating: Double, ratingsCount: Int): Boolean {
+//        return userRating <= 3.5 && ratingsCount >= 6
+//    }
+//
+//    private fun banUser(uid: String) {
+//        val topicsList =
+//            sharedPreferences.getString("topics", "")!!.split(",")
+//                    as MutableList<String>
+//
 //        for(topic in topicsList) {
 //
 //        }
-    }
-
-    private fun unbanUser(uid: String) {
-
-    }
+//    }
+//
+//    private fun unbanUser(uid: String) {
+//
+//    }
 }

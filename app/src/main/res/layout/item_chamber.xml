@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingVertical="8dp"
+    android:padding="8dp"
     android:background="?android:attr/selectableItemBackground"
     android:orientation="horizontal"
     android:gravity="center">
@@ -12,7 +12,6 @@
         android:id="@+id/btnChamberProfile"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_marginHorizontal="8dp"
         android:background="@drawable/ic_couplechat"
         android:backgroundTint="#7A7AFF"
         android:contentDescription="@string/chamberly"/>
@@ -26,8 +25,7 @@
             android:id="@+id/textTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textStyle="bold"
+            android:textSize="18sp"
             android:textColor="@android:color/black"
             app:layout_constraintStart_toEndOf="@id/btnChamberProfile"
             app:layout_constraintTop_toTopOf="@id/btnChamberProfile"
@@ -44,4 +42,10 @@
             android:maxLines="1"
             android:ellipsize="end" />
     </LinearLayout>
+    <ImageView
+        android:id="@+id/notificationBadge"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:src="@drawable/notification_badge"
+        android:visibility="gone"/>
 </LinearLayout>

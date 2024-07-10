@@ -67,6 +67,7 @@ class MainFragment : Fragment() {
         }
 
         usernameTextView.text = userViewModel.userState.value?.displayName ?: "Anonymous"
+        userViewModel.getUserChambers()
 
 //        userViewModel.userState.observe(viewLifecycleOwner) {
 //            if(it.entitlement == Entitlement.CHAMBERLY_PLUS) {
@@ -254,9 +255,12 @@ class MainFragment : Fragment() {
         dialog.setContentView(R.layout.dialog_delete_account_confirmation)
         val confirmButton = dialog.findViewById<TextView>(R.id.confirmButton)
         val dismissButton = dialog.findViewById<TextView>(R.id.dismissButton)
+        val passwordField = dialog.findViewById<EditText>(R.id.passwordField)
 
         confirmButton.setOnClickListener {
-            userViewModel.deleteAccount()
+            userViewModel.deleteAccount(
+                password = passwordField.text.toString()
+            )
             dialog.dismiss()
         }
 

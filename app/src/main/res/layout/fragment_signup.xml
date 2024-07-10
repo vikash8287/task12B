@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".presentation.fragments.SignupFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/temporary_rounded_background"
+        android:backgroundTint="#FFFFFE"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Chamberly is all about you!"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/lightTextColor"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="12dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Share a bit about yourself to get started"
+            android:textSize="20sp"
+            android:textColor="#9B9BA4"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="24dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Create a display name"
+            android:textSize="18sp"
+            android:paddingHorizontal="4dp"
+            android:textColor="@color/lightTextColor"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="4dp" />
+        <EditText
+            android:id="@+id/displayNameField"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/rounded_edittext"
+            android:hint="Enter name, the choice is yours!"
+            android:layout_marginHorizontal="4dp"
+            android:paddingHorizontal="10dp"
+            android:inputType="textEmailAddress"
+            android:autofillHints=""
+            android:imeOptions="actionDone"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="16dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Email"
+            android:textSize="18sp"
+            android:paddingHorizontal="4dp"
+            android:textColor="@color/lightTextColor"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="4dp" />
+        <EditText
+            android:id="@+id/emailField"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/rounded_edittext"
+            android:hint="Email"
+            android:layout_marginHorizontal="4dp"
+            android:paddingHorizontal="10dp"
+            android:inputType="textEmailAddress"
+            android:autofillHints=""
+            android:imeOptions="actionDone"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="16dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Password"
+            android:textSize="18sp"
+            android:paddingHorizontal="4dp"
+            android:textColor="@color/lightTextColor"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="4dp" />
+        <EditText
+            android:id="@+id/passwordField"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/rounded_edittext"
+            android:hint="Password"
+            android:layout_marginHorizontal="4dp"
+            android:paddingHorizontal="10dp"
+            android:inputType="textPassword"
+            android:autofillHints=""
+            android:imeOptions="actionDone"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="16dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Password"
+            android:textSize="18sp"
+            android:paddingHorizontal="4dp"
+            android:textColor="@color/lightTextColor"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="4dp" />
+        <EditText
+            android:id="@+id/confirmPasswordField"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/rounded_edittext"
+            android:hint="Confirm password"
+            android:layout_marginHorizontal="4dp"
+            android:paddingHorizontal="10dp"
+            android:inputType="textPassword"
+            android:autofillHints=""
+            android:imeOptions="actionDone"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="16dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="What best describes you?"
+            android:textSize="18sp"
+            android:paddingHorizontal="4dp"
+            android:textColor="@color/lightTextColor"/>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="4dp" />
+        <RadioGroup
+            android:id="@+id/roleSelectorRadioGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <RadioButton
+                android:id="@+id/roleVentor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/radio_button_large"
+                android:text="I'm here to vent, let it all out"
+                android:padding="12dp"
+                android:textColor="#6c6d89"
+                android:button="@null"/>
+            <androidx.legacy.widget.Space
+                android:layout_width="0dp"
+                android:layout_height="8dp" />
+            <RadioButton
+                android:id="@+id/roleListener"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/radio_button_large"
+                android:text="I'm here to listen: Ready to lend an ear"
+                android:padding="12dp"
+                android:textColor="#6c6d89"
+                android:button="@null"/>
+        </RadioGroup>
+        <androidx.legacy.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="4dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="bottom"
+            android:orientation="vertical">
+            <Button
+                android:id="@+id/proceed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Next"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:background="@drawable/rounded_button"/>
+            <Button
+                android:id="@+id/goToLogin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Log in"
+                android:textAllCaps="false"
+                android:textColor="@color/primary"
+                android:background="@null"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

@@ -18,19 +18,18 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.chamberly.chamberly.R
 import com.chamberly.chamberly.models.Topic
 import com.chamberly.chamberly.presentation.adapters.PendingTopicsListAdapter
 import com.chamberly.chamberly.presentation.adapters.TopicAdapter
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
 import com.chamberly.chamberly.utils.Role
-import com.chamberly.chamberly.R
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.yalantis.library.Koloda
 import com.yalantis.library.KolodaListener
-
 
 class TopicSearchFragment : Fragment(), KolodaListener {
 
@@ -47,6 +46,9 @@ class TopicSearchFragment : Fragment(), KolodaListener {
     private lateinit var kolodaView: Koloda
     private lateinit var kolodaAdapter: TopicAdapter
     private var pendingTopicsRecyclerView: RecyclerView? = null
+    private lateinit var buttonsView: LinearLayout
+    private lateinit var emptyStateView: RelativeLayout
+    private var shouldSearchAgain: Boolean = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -61,21 +63,29 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         val dismissButton = view.findViewById<ImageButton>(R.id.ic_skip)
         val joinButton = view.findViewById<ImageButton>(R.id.ic_chat)
         val backButton = view.findViewById<ImageButton>(R.id.backButton)
-        val buttonsView = view.findViewById<LinearLayout>(R.id.buttonsLayout)
-        val emptyStateView = view.findViewById<RelativeLayout>(R.id.emptyStateView)
+        buttonsView = view.findViewById(R.id.buttonsLayout)
+        emptyStateView = view.findViewById(R.id.emptyStateView)
         pendingTopicsRecyclerView = view.findViewById(R.id.pendingTopicsRecyclerView)
         kolodaView.kolodaListener = this
 
         kolodaAdapter = TopicAdapter()
         kolodaView.adapter = kolodaAdapter
 
-        fetchedTopics.observe(viewLifecycleOwner) {
-            kolodaAdapter.updateTopics(it)
+//        fetchedTopics.observe(viewLifecycleOwner) {
+//            if(it.size != 0) {
+//                Log.d(
+//                    "fetched topics",
+//                    it.size.toString() + ":" + it[it.size - 1].TopicTitle + ":" + it[0].TopicTitle
+//                )
+//            }
+//            kolodaAdapter.clear()
+//            kolodaAdapter.updateTopics(it, callback = { kolodaView.reloadAdapterData() })
+//
+//            kolodaView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
+//            buttonsView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
+//            emptyStateView.visibility = if(kolodaAdapter.count == 0) View.VISIBLE else View.GONE
+//        }
 
-            kolodaView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
-            buttonsView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
-            emptyStateView.visibility = if(kolodaAdapter.count == 0) View.VISIBLE else View.GONE
-        }
         val layoutManager = LinearLayoutManager(requireContext())
 
         if (pendingTopicsRecyclerView != null) {
@@ -136,20 +146,25 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         } else {
             userViewModel.waitOnTopic(topic.TopicID, topic.TopicTitle)
         }
-
         super.onCardSwipedRight(position)
     }
 
     override fun onCardSwipedLeft(position: Int) {
-        fetchedTopics.value!!.remove(kolodaAdapter.getItem(position+1))
+//        fetchedTopics.value!!.remove(kolodaAdapter.getItem(position+1))
         userViewModel.dismissTopic()
         super.onCardSwipedLeft(position)
     }
 
     override fun onEmptyDeck() {
+        Log.d("Empty Deck", "Deck is empty $areTopicsAvailable $isFirstTimeEmpty")
         if(isFirstTimeEmpty) { isFirstTimeEmpty = false }
-        else if(areTopicsAvailable) { getTopics() }
+        else if(areTopicsAvailable && shouldSearchAgain) { fetchTopics() }
         super.onEmptyDeck()
+    }
+
+    override fun onClickRight(position: Int) {
+        super.onClickRight(position)
+        onCardSwipedRight(position)
     }
 
     //TODO: Move this function to the viewModel later
@@ -163,7 +178,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
                         roleField,
                         Query.Direction.DESCENDING
                     )
-                    .startAfter(lastDocumentSnapshot)
+                    .startAt(lastDocumentSnapshot)
                     .limit(8)
             } else {
                 firestore
@@ -176,6 +191,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
             }
         query.get()
             .addOnSuccessListener { querySnapshot ->
+                Log.d("GET TOPICS", querySnapshot.documents.toString())
                 if(querySnapshot.isEmpty) {
                     fetchedTopics.postValue(mutableListOf())
                     areTopicsAvailable = false
@@ -190,7 +206,7 @@ class TopicSearchFragment : Fragment(), KolodaListener {
                     }
                 }
                 fetchedTopics.postValue(updatedTopics)
-                lastDocumentSnapshot =  querySnapshot.documents.lastOrNull()?.get("timestamp")
+                lastDocumentSnapshot =  querySnapshot.documents.lastOrNull()
             }
             .addOnFailureListener { exception ->
                 Log.e("QUERY_ERROR", exception.toString())
@@ -235,5 +251,46 @@ class TopicSearchFragment : Fragment(), KolodaListener {
             dialog.dismiss()
             findNavController().popBackStack()
         }
+    }
+
+    private fun fetchTopics() {
+        val query: Query =
+            if (lastDocumentSnapshot == null) {
+                firestore
+                    .collection("TopicIds")
+                    .orderBy(roleField, Query.Direction.DESCENDING)
+                    .limit(80)
+            } else {
+                firestore
+                    .collection("TopicIds")
+                    .orderBy(roleField, Query.Direction.DESCENDING)
+                    .startAfter(lastDocumentSnapshot)
+                    .limit(80)
+            }
+
+        fetchTopicsRecursively(query)
+    }
+
+    private fun fetchTopicsRecursively(query: Query) {
+        val pendingTopics = userViewModel.pendingTopics.value!!
+        query
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                for (documentSnapshot in querySnapshot) {
+                    val topic =
+                        documentSnapshot
+                            .toObject(Topic::class.java)
+                            .copy(TopicID = documentSnapshot.id)
+                    if(topic.TopicID !in pendingTopics) {
+                        kolodaAdapter.setData(topic)
+                    }
+                }
+                shouldSearchAgain = querySnapshot.documents.isNotEmpty()
+                lastDocumentSnapshot = querySnapshot.documents.lastOrNull()
+
+                kolodaView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
+                buttonsView.visibility = if(kolodaAdapter.count == 0) View.GONE else View.VISIBLE
+                emptyStateView.visibility = if(kolodaAdapter.count == 0) View.VISIBLE else View.GONE
+            }
     }
 }

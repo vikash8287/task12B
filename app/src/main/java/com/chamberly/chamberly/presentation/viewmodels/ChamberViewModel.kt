@@ -2,6 +2,8 @@ package com.chamberly.chamberly.presentation.viewmodels
 
 import android.app.Application
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
@@ -14,6 +16,7 @@ import com.chamberly.chamberly.models.toMap
 import com.chamberly.chamberly.presentation.states.ChamberState
 import com.chamberly.chamberly.utils.logEvent
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -24,14 +27,16 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import org.json.JSONObject
+import java.util.Calendar
+import java.util.Date
 
 class ChamberViewModel(application: Application): AndroidViewModel(application = application) {
 
     private val _chamberState = MutableLiveData<ChamberState>()
     val chamberState: LiveData<ChamberState> = _chamberState
 
-    private val _messages = MutableLiveData<MutableList<Message>>()
-    val messages: LiveData<List<Message>> = _messages as LiveData<List<Message>>
+    private val _messages = MutableLiveData<MutableMap<String, MutableList<Message>>>()
+    val messages: LiveData<MutableMap<String, MutableList<Message>>> = _messages
 
     private val realtimeDatabase = Firebase.database
     private val firestore = Firebase.firestore
@@ -39,55 +44,62 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     private val sharedPreferences =
         application.getSharedPreferences("cache", Context.MODE_PRIVATE)
     val memberNames: MutableMap<String, String> = mutableMapOf()
+    var otherUserNotificationKey: String = ""
+    private var messageUpdateListener: ChildEventListener? = null
+    private var messagesQuery: com.google.firebase.database.Query? = null
 
     fun setChamber(chamberID: String, UID: String) {
-        Log.d("CHAMBER1", chamberID)
-        firestore.collection("GroupChatIds")
-            .document(chamberID)
+        if(chamberID.isBlank()) {
+            return
+        }
+        realtimeDatabase
+            .reference
+            .child(chamberID)
             .get()
             .addOnSuccessListener { chamberSnapshot ->
-                Log.d("CHAMBER1", chamberSnapshot.data.toString())
-                if(chamberSnapshot.data != null) {
-                    _chamberState.value = getChamberFromSnapshot(chamberSnapshot.data!!)
-                    Log.d("CHAMBER", _chamberState.value.toString())
-                    for (member in chamberState.value!!.members) {
-                        firestore
-                            .collection("Accounts")
-                            .document(member)
-                            .get()
-                            .addOnSuccessListener { memberSnapshot ->
-                                memberNames[member] =
-                                    memberSnapshot.data?.get("Display_Name").toString()
-                            }
-                    }
-                    removeNotificationKey(UID)
-                    getMessages()
-                }
-            }
-            .addOnFailureListener {
-                Log.d("CHAMBEREXCEPTION", it.toString())
-            }
-    }
+                val data = chamberSnapshot.value as Map<String, Any>
+                val users = data["users"] as Map<String, Any>
+                val members = users["members"] as Map<String, Any>
+                _chamberState.value = ChamberState(
+                    chamberID = chamberID,
+                    chamberTitle = data["title"].toString(),
+                    members = members.keys.toList()
+                )
+                for (member in members) {
+                    memberNames[member.key] =
+                        try { (member.value as Map<String, Any>)["name"].toString() }
+                        catch (_: Exception) { "User" }
+                    if(member.key != UID) {
+                        realtimeDatabase
+                            .reference
+                            .child("$chamberID/users/members/${member.key}/notificationKey")
+                            .addValueEventListener(object: ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    val notificationKey = snapshot.value as? String
+                                    otherUserNotificationKey = notificationKey ?: ""
+                                }
 
-    private fun getChamberFromSnapshot(chamberData: Map<String, Any>): ChamberState {
-        return ChamberState(
-            chamberID = chamberData["groupChatId"].toString(),
-            chamberTitle = chamberData["groupTitle"].toString(),
-            members = chamberData["members"] as List<String>
-        )
+                                override fun onCancelled(error: DatabaseError) { }
+
+                            })
+                    }
+                }
+                removeNotificationKey(UID)
+                getMessages()
+            }
     }
 
     private fun getMessages() {
-        val messagesQuery =
+        messagesQuery =
             realtimeDatabase
                 .getReference(_chamberState.value!!.chamberID)
                 .child("messages")
                 .orderByKey()
                 .limitToLast(40)
 
-        messagesQuery.addListenerForSingleValueEvent(object: ValueEventListener {
+        messagesQuery!!.addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                _messages.value = mutableListOf()
+                _messages.value = mutableMapOf()
                 for(childSnapshot in snapshot.children) {
                     if (childSnapshot.value is Map<*, *>) {
                         try {
@@ -101,78 +113,79 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                                 addMessage(message)
                             }
                         } catch (e: Exception) {
-                            Log.d("EXCEPTION", e.toString())
                         }
                     }
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // TODO: Network error, will handle later
+                //Network error, will handle later
             }
         })
 
-        messagesQuery
-            .addChildEventListener(object: ChildEventListener {
-                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                    try {
-                        val message = snapshot.getValue(Message::class.java)
-                        if (message != null) {
-                            if (
-                                message.message_type == "custom" &&
-                                message.message_content == "gameCard"
-                            ) {
-                                message.message_content = message.game_content
-                            } else if (message.message_type == "photo") {
-                                message.message_content = "Images are not available to display on Android."
-                            }
-                            if(!(messages.value!!.contains(message))) {
-                                addMessage(message = message)
-                            }
+        messageUpdateListener = object: ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                try {
+                    val message = snapshot.getValue(Message::class.java)
+                    if (message != null) {
+                        if (
+                            message.message_type == "custom" &&
+                            message.message_content == "gameCard"
+                        ) {
+                            message.message_content = message.game_content
+                        } else if (message.message_type == "photo") {
+                            message.message_content = "Images are not available to display on Android."
                         }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-
-                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                    try {
-                        val message = snapshot.getValue(Message::class.java)
-                        if (message != null) {
-                            if (
-                                message.message_type == "custom" &&
-                                message.message_content == "gameCard"
-                            ) {
-                                message.message_content = message.game_content
-                            } else if (message.message_type == "photo") {
-                                message.message_content = "Images are not available to display on Android"
-                            }
-                            changeMessage(message)
+                        if((messages.value!![chamberState.value!!.chamberID]?.contains(message)) != true) {
+                            addMessage(message = message)
                         }
-                    } catch (e: Exception) {
-                        Log.e("Message update error", e.message.toString())
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
+            }
 
-                override fun onChildRemoved(snapshot: DataSnapshot) {
-                    try {
-                        val message = snapshot.getValue(Message::class.java)
-                        if(message != null) {
-                            removeMessage(message)
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                try {
+                    val message = snapshot.getValue(Message::class.java)
+                    if (message != null) {
+                        if (
+                            message.message_type == "custom" &&
+                            message.message_content == "gameCard"
+                        ) {
+                            message.message_content = message.game_content
+                        } else if (message.message_type == "photo") {
+                            message.message_content = "Images are not available to display on Android"
                         }
-                    } catch (e: Exception) {
-                        Log.e("Message deletion error", e.message.toString())
+                        changeMessage(message)
                     }
+                } catch (e: Exception) {
+                    Log.e("Message update error", e.message.toString())
                 }
+            }
 
-                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-                    // Not needed for now
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                try {
+                    val message = snapshot.getValue(Message::class.java)
+                    if(message != null) {
+                        removeMessage(message)
+                    }
+                } catch (e: Exception) {
+                    Log.e("Message deletion error", e.message.toString())
                 }
+            }
 
-                override fun onCancelled(error: DatabaseError) {
-                    // Not needed for now
-                }
-            })
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                // Not needed for now
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Not needed for now
+            }
+        }
+
+        messagesQuery!!
+            .addChildEventListener(messageUpdateListener!!)
     }
 
     fun sendMessage(
@@ -191,7 +204,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             .setValue(message.toMap())
             .addOnSuccessListener {
                 successCallback()
-                sendNotificationToInactiveMembers()
+                updateChamberDataFields()
             }
 
         logEventToAnalytics(
@@ -204,29 +217,35 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
 
     private fun addMessage(message: Message) {
         val updatedMessages = _messages.value!!
-        updatedMessages.add(message)
-        _messages.postValue(updatedMessages)
+        if(updatedMessages[chamberState.value!!.chamberID] == null) {
+            updatedMessages[chamberState.value!!.chamberID] = mutableListOf()
+        }
+        updatedMessages[chamberState.value!!.chamberID]?.add(message)
+        Handler(Looper.getMainLooper()).postDelayed({
+            _messages.postValue(updatedMessages)
+        }, 400)
+//        _messages.postValue(updatedMessages)
     }
 
     private fun changeMessage(message: Message) {
         val updatedMessages = _messages.value!!
-        val index = updatedMessages.indexOfFirst {
+        val index = updatedMessages[chamberState.value!!.chamberID]!!.indexOfFirst {
             it.message_id == message.message_id
         }
 
         if (index != -1) {
-            updatedMessages[index] = message
+            updatedMessages[chamberState.value!!.chamberID]!![index] = message
             _messages.postValue(updatedMessages)
         }
     }
 
     private fun removeMessage(message: Message) {
         val updatedMessages = _messages.value!!
-        val index = updatedMessages.indexOfFirst {
+        val index = updatedMessages[chamberState.value!!.chamberID]!!.indexOfFirst {
             it.message_id == message.message_id
         }
         if(index != -1) {
-            updatedMessages.removeAt(index)
+            updatedMessages[chamberState.value!!.chamberID]!!.removeAt(index)
             _messages.postValue(updatedMessages)
         }
     }
@@ -312,7 +331,41 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                         Toast.LENGTH_SHORT
                     ).show()
                 }
+                if (report["reason"] == "Sexual Behaviour") {
+                    //Restrict the other user
+                    //This reason won't be encountered in a self report so report["UID"] is to be banned
+                    firestore
+                        .collection("Accounts")
+                        .document(report["by"].toString())
+                        .update("timestamp", FieldValue.serverTimestamp())
+                        .addOnSuccessListener {
+                            // This delay is to ensure that the timestamp is updated properly
+                            // in firestore, removing it may cause timestamp to be null
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                firestore
+                                    .collection("Accounts")
+                                    .document(report["by"].toString())
+                                    .get()
+                                    .addOnSuccessListener { snapshot ->
+                                        val timestamp =
+                                            try { snapshot.getDate("timestamp") as Date }
+                                            catch (_: Exception) { null }
+                                        if(timestamp != null) {
+                                            val calendar = Calendar.getInstance()
+                                            calendar.time = timestamp
+                                            calendar.add(Calendar.YEAR, 100)
+                                            val restrictedUntil = calendar.time
+                                            firestore
+                                                .collection("Restrictions")
+                                                .document(report["against"].toString())
+                                                .update("restrictedUntil", restrictedUntil)
+                                        }
+                                    }
+                            }, 500)
+                        }
+                }
             }
+            .addOnFailureListener { }
     }
 
     fun sendExitMessage(message: Message, callback: () -> Unit) {
@@ -329,18 +382,24 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     }
 
     fun exitChamber(UID: String) {
-        firestore
-            .collection("GroupChatIds")
-            .document(chamberState.value!!.chamberID)
-            .update("members", FieldValue.arrayRemove(UID))
-            .addOnSuccessListener {
-                realtimeDatabase
-                    .reference
-                    .child(chamberState.value!!.chamberID)
-                    .child("users")
-                    .child("members")
-                    .child(UID)
-                    .removeValue()
+        val chamberID = chamberState.value!!.chamberID
+        val myChambersRef =
+            firestore
+                .collection("MyChambers")
+                .document(UID)
+        realtimeDatabase
+            .reference
+            .child("${chamberID}/users/members/$UID")
+            .removeValue()
+        myChambersRef
+            .get()
+            .addOnSuccessListener { chamberSnapshot ->
+                val data = chamberSnapshot.data
+                if(data != null) {
+                    val myChambersN = (data["MyChambersN"] as Map<String, Any>).toMutableMap()
+                    myChambersN.remove(chamberID)
+                    myChambersRef.update("MyChambersN", myChambersN)
+                }
             }
 
         logEventToAnalytics(eventName = "ended_chat")
@@ -348,63 +407,103 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
 
     fun clear(uid: String, notificationKey: String) {
         addNotificationKey(uid, notificationKey)
-        Log.d("HERE", "VIEWMODEL CLEARED")
         _messages.value?.clear()
         _chamberState.value = ChamberState(
             chamberID = "",
             chamberTitle = ""
         )
+        messageUpdateListener?.let {
+            messagesQuery?.removeEventListener(it)
+        }
     }
 
-    private fun sendNotificationToInactiveMembers() {
-        val notificationKey =
-            sharedPreferences
-                .getString("notificationKey", "") ?: ""
+    private fun sendNotification(token: String) {
         val notificationPayload = JSONObject()
         val dataPayload = JSONObject()
-        realtimeDatabase
-            .reference
-            .child(_chamberState.value!!.chamberID)
-            .child("users")
-            .child("members")
-            .get()
-            .addOnSuccessListener { membersSnapshot ->
-                for(snapshot in membersSnapshot.children) {
-                    val token = snapshot.child("notificationKey").value as String?
-                    if(!token.isNullOrBlank() && token != notificationKey) {
-                        try {
-                            notificationPayload.put(
-                                "title",
-                                sharedPreferences.getString("displayName", "")
-                            )
-                            notificationPayload.put(
-                                "body",
-                                "sent you a message"
-                            )
-                            dataPayload.put(
-                                "groupChatId",
-                                _chamberState.value!!.chamberID
-                            )
-                            OkHttpHandler(
-                                getApplication() as Context,
-                                token,
-                                notification = notificationPayload,
-                                data = dataPayload
-                            ).executeAsync()
-                        } catch (e: Exception) {
-                            Log.e("Error sending notifications", e.message.toString())
-                        }
-                    }
-                }
+        try {
+            notificationPayload.put(
+                "title",
+                sharedPreferences.getString("displayName", "")
+            )
+            notificationPayload.put(
+                "body",
+                "sent you a message"
+            )
+            dataPayload.put(
+                "groupChatId",
+                _chamberState.value!!.chamberID
+            )
+            OkHttpHandler(
+                getApplication() as Context,
+                token,
+                notification = notificationPayload,
+                data = dataPayload
+            ).executeAsync()
+        } catch (e: Exception) {
+            Log.e("Error sending notifications", e.message.toString())
+        }
+    }
+
+    private fun updateChamberDataFields() {
+        val members = chamberState.value!!.members
+        val selfUID = Firebase.auth.currentUser!!.uid
+
+        val otherUID =
+            if(members.size > 1) {
+                if (members[0] == selfUID) members[1]
+                else members[0]
+            } else {
+                ""
             }
+        val selfChambersRef =
+            firestore
+                .collection("MyChambers")
+                .document(selfUID)
+        selfChambersRef
+            .get()
+            .addOnSuccessListener {
+                val data = it.data!!
+                val myChambers =
+                    (data["MyChambersN"] as Map<String, Map<String, Any>>).toMutableMap()
+                myChambers[chamberState.value!!.chamberID] = mapOf(
+                    "groupChatId" to chamberState.value!!.chamberID,
+                    "messageRead" to true,
+                    "timestamp" to FieldValue.serverTimestamp(),
+                )
+            }
+        if (otherUID.isNotBlank()) {
+            val otherChambersRef = firestore
+                .collection("MyChambers")
+                .document(otherUID)
+            otherChambersRef
+                .get()
+                .addOnSuccessListener {
+                    val data = it.data!!
+                    val myChambers =
+                        (data["MyChambersN"] as Map<String, Map<String, Any>>).toMutableMap()
+                    myChambers[chamberState.value!!.chamberID] = mapOf(
+                        "groupChatId" to chamberState.value!!.chamberID,
+                        "messageRead" to otherUserNotificationKey.isBlank(),
+                        "timestamp" to FieldValue.serverTimestamp(),
+                    )
+                    otherChambersRef.update(
+                        "MyChambersN", myChambers
+                    )
+                }
+            if (otherUserNotificationKey.isNotBlank()) {
+                sendNotification(otherUserNotificationKey)
+            }
+        }
     }
 
     fun addNotificationKey(
         UID: String,
         notificationKey: String
     ) {
+        if(notificationKey.isBlank()) {
+            return
+        }
         if(chamberState.value != null && chamberState.value!!.chamberID.isNotBlank()) {
-            Log.d("CHAMBER ID", chamberState.value!!.toString())
             realtimeDatabase
                 .reference
                 .child(chamberState.value!!.chamberID)
@@ -439,4 +538,6 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             params = params
         )
     }
+
+
 }
