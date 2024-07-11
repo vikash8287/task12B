@@ -59,6 +59,19 @@
                     android:textAllCaps="false"
                     android:textSize="18sp"
                     android:background="@drawable/button_outlined" />
+                <androidx.legacy.widget.Space
+                    android:layout_width="0dp"
+                    android:layout_height="16dp" />
+                <Button
+                    android:id="@+id/getChamberlyPlusButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:textColor="@color/black"
+                    android:text="@string/get_chamberly_plus"
+                    android:textAllCaps="false"
+                    android:textSize="18sp"
+                    android:background="@drawable/button_filled_golden" />
             </LinearLayout>
         </LinearLayout>
         <TextView

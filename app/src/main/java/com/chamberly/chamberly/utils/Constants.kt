@@ -10,6 +10,6 @@ const val channelName = "Chamberly Notification Channel"
 const val FCM_SERVER_URL = "https://fcm.googleapis.com/v1/projects/chamberly-v1ready/messages:send"
 const val TOKEN_URL = "https://oauth2.googleapis.com/token"
 
-//const val REVENUECAT_API_KEY = "goog_YoFFprybAbVsdaTGKkoYExNDgod"
+const val REVENUECAT_API_KEY = "goog_YoFFprybAbVsdaTGKkoYExNDgod"
 
 val EMAIL_REGEX = Regex("^[a-zA-Z0-9_.±]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+")

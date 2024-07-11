@@ -23,7 +23,6 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
@@ -185,13 +184,6 @@ class MainFragment : Fragment() {
         val confirmRoleChangeButton = profileOptionsPopUp.findViewById<TextView>(R.id.confirm_role_change_button)
         val ventorButton = profileOptionsPopUp.findViewById<RadioButton>(R.id.role_ventor)
         val listenerButton = profileOptionsPopUp.findViewById<RadioButton>(R.id.role_listener)
-        val subscribeButton = profileOptionsPopUp.findViewById<TextView>(R.id.subscribe_button)
-
-        userViewModel.appState.observe(viewLifecycleOwner) {
-            subscribeButton.visibility =
-                if (it.areExperimentalFeaturesEnabled) { View.VISIBLE }
-                else { View.GONE }
-        }
 
         var isListener = userViewModel.userState.value?.role == Role.LISTENER
 
@@ -231,23 +223,6 @@ class MainFragment : Fragment() {
 
         submitFeedbackButton.setOnClickListener {
             submitFeedback(profileOptionsPopUp)
-        }
-
-        subscribeButton.setOnClickListener {
-            profileOptionsPopUp.dismiss()
-            findNavController()
-                .navigate(
-                    R.id.subscriptionFragment,
-                    null,
-                    navOptions {
-                        anim {
-                            enter = R.anim.slide_in
-                            exit = R.anim.slide_out
-                            popEnter = R.anim.slide_in
-                            popExit = R.anim.slide_out
-                        }
-                    }
-                )
         }
 
         //TODO: Later, rectify positioning of the popup

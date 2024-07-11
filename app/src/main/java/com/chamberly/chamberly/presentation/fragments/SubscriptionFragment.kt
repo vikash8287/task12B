@@ -24,8 +24,8 @@ class SubscriptionFragment : Fragment() {
 
     private val chamberlyPlusBenefits = mutableListOf(
         Pair(R.drawable.ic_chamberly_memeber, "Unlimited messages, for everyone, all chambers"),
-        Pair(R.drawable.ic_journal, "Unlock smart journal"),
-        Pair(R.drawable.chat_add_on, "Create/Join more chambers"),
+        Pair(R.drawable.ic_journal, "Higher Quality Matches"),
+        Pair(R.drawable.chat_add_on, "Faster Matches"),
         Pair(R.drawable.ic_heart, "and so much more")
     )
 
@@ -70,7 +70,7 @@ class SubscriptionFragment : Fragment() {
 
         layout.orientation = LinearLayout.HORIZONTAL
         layout.gravity = Gravity.CENTER_VERTICAL or Gravity.START
-        layout.setPadding(20, 5, 20, 0)
+        layout.setPadding(20, 8, 20, 8)
         iconButton.setImageResource(icon)
         iconButton.adjustViewBounds = true
         iconButton.maxWidth = 100

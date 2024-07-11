@@ -25,6 +25,7 @@ import com.chamberly.chamberly.presentation.states.AppState
 import com.chamberly.chamberly.presentation.states.UserState
 import com.chamberly.chamberly.utils.DatabaseManager
 import com.chamberly.chamberly.utils.Entitlement
+import com.chamberly.chamberly.utils.REVENUECAT_API_KEY
 import com.chamberly.chamberly.utils.Role
 import com.chamberly.chamberly.utils.TaskScheduler
 import com.chamberly.chamberly.utils.logEvent
@@ -195,6 +196,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             )
                             databaseManager = DatabaseManager(auth.currentUser!!.uid, displayName)
                             setupUXListeners()
+                            setPaywallStatus()
                             setNotificationToken()
                         }
                         .addOnFailureListener { error ->
@@ -356,6 +358,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             getUserRestrictions(uid = uid)
                             getUserRating(uid = uid)
                             attachTopicRequestListeners()
+                            setPaywallStatus()
                             onComplete()
                         }
                 }
@@ -426,36 +429,36 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         messaging.isAutoInitEnabled = true
     }
 
-//    private fun setPaywallStatus() {
-//        Purchases.configure(
-//            PurchasesConfiguration.Builder(
-//                getApplication(),
-//                REVENUECAT_API_KEY
-//            )
-//                .appUserID(userState.value!!.UID)
-//                .build()
-//        )
-//        Purchases.sharedInstance.getOfferings(object: ReceiveOfferingsCallback {
-//            override fun onError(error: PurchasesError) {
-//                showToast("An error occurred while checking subscription status")
-//            }
-//            override fun onReceived(offerings: Offerings) {
-//                currentOffering = offerings.current
-//            }
-//        })
-//        Purchases.sharedInstance.getCustomerInfo(object: ReceiveCustomerInfoCallback {
-//            override fun onError(error: PurchasesError) {
-//                showToast("An error occurred while checking subscription status")
-//            }
-//            override fun onReceived(customerInfo: CustomerInfo) {
-//                if(customerInfo.entitlements["ChamberlyPlus"]?.isActive == true) {
-//                    _userState.postValue(
-//                        _userState.value!!.copy(entitlement = Entitlement.CHAMBERLY_PLUS)
-//                    )
-//                }
-//            }
-//        })
-//    }
+    private fun setPaywallStatus() {
+        Purchases.configure(
+            PurchasesConfiguration.Builder(
+                getApplication(),
+                REVENUECAT_API_KEY
+            )
+                .appUserID(userState.value!!.UID)
+                .build()
+        )
+        Purchases.sharedInstance.getOfferings(object: ReceiveOfferingsCallback {
+            override fun onError(error: PurchasesError) {
+                showToast("An error occurred while checking subscription status")
+            }
+            override fun onReceived(offerings: Offerings) {
+                currentOffering = offerings.current
+            }
+        })
+        Purchases.sharedInstance.getCustomerInfo(object: ReceiveCustomerInfoCallback {
+            override fun onError(error: PurchasesError) {
+                showToast("An error occurred while checking subscription status")
+            }
+            override fun onReceived(customerInfo: CustomerInfo) {
+                if(customerInfo.entitlements["ChamberlyPlus"]?.isActive == true) {
+                    _userState.postValue(
+                        _userState.value!!.copy(entitlement = Entitlement.CHAMBERLY_PLUS)
+                    )
+                }
+            }
+        })
+    }
 
     fun getUserChambers(
         callback: (List<ChamberPreview>) -> Unit = {}

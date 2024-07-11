@@ -3,10 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".presentation.fragments.SubscriptionFragment">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -15,67 +13,38 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:textSize="32sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:textSize="32sp"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="Vent and share how you feel"
             android:textColor="#2E2E5B"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/chamberlyPlusText" />
+            android:textSize="16sp"/>
         <ImageView
             android:id="@+id/chamberlyBackground"
             android:layout_width="match_parent"
             android:layout_height="325dp"
             android:background="@drawable/people_background"
-            android:src="@drawable/people"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
+            android:src="@drawable/people"/>
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:background="@drawable/background_bottom_sheet"
             android:maxWidth="300dp"
             android:orientation="vertical"
-            android:paddingTop="16dp"
-            android:translationY="-8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/chamberlyBackground">
-
+            android:paddingTop="16dp">
             <LinearLayout
                 android:id="@+id/chamberlyBenefits"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
-
             <LinearLayout
                 android:id="@+id/benefitConditions"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:orientation="vertical" />
-
-            <TextView
-                android:id="@+id/text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="5dp"
-                android:text="Only 1 subscriber in a chamber is enough"
-                android:textAlignment="textStart"
-                android:textColor="#B0B0CA"
-                android:textSize="16sp" />
-
             <LinearLayout
                 android:id="@+id/subscriptionBtn"
                 android:layout_width="match_parent"
@@ -86,7 +55,6 @@
                 android:background="@drawable/rounded_button"
                 android:orientation="vertical"
                 android:paddingVertical="8dp">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -94,16 +62,14 @@
                     android:text="Get 3 days trial"
                     android:textColor="@color/white"
                     android:textSize="18sp" />
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="then 19kr/month"
+                    android:text="@string/subscription_price"
                     android:textColor="@color/white"
                     android:textSize="14sp" />
             </LinearLayout>
-
             <!--            <TextView-->
             <!--                android:id="@+id/restoreBtn"-->
             <!--                android:layout_width="wrap_content"-->
@@ -114,6 +80,6 @@
             <!--                android:textColor="#B0B0CA"-->
             <!--                android:textSize="20sp" />-->
         </LinearLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
 </FrameLayout>

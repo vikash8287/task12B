@@ -107,7 +107,5 @@
                 android:scaleType="centerInside"
                 android:src="@drawable/mychambers" />
         </LinearLayout>
-
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>
