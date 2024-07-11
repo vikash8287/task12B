@@ -1,13 +1,17 @@
 package com.chamberly.chamberly.presentation.fragments
 
+import android.app.AlarmManager
 import android.app.Dialog
+import android.app.PendingIntent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -16,26 +20,39 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat.getColor
 import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chamberly.chamberly.R
+import com.chamberly.chamberly.presentation.adapters.MessageAdapter
+import com.chamberly.chamberly.models.ActiveChatInfoModel
 import com.chamberly.chamberly.models.Message
 import com.chamberly.chamberly.models.toMap
-import com.chamberly.chamberly.presentation.adapters.MessageAdapter
 import com.chamberly.chamberly.presentation.viewmodels.ChamberViewModel
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
+import com.chamberly.chamberly.notification.ReminderNotification
+
 import com.google.firebase.firestore.FieldValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ChatFragment : Fragment() {
 
@@ -47,8 +64,9 @@ class ChatFragment : Fragment() {
     private lateinit var emojiPickerView: EmojiPickerView
     private lateinit var cancelReplyButton: ImageButton
     private lateinit var replyContentView: TextView
+    private lateinit var addImageButton:Button
+    private   val pickMedia= registerActivityResultLauncher()
     private lateinit var messagesCountView: TextView
-
     private val replyingTo = MutableLiveData("")
     private val reactionEmojis: List<String> = listOf("👍", "💗", "😂", "😯", "😥", "😔", "+")
     private val chamberLeavingOptions: Map<String, String> = mapOf(
@@ -80,12 +98,14 @@ class ChatFragment : Fragment() {
             userViewModel.chamberID.value!!,
             userViewModel.userState.value!!.UID
         )
+        cancelNotificationAlarm(requireContext())
         chamberViewModel.setChamber(
             userViewModel.chamberID.value!!,
             userViewModel.userState.value!!.UID
         )
     }
 
+//    override fun on
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -99,6 +119,7 @@ class ChatFragment : Fragment() {
         val sendButton = view.findViewById<Button>(R.id.buttonSend)
         val messageBox = view.findViewById<EditText>(R.id.editTextMessage)
         val replyView = view.findViewById<LinearLayout>(R.id.replyingToView)
+        addImageButton = view.findViewById<Button>(R.id.buttonAddImage)
         emojiPickerView = view.findViewById(R.id.reaction_emoji_picker)
         replyContentView = view.findViewById(R.id.replyContentView)
         cancelReplyButton = view.findViewById(R.id.cancelReplyButton)
@@ -244,9 +265,53 @@ class ChatFragment : Fragment() {
         exitChamberButton.setOnClickListener {
             showChamberExitDialog()
         }
+   //     val postImage =PostImage(activity= requireActivity(),storage = FirebaseStorage.getInstance(),auth = FirebaseAuth.getInstance(), database = FirebaseDatabase.getInstance(),groupChatId = groupChatId,senderName=senderName,messageAdapter = messageAdapter, recyclerView = recyclerView,messages = chamberViewModel.messages)
+
+        addImageButton.setOnClickListener {
+
+            launchPhotoPicker()
+        }
+//TODO: add click listener
+        groupTitle.setOnClickListener{
+            chamberViewModel.getChamberMetadata {
+                if (it.isNotEmpty()) {
+                    val chamberInfo = ActiveChatInfoModel(
+                        groupChatID = chamberViewModel.chamberState.value!!.chamberID,
+                        groupChatName = groupTitle.text as String,
+                        activeChatMemberLimit = 2,
+                        memberInfoList = it
+                    )
+                    val args = Bundle()
+                    args.putSerializable("chamberInfo", chamberInfo)
+                    val navController = requireActivity().findNavController(R.id.navHostFragment)
+                    Log.i("calledBefore", "is bbeing caLLED")
+
+                    navController.navigate(
+                        R.id.chamber_info_fragment,
+                        args = args,
+                        navOptions {
+                            anim {
+                                enter = R.anim.slide_in
+                                exit = R.anim.slide_out
+                                popEnter = R.anim.slide_in
+                                popExit = R.anim.slide_out
+                            }
+                        }
+
+                    )
+                    Log.i("called", "is bbeing caLLED")
+                } else {
+                    Toast.makeText(context, "Chamber info not available", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+        }
+
         return view
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
     private fun showTooManyMessagesDialog() {
         val dialog = Dialog(requireContext(), R.style.Dialog)
         dialog.setContentView(R.layout.dialog_too_many_messages)
@@ -648,6 +713,77 @@ class ChatFragment : Fragment() {
         }
     }
 
+
+
+
+    private fun registerActivityResultLauncher():ActivityResultLauncher<PickVisualMediaRequest> {
+        return registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+
+                if (uri != null) {
+                    Log.d("PhotoPicker", "Selected URI: $uri")
+
+                    showImageConfirmationDialogBox( imageUri = uri) {
+                        if (it) {
+//TODO: add message over here
+
+chamberViewModel.postImage(uri = uri,UID = userViewModel.userState.value!!.UID,senderName=userViewModel.userState.value!!.displayName)
+//                            }
+                        } else {
+                            Log.d("ImagePickedConfirmation", "Failed")
+                        }
+                    }
+
+
+                } else {
+                    Log.d("PhotoPicker", "No media selected")
+                }
+            }
+    }
+
+
+
+
+
+
+
+
+
+    fun launchPhotoPicker() {
+        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
+
+
+    //TODO: This will be here only
+
+    private fun showImageConfirmationDialogBox(
+        imageUri: Uri,
+        result: (v: Boolean) -> Unit
+    ) {
+        val dialog = Dialog(requireActivity(), R.style.Dialog)
+        dialog.setContentView(R.layout.dialog_box_upload_button)
+        dialog.setCancelable(true)
+        val confirm_button = dialog.findViewById<Button>(R.id.confirm_button)
+        val cancel_button = dialog.findViewById<Button>(R.id.cancel_button)
+        val previewImage = dialog.findViewById<ImageView>(R.id.previewImage)
+        confirm_button.setOnClickListener {
+            result(true)
+            dialog.dismiss()
+        }
+        cancel_button.setOnClickListener {
+            result(false)
+            dialog.dismiss()
+        }
+        CoroutineScope(Dispatchers.Main).launch {
+         chamberViewModel.compressThumbnail(imageUri,previewImage) {
+             dialog.show()
+         }
+        }
+
+    }
+// TODO: separate in showing dialog box and compressing image which should be in viewmodel
+
+
+
     override fun onDestroy() {
         super.onDestroy()
         chamberViewModel.addNotificationKey(
@@ -661,5 +797,51 @@ class ChatFragment : Fragment() {
             userViewModel.userState.value!!.UID,
             userViewModel.userState.value!!.notificationKey
         )
+        scheduleNotification(requireContext())
+
     }
+    private fun scheduleNotification(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(context, ReminderNotification::class.java)
+        val pendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                1,
+                intent,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
+        val triggerAtMillis = System.currentTimeMillis() + 16 * 60 * 60 * 1000L
+if(hasScheduleExactAlarmPermission(context)){
+    Log.d("AlarmManagerPermission","Success")
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+
+}else{
+    Log.d("AlarmManagerPermission","Denied")
 }
+    }
+    private fun hasScheduleExactAlarmPermission(context: Context): Boolean {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                alarmManager.canScheduleExactAlarms()
+            } else {
+true
+            }
+        }
+    private fun cancelNotificationAlarm(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(context, ReminderNotification::class.java)
+        val pendingIntent =   PendingIntent.getBroadcast(
+            context,
+            1,
+            intent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        alarmManager.cancel(pendingIntent)
+    }
+    }
+
+

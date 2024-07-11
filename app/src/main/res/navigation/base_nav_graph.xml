@@ -30,12 +30,39 @@
             app:destination="@id/chamber_search_fragment"/>
     </fragment>
 
-
+<fragment
+    android:id="@+id/profile_fragment"
+    android:name="com.chamberly.chamberly.presentation.fragments.ProfileFragment"
+    android:label="ProfileFragment"
+    />
+    <fragment
+        android:id="@+id/setting_fragment"
+        android:name="com.chamberly.chamberly.presentation.fragments.SettingFragment"
+        android:label="SettingFragment"
+        />
+    <fragment
+        android:id="@+id/edit_profile_setting_fragment"
+        android:name="com.chamberly.chamberly.presentation.fragments.EditProfileFragment"
+        android:label="EditProfileFragment"
+        />
+    <fragment
+        android:id="@+id/notification_setting_fragment"
+        android:name="com.chamberly.chamberly.presentation.fragments.NotificationsFragment"
+        android:label="NotificationsFragment"
+        />
     <fragment
         android:id="@+id/chat_fragment"
         android:name="com.chamberly.chamberly.presentation.fragments.ChatFragment"
         android:label="ChatFragment"/>
-
+    <fragment
+        android:id="@+id/chamber_info_fragment"
+        android:name="com.chamberly.chamberly.presentation.fragments.ChamberInfoFragment"
+        />
+<fragment
+    android:id="@+id/view_photo_fragment"
+    android:name="com.chamberly.chamberly.presentation.fragments.ViewPhotoFragment"
+    android:label="ViewPhotoFragment"
+    />
     <fragment
         android:id="@+id/topic_search_fragment"
         android:name="com.chamberly.chamberly.presentation.fragments.TopicSearchFragment"

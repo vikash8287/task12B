@@ -75,7 +75,18 @@ class MainFragment : Fragment() {
 //        }
 
         profilePictureButton.setOnClickListener {
-            showProfileOptionsPopup(it)
+          //  showProfileOptionsPopup(it)
+            requireParentFragment().findNavController().navigate(
+                R.id.profile_fragment,
+                null,
+                navOptions {
+                    anim {
+                        enter = R.anim.slide_in
+                        exit = R.anim.slide_out
+                    }
+                }
+            )
+
         }
         return view
     }
@@ -223,7 +234,7 @@ class MainFragment : Fragment() {
         profileOptionsPopUp.window?.attributes = params
         profileOptionsPopUp.show()
     }
-
+// TODO: comment it
     private fun showAccountDeleteDialog() {
         val dialog = Dialog(requireActivity(), R.style.Dialog)
 

@@ -40,7 +40,17 @@ class ChambersRecyclerViewAdapter(private val UID: String, private val onItemCli
                 chamber.lastMessage.message_id.isBlank()
             ) {
                 "No messages"
-            } else if (chamber.lastMessage.UID == UID) {
+            }
+            else if(chamber.lastMessage.UID == UID &&  chamber.lastMessage.message_type=="photo"){
+                "You: Photo"
+
+            }
+            else if(chamber.lastMessage.UID != UID &&  chamber.lastMessage.message_type.toString()=="photo"){
+                "Photo"
+
+            }
+
+            else if (chamber.lastMessage.UID == UID ) {
                 "You: ${chamber.lastMessage.message_content}"
             } else {
                 chamber.lastMessage.message_content

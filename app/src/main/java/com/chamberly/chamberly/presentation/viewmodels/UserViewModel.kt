@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -13,6 +14,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.chamberly.chamberly.OkHttpHandler
 import com.chamberly.chamberly.R
+import com.chamberly.chamberly.constant.Gender
 import com.chamberly.chamberly.models.Chamber
 import com.chamberly.chamberly.models.ChamberPreview
 import com.chamberly.chamberly.models.Match
@@ -41,6 +43,7 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.storage.StorageReference
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offering
 import com.revenuecat.purchases.Offerings
@@ -56,6 +59,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+
 
 class UserViewModel(application: Application): AndroidViewModel(application = application) {
 
@@ -166,6 +170,21 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                 putString("displayName", displayName)
                                 putString("email", email)
                                 putBoolean("isListener", role == Role.LISTENER)
+                                putInt("age",24)
+                                putInt("gender", Gender.MALE_GENDER_INT)
+                                putInt("firstGender", Gender.MALE_GENDER_INT)
+                                putString("bio","")
+                                putFloat("rating",0f)
+                                putInt("reviewCount",0)
+                                putBoolean("seeAge",true)
+                                putBoolean("seeGender",true)
+                                putBoolean("seeAchievements",false)
+
+                                putBoolean("AppUpdates",true)
+                                putBoolean("ChamberReminders",true)
+                                putBoolean("Checkup",true)
+                                putBoolean("DailyCoins",false)
+                                putBoolean("Discounts",true)
                                 apply()
                             }
                             _userState.postValue(
@@ -221,28 +240,32 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             "UID" to uid,
             "Display_Name" to displayName,
             "Email" to email,
+            "platform" to "android",
+            "Coins" to 0,
+            "gender" to "male",
+            "age" to 0,
+            "bio" to "",
             "isModerator" to false,
+            "timestamp" to FieldValue.serverTimestamp(),
+            "selectedRole" to role.toString(),
+            "privacy" to mapOf(
+                "seeAge" to true,
+                "seeGender" to true,
+                "seeAchievements" to false,
+            ),
+            "notifications" to mapOf(
+                "AppUpdates" to true,
+                "ChamberReminders" to true,
+                "Checkup" to true,
+                "DailyCoins" to false,
+                "Discounts" to true,
+            ),
         )
 
         firestore
             .collection("Accounts")
             .document(uid)
             .set(account)
-
-        firestore
-            .collection("Accounts")
-            .document(uid)
-            .update(
-                mapOf(
-                    "platform" to "android",
-                    "Coins" to 0,
-                    "gender" to "male",
-                    "age" to 0,
-                    "biography" to "",
-                    "timestamp" to FieldValue.serverTimestamp(),
-                    "selectedRole" to role.toString()
-                )
-            )
     }
 
     private fun setRestriction(uid: String) {
@@ -1540,6 +1563,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 )
             }
         } catch (e: Exception) {
+            Log.d("SUBSCRIPTION ERROR", e.message.toString())
         }
     }
 
@@ -1644,4 +1668,5 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             Toast.LENGTH_SHORT
         ).show()
     }
+
 }

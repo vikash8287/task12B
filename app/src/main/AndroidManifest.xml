@@ -3,11 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.chamberly.chamberly">
 
+    <uses-feature android:name="android.hardware.camera" />
+
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.android.vending.BILLING" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
         android:allowBackup="true"
@@ -23,7 +27,16 @@
 
         <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
         <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token"/>
+        <receiver
+            android:name=".notification.CheckUpNotification"
+            android:enabled="true"
 
+            />
+<receiver
+    android:name=".notification.ReminderNotification"
+    android:enabled="true"
+
+    />
         <service
             android:name="com.chamberly.chamberly.MyFirebaseMessagingService"
             android:exported="false">
@@ -31,6 +44,7 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <service android:name=".notification.CollectCoinNotification" />
 
         <activity
             android:name="com.chamberly.chamberly.presentation.activities.UpdateActivity"
