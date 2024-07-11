@@ -21,6 +21,7 @@ class HomeFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         val createTopicButton = view.findViewById<Button>(R.id.createTopicButton)
         val searchTopicButton = view.findViewById<Button>(R.id.findTopicButton)
+        val getChamberlyPlusButton = view.findViewById<Button>(R.id.getChamberlyPlusButton)
         val followUsButton = view.findViewById<TextView>(R.id.followUs)
 
         createTopicButton.setOnClickListener {
@@ -47,6 +48,24 @@ class HomeFragment : Fragment() {
                 .findNavController()
                 .navigate(
                     R.id.action_main_fragment_to_topic_search_fragment,
+                    null,
+                    navOptions {
+                        anim {
+                            enter = R.anim.slide_in
+                            exit = R.anim.slide_out
+                            popEnter = R.anim.slide_in
+                            popExit = R.anim.slide_out
+                        }
+                    }
+                )
+        }
+
+        getChamberlyPlusButton.setOnClickListener {
+            requireParentFragment()
+                .requireParentFragment()
+                .findNavController()
+                .navigate(
+                    R.id.subscriptionFragment,
                     null,
                     navOptions {
                         anim {

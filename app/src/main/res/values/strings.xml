@@ -96,4 +96,8 @@
     <string name="welcome_message">🌟 Chamberly is a supportive space for venting and listening, not for dating.\nSay Hi 👋</string>
     <string name="rate_user">Rate %1$s</string>
     <string name="welcome_text">Find others that relate to you and share your feelings anonymously!\n</string>
+    <string name="get_chamberly_plus">Get Chamberly Plus</string>
+    <string name="too_many_messages_body">Get Chamberly Plus to remove limit on messages in all chambers</string>
+    <string name="too_many_messages_heading">Message Limit Reached</string>
+    <string name="subscription_price">then 19kr/month</string>
 </resources>

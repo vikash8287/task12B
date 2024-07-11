@@ -25,6 +25,8 @@ import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chamberly.chamberly.R
@@ -45,6 +47,7 @@ class ChatFragment : Fragment() {
     private lateinit var emojiPickerView: EmojiPickerView
     private lateinit var cancelReplyButton: ImageButton
     private lateinit var replyContentView: TextView
+    private lateinit var messagesCountView: TextView
 
     private val replyingTo = MutableLiveData("")
     private val reactionEmojis: List<String> = listOf("👍", "💗", "😂", "😯", "😥", "😔", "+")
@@ -89,6 +92,7 @@ class ChatFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_chat, container, false)
         val groupTitle = view.findViewById<TextView>(R.id.groupTitle)
+        messagesCountView = view.findViewById(R.id.messagesCount)
         val backButton = view.findViewById<ImageButton>(R.id.backButton)
         val exitChamberButton = view.findViewById<ImageButton>(R.id.exitChatButton)
         recyclerView = view.findViewById(R.id.recyclerViewMessages)
@@ -136,6 +140,8 @@ class ChatFragment : Fragment() {
 
         chamberViewModel.messages.observe(viewLifecycleOwner) { messages ->
             val chamberID = chamberViewModel.chamberState.value!!.chamberID
+            messagesCountView.text =
+                "${messages[chamberID]?.size ?: 0}/${chamberViewModel.messageLimitCount}"
             if(chamberID.isBlank() ||
                 messages[chamberID] == null) {
                 return@observe
@@ -184,6 +190,13 @@ class ChatFragment : Fragment() {
         }
 
         sendButton.setOnClickListener {
+            val chamberID = chamberViewModel.chamberState.value!!.chamberID
+            if ((chamberViewModel.messages.value!![chamberID]?.size?.toLong()
+                    ?: 0L) >= chamberViewModel.messageLimitCount
+            ) {
+                showTooManyMessagesDialog()
+                return@setOnClickListener
+            }
             val text = messageBox.text.toString()
             if(text.isBlank()) {
                 return@setOnClickListener
@@ -232,6 +245,40 @@ class ChatFragment : Fragment() {
             showChamberExitDialog()
         }
         return view
+    }
+
+    private fun showTooManyMessagesDialog() {
+        val dialog = Dialog(requireContext(), R.style.Dialog)
+        dialog.setContentView(R.layout.dialog_too_many_messages)
+
+        val getChamberlyPlusButton = dialog.findViewById<Button>(R.id.getChamberlyPlusButton)
+        val cancelButton = dialog.findViewById<Button>(R.id.cancelButton)
+
+        getChamberlyPlusButton.setOnClickListener {
+            dialog.dismiss()
+            openSubscriptionScreen()
+        }
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun openSubscriptionScreen() {
+        findNavController()
+            .navigate(
+                R.id.subscriptionFragment,
+                null,
+                navOptions {
+                    anim {
+                        enter = R.anim.slide_in
+                        exit = R.anim.slide_out
+                        popEnter = R.anim.slide_in
+                        popExit = R.anim.slide_out
+                    }
+                }
+            )
     }
 
     private fun showMessageDialog(message: Message) {

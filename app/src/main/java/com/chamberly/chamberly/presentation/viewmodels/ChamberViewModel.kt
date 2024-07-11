@@ -38,6 +38,8 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     private val _messages = MutableLiveData<MutableMap<String, MutableList<Message>>>()
     val messages: LiveData<MutableMap<String, MutableList<Message>>> = _messages
 
+    var messageLimitCount: Long = 40L
+
     private val realtimeDatabase = Firebase.database
     private val firestore = Firebase.firestore
     private val firebaseAnalytics = FirebaseAnalytics.getInstance(getApplication())
@@ -47,6 +49,23 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     var otherUserNotificationKey: String = ""
     private var messageUpdateListener: ChildEventListener? = null
     private var messagesQuery: com.google.firebase.database.Query? = null
+
+    init {
+        realtimeDatabase
+            .reference
+            .child("UX_Android/numberOfMessagesInChamberLimit")
+            .addValueEventListener(object: ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    messageLimitCount =
+                        try { snapshot.value as Long }
+                        catch (_: Exception) { 40L }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    // Not needed for now
+                }
+            })
+    }
 
     fun setChamber(chamberID: String, UID: String) {
         if(chamberID.isBlank()) {
