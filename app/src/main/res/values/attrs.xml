@@ -4,4 +4,8 @@
         <attr name="rating" format="float" />
         <attr name="starSize" format="dimension" />
     </declare-styleable>
+    <declare-styleable name="SettingSectionWithListAndSwitchButton">
+        <attr format="string" name="text"/>
+
+    </declare-styleable>
 </resources>

@@ -4,8 +4,13 @@ import android.app.Application
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.content.res.AssetFileDescriptor
+import android.net.Uri
+
 import android.util.Log
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,18 +19,32 @@ import com.chamberly.chamberly.models.Message
 import com.chamberly.chamberly.models.UserRatingModel
 import com.chamberly.chamberly.models.toMap
 import com.chamberly.chamberly.presentation.states.ChamberState
+import com.chamberly.chamberly.utils.compressImageFile
 import com.chamberly.chamberly.utils.logEvent
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.ktx.storage
+import id.zelory.compressor.constraint.quality
+import id.zelory.compressor.constraint.resolution
+import id.zelory.compressor.constraint.size
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.json.JSONObject
 import java.util.Calendar
 import java.util.Date
@@ -37,7 +56,8 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
 
     private val _messages = MutableLiveData<MutableMap<String, MutableList<Message>>>()
     val messages: LiveData<MutableMap<String, MutableList<Message>>> = _messages
-
+private val storage = Firebase.storage
+    var messageLimitCount: Long = 40L
     private val realtimeDatabase = Firebase.database
     private val firestore = Firebase.firestore
     private val firebaseAnalytics = FirebaseAnalytics.getInstance(getApplication())
@@ -48,6 +68,23 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
     private var messageUpdateListener: ChildEventListener? = null
     private var messagesQuery: com.google.firebase.database.Query? = null
 
+    init {
+        realtimeDatabase
+            .reference
+            .child("UX_Android/numberOfMessagesInChamberLimit")
+            .addValueEventListener(object: ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    messageLimitCount =
+                        try { snapshot.value as Long }
+                        catch (_: Exception) { 40L }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    // Not needed for now
+                }
+            })
+    }
+
     fun setChamber(chamberID: String, UID: String) {
         if(chamberID.isBlank()) {
             return
@@ -57,7 +94,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             .child(chamberID)
             .get()
             .addOnSuccessListener { chamberSnapshot ->
-                val data = chamberSnapshot.value as Map<String, Any>
+                val data = (chamberSnapshot.value as? Map<String, Any>) ?: return@addOnSuccessListener
                 val users = data["users"] as Map<String, Any>
                 val members = users["members"] as Map<String, Any>
                 _chamberState.value = ChamberState(
@@ -87,6 +124,17 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                 removeNotificationKey(UID)
                 getMessages()
             }
+            .addOnFailureListener {
+                Log.d("CHAMBEREXCEPTION", it.toString())
+            }
+    }
+
+    private fun getChamberFromSnapshot(chamberData: Map<String, Any>): ChamberState {
+        return ChamberState(
+            chamberID = chamberData["groupChatId"].toString(),
+            chamberTitle = chamberData["groupTitle"].toString(),
+            members = chamberData["members"] as List<String>
+        )
     }
 
     private fun getMessages() {
@@ -108,7 +156,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                                 if (message.message_type == "custom" && message.message_content == "gameCard") {
                                     message.message_content = message.game_content
                                 } else if (message.message_type == "photo") {
-                                    message.message_content = "Images are not available to display on Android"
+                                 //   message.message_content = "Images are not available to display on Android"
                                 }
                                 addMessage(message)
                             }
@@ -134,7 +182,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                         ) {
                             message.message_content = message.game_content
                         } else if (message.message_type == "photo") {
-                            message.message_content = "Images are not available to display on Android."
+                         //   message.message_content = "Images are not available to display on Android."
                         }
                         if((messages.value!![chamberState.value!!.chamberID]?.contains(message)) != true) {
                             addMessage(message = message)
@@ -155,7 +203,7 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                         ) {
                             message.message_content = message.game_content
                         } else if (message.message_type == "photo") {
-                            message.message_content = "Images are not available to display on Android"
+                         //   message.message_content = "Images are not available to display on Android"
                         }
                         changeMessage(message)
                     }
@@ -206,6 +254,13 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
                 successCallback()
                 updateChamberDataFields()
             }
+
+        if(message.message_type != "custom") {
+            realtimeDatabase
+                .reference
+                .child("${chamberState.value!!.chamberID}/messageCount")
+                .setValue(ServerValue.increment(1L))
+        }
 
         logEventToAnalytics(
             eventName = "message_sent",
@@ -537,6 +592,197 @@ class ChamberViewModel(application: Application): AndroidViewModel(application =
             eventName = eventName,
             params = params
         )
+    }
+    private  fun getCurrentDateInCestTimeZone():String{
+        val now = Clock.System.now()
+        val timeZone = TimeZone.of("Europe/Berlin")
+        val now_in_cest = now.toLocalDateTime(timeZone)
+        val day = now_in_cest.dayOfMonth.toString().padStart(2, '0')
+        val month = now_in_cest.month.toString() // Use shortName for abbreviated month name
+        val year = now_in_cest.year.toString()
+        val hours = now_in_cest.hour.toString().padStart(2, '0')
+        val minutes = now_in_cest.minute.toString().padStart(2, '0')
+        val seconds = now_in_cest.second.toString().padStart(2, '0')
+        val timezone  = "CEST"
+
+        val formattedDateTime = "$day $month $year $hours:$minutes:$seconds $timezone"
+        return formattedDateTime
+    }
+    fun postImage(uri: Uri,UID: String,senderName: String){
+        val todayDateInCest = getCurrentDateInCestTimeZone()
+        val messageId =   addImageInfoToRealtimeDatabase(todayDateInCest,UID,senderName)
+        CoroutineScope(Dispatchers.Default).launch {
+            compressImageAndUploadItToStorage(uri = uri,messageId,getApplication<Application>().applicationContext,UID)
+        }
+
+    }
+    private suspend fun compressImageAndUploadItToStorage(uri: Uri, messageId: String,context: Context,UID: String) {
+
+        val fileDescriptor: AssetFileDescriptor =
+            context.contentResolver.openAssetFileDescriptor(uri, "r")!!
+        val fileSize = fileDescriptor.getLength()
+        fileDescriptor.close()
+        if (fileSize > 400000) {
+            val tempImageFile = CoroutineScope(Dispatchers.Default).async {
+                compressImageFile(context = context, uri) {
+                    it.resolution(1280, 720)
+                    it.quality(80)
+                    it.size(400000)
+                }
+            }
+            postImageToStorage(tempImageFile.await().toUri(),messageId,UID)
+        } else {
+            postImageToStorage(uri, messageId,UID)
+        }
+        Log.d("size", fileSize.toString())
+
+    }
+    private fun getUrl(uri: Uri): String {
+
+        return uri.toString()
+    }
+    private fun postImageToStorage(uri: Uri, messageId: String,UID: String) {
+        val storageRef: StorageReference = storage.reference
+        val uid = UID
+        val todayDateInCest = getCurrentDateInCestTimeZone()
+        val filename = "photo_message_" + uid + "_" + todayDateInCest + "_png"
+        val path = storageRef.child("message_image/${filename}")
+
+        val uploadTask = path.putFile(uri)
+
+        uploadTask.addOnFailureListener { error(it) }.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                path.downloadUrl.addOnSuccessListener {
+
+                    updateImageUrl(getUrl(it), messageId)
+
+                }.addOnFailureListener {
+                    Log.d("FirebaseStorageError", it.message.toString())
+                }
+            } else {
+                Log.d("FirebaseStorageError", task.exception?.toString()!!)
+            }
+
+        }
+
+    }
+    private fun updateImageUrl(imageUrl:String,messageId:String){
+        // TODO:chamber state
+        val ref = realtimeDatabase.getReference(chamberState.value!!.chamberID).child("messages").child(messageId).child("message_content")
+        ref.setValue(imageUrl).addOnSuccessListener {
+            Log.d("realtimeDatabaseImageUrlUpdate","Success")
+
+        }.addOnFailureListener {
+            Log.d("realtimeDatabaseImageUrlUpdate",it.message.toString())
+
+        }
+
+    }
+    private fun addImageInfoToRealtimeDatabase(todayDateInCest: String,UID:String,senderName:String):String {
+
+
+        val ref = realtimeDatabase.getReference(_chamberState.value!!.chamberID).child("messages")
+        val key = ref.push().key
+        val messageId = key!!
+        val data = Message(
+            UID = UID,
+            message_content = "",
+            message_date = todayDateInCest,
+            message_id = messageId,
+            message_type = "photo",
+            sender_name = senderName
+        )
+        ref.child(messageId).setValue(data.toMap())
+            .addOnSuccessListener {
+                Log.i("beforeSend", "success")
+            }
+        return key
+    }
+     suspend fun compressThumbnail(uri: Uri, previewImage: ImageView, callback: () -> Unit) {
+
+
+        val tempImageFile = CoroutineScope(Dispatchers.Default).async {
+            compressImageFile(context = getApplication<Application>().applicationContext, uri) {
+                it.resolution(100, 100)
+                it.quality(30)
+                it.size(40000)
+            }
+        }
+        CoroutineScope(Dispatchers.Main).launch{
+
+            previewImage.setImageURI(Uri.fromFile(tempImageFile.await()))
+            callback()
+        }
+    }
+     fun getChamberMetadata(callback: (result: List<List<String>>) -> Unit) {
+        val membersRef = realtimeDatabase.getReference().child(_chamberState.value!!.chamberID).child("users").child("members")
+        val result : MutableList<MutableList<String>> = mutableListOf()
+        membersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+
+                for (memberSnapshot in dataSnapshot.children) {
+                  Log.d("value",memberSnapshot.toString())
+                    val memberList : MutableList<String> = mutableListOf()
+                    val memberId = memberSnapshot.key
+                    val memberName = memberSnapshot.child("name").value as? String
+                    //result[memberName] = memberId
+                    Log.i("memberId",memberId.toString())
+                    memberList.add(memberId.toString())
+                    memberList.add(memberName.toString())
+                    result.add(memberList)
+                }
+                getChatMemberRatings(result, callback)
+
+
+            }
+            override fun onCancelled(databaseError: DatabaseError) {
+                println("Database error: ${databaseError.message}")
+            }
+        })
+
+    }
+
+    private fun getChatMemberRatings(chatMemberList: List<MutableList<String>>, callback: (result: List<List<String>>) ->Unit) {
+        var temp = chatMemberList
+        var count =0
+        for (memberInfo in temp) {
+            firestore.collection("StarReviews")
+                .whereEqualTo("To", memberInfo[0])
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .addOnSuccessListener { documents ->
+                    if (!documents.isEmpty) {
+                        val document = documents.documents[0]
+                        val averageStars = document.getDouble("AverageStars")
+                        if (averageStars != null)
+                            memberInfo.add(averageStars.toString())
+                        else
+                            memberInfo.add("0.0")
+
+                        val reviewsCount = document.getLong("ReviewsCount")
+                        if (reviewsCount != null)
+                            memberInfo.add(reviewsCount.toString())
+                        else
+                            memberInfo.add("0")
+
+                        Log.i("afterValue",count.toString())
+
+                    }else
+                    {
+                        memberInfo.add("0.0")
+                        memberInfo.add("0")
+
+                    }
+                    count++
+
+                       if(count==temp.size)callback(chatMemberList)
+                }
+                .addOnFailureListener { exception ->
+                    // Handle any errors here
+                    println("Error getting documents: $exception")
+                }
+        }
     }
 
 

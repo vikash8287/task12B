@@ -3,9 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".presentation.fragments.SubscriptionFragment">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -14,56 +15,89 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:textSize="32sp"/>
+            android:textSize="32sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:text="Vent and share how you feel"
             android:textColor="#2E2E5B"
-            android:layout_gravity="center"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/chamberlyPlusText" />
         <ImageView
+            android:id="@+id/chamberlyBackground"
             android:layout_width="match_parent"
             android:layout_height="325dp"
             android:background="@drawable/people_background"
-            android:src="@drawable/people" />
+            android:src="@drawable/people"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/closeButton"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/circle_with_purple_200"
+            android:contentDescription="@string/setting_button"
+            android:src="@drawable/ic_close"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/background_bottom_sheet"
+            android:maxWidth="300dp"
             android:orientation="vertical"
+            android:paddingTop="16dp"
             android:translationY="-8dp"
-            android:background="@drawable/background_bottom_sheet">
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/chamberlyBackground">
+
             <LinearLayout
                 android:id="@+id/chamberlyBenefits"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
+
             <LinearLayout
                 android:id="@+id/benefitConditions"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:orientation="vertical" />
+
             <TextView
                 android:id="@+id/text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
                 android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="5dp"
+                android:text="Only 1 subscriber in a chamber is enough"
                 android:textAlignment="textStart"
-                android:text="1 Only 1 subscriber in a chamber is enough"
                 android:textColor="#B0B0CA"
                 android:textSize="16sp" />
+
             <LinearLayout
                 android:id="@+id/subscriptionBtn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginTop="8dp"
                 android:layout_marginHorizontal="12dp"
-                android:paddingVertical="8dp"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/rounded_button"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:paddingVertical="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -82,16 +116,16 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/restoreBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="12dp"
-                android:text="Restore Purchase"
-                android:textColor="#B0B0CA"
-                android:textSize="20sp" />
+            <!--            <TextView-->
+            <!--                android:id="@+id/restoreBtn"-->
+            <!--                android:layout_width="wrap_content"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:layout_gravity="center"-->
+            <!--                android:layout_margin="12dp"-->
+            <!--                android:text="Restore Purchase"-->
+            <!--                android:textColor="#B0B0CA"-->
+            <!--                android:textSize="20sp" />-->
         </LinearLayout>
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

@@ -8,7 +8,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="green">#00AA82</color>
-
+<color name="gray">#F2F2F2</color>
     <color name="primary">#FF7A7AFF</color>
     <!-- colors.xml -->
     <color name="overlay_background_right">#883498FB</color> <!-- Adjust the color value as needed -->
@@ -24,4 +24,9 @@
     </color>
     <color name="lightTextColor">#2E2E5B</color>
     <color name="golden">#FFCA5F</color>
+    <color name="setting_background_color">#F2F2FF</color>
+    <color name="setting_list_item_background">#F8F8FF</color>
+    <color name="light_red">#FF3B30</color>
+    <color name="edit_profile_background">#F2F2FF</color>
+    <color name="edit_profile_background_color">#F8F8FF</color>
 </resources>

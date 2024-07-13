@@ -1,9 +1,11 @@
 package com.chamberly.chamberly.presentation.fragments
 
 import android.os.Bundle
+import android.os.Handler
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -18,16 +20,25 @@ import com.chamberly.chamberly.R
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
 import com.chamberly.chamberly.utils.Entitlement
 
+private const val DELAY_PARAM = "shouldDelayClose"
 class SubscriptionFragment : Fragment() {
 
+    private var shouldDelayClose: Boolean? = null
     private val userViewModel: UserViewModel by activityViewModels()
 
     private val chamberlyPlusBenefits = mutableListOf(
         Pair(R.drawable.ic_chamberly_memeber, "Unlimited messages, for everyone, all chambers"),
-        Pair(R.drawable.ic_journal, "Unlock smart journal"),
-        Pair(R.drawable.chat_add_on, "Create/Join more chambers"),
+        Pair(R.drawable.ic_journal, "Higher Quality Matches"),
+        Pair(R.drawable.chat_add_on, "Faster Matches"),
         Pair(R.drawable.ic_heart, "and so much more")
     )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        arguments?.let {
+            shouldDelayClose = it.getBoolean(DELAY_PARAM)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,6 +55,7 @@ class SubscriptionFragment : Fragment() {
             chamberlyBenefitsLayout.addView(benefitLayout)
         }
 
+        Log.d("SHOULD DELAY CLOSE", shouldDelayClose.toString())
         subscribeButton.isEnabled =
             userViewModel.userState.value!!.entitlement == Entitlement.REGULAR
 
@@ -70,7 +82,7 @@ class SubscriptionFragment : Fragment() {
 
         layout.orientation = LinearLayout.HORIZONTAL
         layout.gravity = Gravity.CENTER_VERTICAL or Gravity.START
-        layout.setPadding(20, 5, 20, 0)
+        layout.setPadding(20, 8, 20, 8)
         iconButton.setImageResource(icon)
         iconButton.adjustViewBounds = true
         iconButton.maxWidth = 100
@@ -88,5 +100,14 @@ class SubscriptionFragment : Fragment() {
         layout.addView(iconButton)
         layout.addView(contentLayout)
         return layout
+    }
+
+    companion object {
+        @JvmStatic
+        fun newInstance(shouldDelayClose: Boolean) = SubscriptionFragment().apply {
+            arguments = Bundle().apply {
+                putBoolean(DELAY_PARAM, true)
+            }
+        }
     }
 }

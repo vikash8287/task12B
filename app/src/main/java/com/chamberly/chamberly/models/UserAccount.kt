@@ -16,21 +16,3 @@ data class UserAccount(
     val selectedRole: String = "listener",
     @ServerTimestamp val timestamp: Date? = null
 )
-
-enum class Gender {
-    MALE {
-        override fun toString(): String {
-            return "male"
-        }
-    },
-    FEMALE {
-        override fun toString(): String {
-            return "female"
-        }
-    },
-    OTHER {
-        override fun toString(): String {
-            return "other"
-        }
-    }
-}

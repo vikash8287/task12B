@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -13,6 +14,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.chamberly.chamberly.OkHttpHandler
 import com.chamberly.chamberly.R
+import com.chamberly.chamberly.constant.Gender
 import com.chamberly.chamberly.models.Chamber
 import com.chamberly.chamberly.models.ChamberPreview
 import com.chamberly.chamberly.models.Match
@@ -23,6 +25,7 @@ import com.chamberly.chamberly.presentation.states.AppState
 import com.chamberly.chamberly.presentation.states.UserState
 import com.chamberly.chamberly.utils.DatabaseManager
 import com.chamberly.chamberly.utils.Entitlement
+import com.chamberly.chamberly.utils.REVENUECAT_API_KEY
 import com.chamberly.chamberly.utils.Role
 import com.chamberly.chamberly.utils.TaskScheduler
 import com.chamberly.chamberly.utils.logEvent
@@ -40,17 +43,23 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.storage.StorageReference
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offering
+import com.revenuecat.purchases.Offerings
 import com.revenuecat.purchases.PurchaseParams
 import com.revenuecat.purchases.Purchases
+import com.revenuecat.purchases.PurchasesConfiguration
 import com.revenuecat.purchases.PurchasesError
+import com.revenuecat.purchases.interfaces.ReceiveCustomerInfoCallback
+import com.revenuecat.purchases.interfaces.ReceiveOfferingsCallback
 import com.revenuecat.purchases.models.StoreTransaction
 import com.revenuecat.purchases.purchaseWith
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+
 
 class UserViewModel(application: Application): AndroidViewModel(application = application) {
 
@@ -62,6 +71,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         isAppUpdated = true,
         areExperimentalFeaturesEnabled = false
     ))
+
     val appState: LiveData<AppState> = _appState
 
     private val _chamberID = MutableLiveData<String>()
@@ -91,7 +101,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     // This map will contain the topic title corresponding to the topic ID
     val pendingTopicTitles = mutableMapOf<String, String>()
 
-    //This is to prevent users from clicking sign up login buttons while the loginuser function
+    //This is to prevent users from clicking sign up login buttons while the loginUser function
     //loads user data from cache
     val authState: MutableLiveData<String> = MutableLiveData("LOADING")
 
@@ -161,6 +171,20 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                 putString("displayName", displayName)
                                 putString("email", email)
                                 putBoolean("isListener", role == Role.LISTENER)
+                                putInt("age",24)
+                                putInt("gender", Gender.MALE_GENDER_INT)
+                                putInt("firstGender", Gender.MALE_GENDER_INT)
+                                putString("bio","")
+                                putFloat("rating",0f)
+                                putInt("reviewCount",0)
+                                putBoolean("seeAge",true)
+                                putBoolean("seeGender",true)
+                                putBoolean("seeAchievements",false)
+                                putBoolean("AppUpdates",true)
+                                putBoolean("ChamberReminders",true)
+                                putBoolean("Checkup",true)
+                                putBoolean("DailyCoins",false)
+                                putBoolean("Discounts",true)
                                 apply()
                             }
                             _userState.postValue(
@@ -172,6 +196,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             )
                             databaseManager = DatabaseManager(auth.currentUser!!.uid, displayName)
                             setupUXListeners()
+                            setPaywallStatus()
                             setNotificationToken()
                         }
                         .addOnFailureListener { error ->
@@ -211,6 +236,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         email: String,
         role: Role
     ) {
+        //Due to security rules, while creating the document, only these 4 fields can be used
         val account = mapOf(
             "UID" to uid,
             "Display_Name" to displayName,
@@ -222,21 +248,31 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             .collection("Accounts")
             .document(uid)
             .set(account)
-
+        //The other fields can be added after creating the document
         firestore
             .collection("Accounts")
             .document(uid)
-            .update(
-                mapOf(
-                    "platform" to "android",
-                    "Coins" to 0,
-                    "gender" to "male",
-                    "age" to 0,
-                    "biography" to "",
-                    "timestamp" to FieldValue.serverTimestamp(),
-                    "selectedRole" to role.toString()
-                )
-            )
+            .update(mapOf(
+                "platform" to "android",
+                "Coins" to 0,
+                "gender" to "male",
+                "age" to 0,
+                "bio" to "",
+                "timestamp" to FieldValue.serverTimestamp(),
+                "selectedRole" to role.toString(),
+                "privacy" to mapOf(
+                    "seeAge" to true,
+                    "seeGender" to true,
+                    "seeAchievements" to false,
+                ),
+                "notifications" to mapOf(
+                    "AppUpdates" to true,
+                    "ChamberReminders" to true,
+                    "Checkup" to true,
+                    "DailyCoins" to false,
+                    "Discounts" to true,
+                ),
+            ))
     }
 
     private fun setRestriction(uid: String) {
@@ -314,6 +350,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                 putString("uid", uid)
                                 putString("displayName", displayName)
                                 putBoolean("isListener", role == Role.LISTENER)
+                                putBoolean("hasLoggedIn", true)
                                 apply()
                             }
                             _userState.postValue(
@@ -329,6 +366,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                             getUserRestrictions(uid = uid)
                             getUserRating(uid = uid)
                             attachTopicRequestListeners()
+                            setPaywallStatus()
                             onComplete()
                         }
                 }
@@ -399,36 +437,36 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         messaging.isAutoInitEnabled = true
     }
 
-//    private fun setPaywallStatus() {
-//        Purchases.configure(
-//            PurchasesConfiguration.Builder(
-//                getApplication(),
-//                REVENUECAT_API_KEY
-//            )
-//                .appUserID(userState.value!!.UID)
-//                .build()
-//        )
-//        Purchases.sharedInstance.getOfferings(object: ReceiveOfferingsCallback {
-//            override fun onError(error: PurchasesError) {
-//                showToast("An error occurred while checking subscription status")
-//            }
-//            override fun onReceived(offerings: Offerings) {
-//                currentOffering = offerings.current
-//            }
-//        })
-//        Purchases.sharedInstance.getCustomerInfo(object: ReceiveCustomerInfoCallback {
-//            override fun onError(error: PurchasesError) {
-//                showToast("An error occurred while checking subscription status")
-//            }
-//            override fun onReceived(customerInfo: CustomerInfo) {
-//                if(customerInfo.entitlements["ChamberlyPlus"]?.isActive == true) {
-//                    _userState.postValue(
-//                        _userState.value!!.copy(entitlement = Entitlement.CHAMBERLY_PLUS)
-//                    )
-//                }
-//            }
-//        })
-//    }
+    private fun setPaywallStatus() {
+        Purchases.configure(
+            PurchasesConfiguration.Builder(
+                getApplication(),
+                REVENUECAT_API_KEY
+            )
+                .appUserID(userState.value!!.UID)
+                .build()
+        )
+        Purchases.sharedInstance.getOfferings(object: ReceiveOfferingsCallback {
+            override fun onError(error: PurchasesError) {
+                showToast("An error occurred while checking subscription status")
+            }
+            override fun onReceived(offerings: Offerings) {
+                currentOffering = offerings.current
+            }
+        })
+        Purchases.sharedInstance.getCustomerInfo(object: ReceiveCustomerInfoCallback {
+            override fun onError(error: PurchasesError) {
+                showToast("An error occurred while checking subscription status")
+            }
+            override fun onReceived(customerInfo: CustomerInfo) {
+                if(customerInfo.entitlements["ChamberlyPlus"]?.isActive == true) {
+                    _userState.postValue(
+                        _userState.value!!.copy(entitlement = Entitlement.CHAMBERLY_PLUS)
+                    )
+                }
+            }
+        })
+    }
 
     fun getUserChambers(
         callback: (List<ChamberPreview>) -> Unit = {}
@@ -471,7 +509,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                                             .child("users/members")
                                             .get()
                                             .addOnSuccessListener {
-                                                val members = it.value as Map<String, Any>
+                                                val members = (it.value as? Map<String, Any>) ?: return@addOnSuccessListener
                                                 for (member in members.keys) {
                                                     checkedUsers.add(member)
                                                 }
@@ -532,9 +570,13 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 val chamberDataRef =
                     realtimeDatabase.getReference(chamber.groupChatId)
 
-                chamberDataRef.child("host").setValue(chamber.AuthorUID)
-                chamberDataRef.child("title").setValue(chamberTitle)
-                chamberDataRef.child("timestamp").setValue(ServerValue.TIMESTAMP)
+                chamberDataRef
+                    .updateChildren(mapOf(
+                        "host" to chamber.AuthorUID,
+                        "title" to chamberTitle,
+                        "timestamp" to ServerValue.TIMESTAMP,
+                        "messageCount" to 0
+                    ))
 
                 val messageId = chamberDataRef.child("messages").push().key
 
@@ -765,6 +807,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         val lookingFor =
             if(userState.value!!.role == Role.LISTENER) "lfl"
             else                                        "lfv"
+
         realtimeDatabase
             .reference
             .child("$topicID/users")
@@ -824,6 +867,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             val listOfUsers = eligibleUsers[topicID]!!.sortedWith(compareBy<Map<String, Any>>(
+                { !(it["isRoleP"] as? Boolean ?: false) },
                 { !(it["isSubscribed"] as? Boolean ?: false) },
                 { it["penalty"] as? Long ?: 0L },
                 { it["timestamp"] as? Long ?: 0L }
@@ -1533,6 +1577,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 )
             }
         } catch (e: Exception) {
+            Log.d("SUBSCRIPTION ERROR", e.message.toString())
         }
     }
 
@@ -1545,30 +1590,18 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             val email = user.email!!
             auth.signInWithEmailAndPassword(email, password)
                 .addOnSuccessListener {
-                    user.delete().addOnCompleteListener { task ->
-                        firestore
-                            .collection("Display_Names")
-                            .document(displayName)
-                            .delete()
-                        firestore
-                            .collection("Accounts")
-                            .document(uid!!)
-                            .delete()
-                        if (task.isSuccessful) {
-                            with(sharedPreferences.edit()) {
-                                clear()
-                                putBoolean("isNewUser", false)
-                                apply()
-                            }
-                            showToast("Account deleted")
-                        } else {
-//                    showToast("Failed to delete account")
-                        }
-                        _userState.value = UserState()
+                    firestore
+                        .collection("Display_Names")
+                        .document(displayName)
+                        .delete()
+                    firestore
+                        .collection("Accounts")
+                        .document(uid!!)
+                        .delete()
+                    user.delete().addOnSuccessListener {
+                        showToast("Account deleted")
                     }
-                }
-                .addOnFailureListener {
-                    showToast("Incorrect password")
+                    _userState.value = UserState()
                 }
         } else {
             showToast("Account deleted")
@@ -1637,4 +1670,5 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             Toast.LENGTH_SHORT
         ).show()
     }
+
 }

@@ -13,6 +13,8 @@ import com.chamberly.chamberly.presentation.activities.MainActivity
 import com.chamberly.chamberly.utils.channelID
 import com.chamberly.chamberly.utils.channelName
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -25,15 +27,26 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         // Get the current user's UID or identifier
         val userId = FirebaseAuth.getInstance().currentUser?.uid
-
         if (userId != null) {
             // Define a reference to the Cloud Firestore
             val firestore = Firebase.firestore
+            val realtimeDB = FirebaseDatabase.getInstance()
             val userRef = firestore.collection("Accounts").document(userId)
+
+            val realtimeRefAppUpdatesNotificationKeys =
+                realtimeDB.getReference("notificationKeys_appUpdates_Android")
+
+            val realtimeRefDiscountsNotificationKeys =
+                realtimeDB.getReference("notificationKeys_discounts_Android")
+
+            val realtimeRefGlobalNotificationKeys =
+                realtimeDB.getReference("notificationKeys_global_Android")
+
             val sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
             val editor = sharedPreferences.edit()
             editor.putString("notificationKey", token)
             editor.apply()
+
             // Update the FCM token for the current user
             userRef.update("FCMTOKEN", token)
                 .addOnSuccessListener {
@@ -42,6 +55,31 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 .addOnFailureListener {
                     Log.e("FCM Token Update Failed", it.message ?: "An error occurred while updating FCM token")
                 }
+
+            realtimeRefAppUpdatesNotificationKeys.child(userId).setValue(token)
+                .addOnSuccessListener {
+                    Log.i("FCM Token Updated", "Token updated successfully")
+                }
+                .addOnFailureListener {
+                    Log.e("FCM Token Update Failed", it.message ?: "An error occurred while updating FCM token")
+                }
+
+            realtimeRefDiscountsNotificationKeys.child(userId).setValue(token)
+                .addOnSuccessListener {
+                    Log.i("FCM Token Updated", "Token updated successfully")
+                }
+                .addOnFailureListener {
+                    Log.e("FCM Token Update Failed", it.message ?: "An error occurred while updating FCM token")
+                }
+
+            realtimeRefGlobalNotificationKeys.child(userId).setValue(token)
+                .addOnSuccessListener {
+                    Log.i("FCM Token Updated", "Token updated successfully")
+                }
+                .addOnFailureListener {
+                    Log.e("FCM Token Update Failed", it.message ?: "An error occurred while updating FCM token")
+                }
+
         }
     }
 
@@ -59,7 +97,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         ActivityManager.getMyMemoryState(appProcessInfo)
         return (appProcessInfo.importance== ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)
     }
-
     private fun sendNotification(title: String?, messageBody: String?,groupChatId:String?) {
         if(
             title.isNullOrBlank() ||
@@ -68,10 +105,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         ) {
             return
         }
+
         val requestCode = groupChatId.hashCode()
         val intent = Intent(this, MainActivity::class.java)
         intent.putExtra("groupChatId", groupChatId)
         Log.d("NOTIFICATION RECEIVED", intent.toString())
+
         val pendingIntent =
             PendingIntent.getActivity(
                 this,
@@ -79,6 +118,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
             )
+
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notificationBuilder = NotificationCompat.Builder(this, channelID)
@@ -89,7 +129,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE)
+                as NotificationManager
 
         // NotificationChannel setup (for Android O and above)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
