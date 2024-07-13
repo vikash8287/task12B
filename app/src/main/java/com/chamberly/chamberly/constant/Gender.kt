@@ -2,12 +2,8 @@ package com.chamberly.chamberly.constant
 
 class Gender {
     companion object{
-
-        @JvmField
-        val MALE_GENDER_INT: Int = 1
-@JvmField
-        val FEMALE_GENDER_INT: Int = 2
-        @JvmField
-        val OTHER_GENDER_INT: Int = 3
+        const val MALE_GENDER_INT: Int = 1
+        const val FEMALE_GENDER_INT: Int = 2
+        const val OTHER_GENDER_INT: Int = 3
     }
 }

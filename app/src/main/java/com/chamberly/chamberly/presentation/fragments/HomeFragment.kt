@@ -61,6 +61,8 @@ class HomeFragment : Fragment() {
         }
 
         getChamberlyPlusButton.setOnClickListener {
+            val navBundle = Bundle()
+            navBundle.putBoolean("shouldDelayClose", true)
             requireParentFragment()
                 .requireParentFragment()
                 .findNavController()

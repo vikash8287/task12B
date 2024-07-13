@@ -23,6 +23,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
@@ -75,18 +76,19 @@ class MainFragment : Fragment() {
 //        }
 
         profilePictureButton.setOnClickListener {
-          //  showProfileOptionsPopup(it)
-            requireParentFragment().findNavController().navigate(
-                R.id.profile_fragment,
-                null,
-                navOptions {
-                    anim {
-                        enter = R.anim.slide_in
-                        exit = R.anim.slide_out
-                    }
-                }
-            )
-
+            showProfileOptionsPopup(it)
+//            requireParentFragment()
+//                .findNavController()
+//                .navigate(
+//                    R.id.profile_fragment,
+//                    null,
+//                    navOptions {
+//                        anim {
+//                            enter = R.anim.slide_in
+//                            exit = R.anim.slide_out
+//                        }
+//                    }
+//                )
         }
         return view
     }

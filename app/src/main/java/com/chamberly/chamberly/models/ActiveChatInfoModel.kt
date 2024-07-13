@@ -8,4 +8,3 @@ data class ActiveChatInfoModel(
     var activeChatMemberLimit: Int =2,
     var memberInfoList: List<List<String>>
 ): Serializable
-
