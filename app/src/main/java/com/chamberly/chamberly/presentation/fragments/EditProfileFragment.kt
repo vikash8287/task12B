@@ -32,57 +32,54 @@ class EditProfileFragment : Fragment() {
 
     private val profileViewModel: ProfileViewModel by activityViewModels()
     private  var chosenGender:Int = Gender.MALE_GENDER_INT
-    private var age:Int = 24
+    private var age: Int = 24
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.fragment_edit_profile, container, false)
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-      backButtonView(view)
+        backButtonView(view)
         deleteButtonView(view)
-     list(view)
-whatOtherPersonCanSeeList(view)
-
-
+        list(view)
+        whatOtherPersonCanSeeList(view)
     }
 
     private fun deleteButtonView(view: View) {
-val deleteButton = view.findViewById<Button>(R.id.delete_button)
+        val deleteButton = view.findViewById<Button>(R.id.delete_button)
         deleteButton.setOnClickListener { 
             showDeleteDialogBox()
         }
     }
 
     private  fun backButtonView(view:View){
-    val backButton = view.findViewById<ImageButton>(R.id.back_button)
-    backButton.setOnClickListener {
-        requireActivity().supportFragmentManager.popBackStack()
+        val backButton = view.findViewById<ImageButton>(R.id.back_button)
+        backButton.setOnClickListener {
+            requireActivity().supportFragmentManager.popBackStack()
+        }
     }
-}
+
     private fun list(view: View){
         val editInfoList =
             view.findViewById<ListView>(R.id.normal_list_without_toggle)
         val name = profileViewModel.getNameFromSharePreference()
-        val gender:String = when(profileViewModel.getGenderFromSharePreference()){
+        val gender:String = when(profileViewModel.getGenderFromSharePreference()) {
             Gender.MALE_GENDER_INT->"Male"
             Gender.FEMALE_GENDER_INT->"Female"
             Gender.OTHER_GENDER_INT->"Other"
-else ->"Male"
+            else ->"Male"
         }
         val age = profileViewModel.getAgeFromSharePreference().toString() +" y/o"
         val editInfoListData = arrayListOf<EditInfoListDataItem>(
             EditInfoListDataItem(name,false){
-                                                //TODO: when name is clicked
+                //TODO: when name is clicked
             },
-
-
-            EditInfoListDataItem(gender){
-showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
+            EditInfoListDataItem(gender) {
+                showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
             },
             EditInfoListDataItem(age){
                 showAgePicker(it)
@@ -93,27 +90,45 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
             activity = requireActivity()
         )
     }
+
     private fun whatOtherPersonCanSeeList(view:View){
         val whatOtherPersonSeeListView =
             view.findViewById<SettingSectionWithListAndSwitchButton>(R.id.list_with_switch)
         val toggleList = arrayListOf<ListWithSwitchItem>(
-            ListWithSwitchItem("Allow others to see my age", state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("seeAge")){
-                                                               _,check->
-                                                              profileViewModel.updateSectionInAccountFirestore("privacy","seeAge",check)
-            },
-            ListWithSwitchItem("Allow others to see my gender",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("seeGender")){
-                    _,check->
-                profileViewModel.updateSectionInAccountFirestore("privacy","seeGender",check)
-            },
-            ListWithSwitchItem("Allow others to see achievements",state = profileViewModel.getSettingInfoWithBooleanFromSharePreference("seeAchievements")){
-                    _,check->
-                profileViewModel.updateSectionInAccountFirestore("privacy","seeAchievements",check)
-            },
-
+            ListWithSwitchItem(
+                "Allow others to see my age",
+                state = profileViewModel
+                    .getSettingInfoWithBooleanFromSharePreference("seeAge")) { _,check->
+                          profileViewModel.updateSectionInAccountFirestore(
+                              "privacy",
+                              "seeAge",
+                              check
+                          )
+                    },
+            ListWithSwitchItem(
+                "Allow others to see my gender",
+                state = profileViewModel
+                    .getSettingInfoWithBooleanFromSharePreference("seeGender")) { _,check->
+                        profileViewModel.updateSectionInAccountFirestore(
+                            "privacy",
+                            "seeGender",
+                            check
+                        )
+                    },
+            ListWithSwitchItem(
+                "Allow others to see achievements",
+                state = profileViewModel
+                    .getSettingInfoWithBooleanFromSharePreference("seeAchievements")) { _,check->
+                        profileViewModel.updateSectionInAccountFirestore(
+                            "privacy",
+                            "seeAchievements",
+                            check
+                        )
+                    },
             )
-
         whatOtherPersonSeeListView.setData(toggleList)
     }
+
     private fun showDeleteDialogBox() {
         val dialog = Dialog(requireContext(),R.style.Dialog)
         dialog.setContentView(R.layout.dialog_box_delete_account)
@@ -167,20 +182,15 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
             when (chosenGender) {
                 Gender.MALE_GENDER_INT -> {
                     text = "Male"
-
                     profileViewModel.setGenderToFirestore("male",chosenGender)
                 }
-
                 Gender.FEMALE_GENDER_INT -> {
                     text = "Female"
                     profileViewModel.setGenderToFirestore("female",chosenGender)
-
                 }
-
                 Gender.OTHER_GENDER_INT -> {
                     text = "Other"
                     profileViewModel.setGenderToFirestore("other",chosenGender)
-
                 }
             }
             chosenGenderText.setText(text)
@@ -211,8 +221,6 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
                 femaleGenderContainer,
                 otherGenderContainer
             )
-
-
         }
         otherGenderContainer.setOnClickListener {
             updateGenderCard(
@@ -222,10 +230,10 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
                 femaleGenderContainer,
                 otherGenderContainer
             )
-
         }
         dialog.show()
     }
+
     private fun updateGenderCard(
         selectedGenderInt: Int,
         dialog: Dialog,
@@ -241,40 +249,42 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
         val otherGenderIcon = dialog.findViewById<ImageView>(R.id.other_gender_icon)
         val otherGenderText = dialog.findViewById<TextView>(R.id.other_gender_text)
         maleGenderText.setTextColor(
-            if (selectedGenderInt == Gender.MALE_GENDER_INT) requireActivity().getColor(R.color.white) else requireActivity().getColor(
-                R.color.black
-            )
+            if (selectedGenderInt == Gender.MALE_GENDER_INT) requireActivity().getColor(R.color.white)
+            else requireActivity().getColor(R.color.black)
         )
         maleGenderIcon.setColorFilter(
-            if (selectedGenderInt == Gender.MALE_GENDER_INT) requireActivity().getColor(R.color.white) else requireActivity().getColor(
-                R.color.primary
-            )
+            if (selectedGenderInt == Gender.MALE_GENDER_INT) requireActivity().getColor(R.color.white)
+            else requireActivity().getColor(R.color.primary)
         )
-        maleGenderContainer.setBackgroundResource(if (selectedGenderInt == Gender.MALE_GENDER_INT) R.drawable.bg_rounded_primary else R.drawable.white_corner_background)
-
+        maleGenderContainer.setBackgroundResource(
+            if (selectedGenderInt == Gender.MALE_GENDER_INT) R.drawable.bg_rounded_primary
+            else R.drawable.white_corner_background
+        )
         femaleGenderText.setTextColor(
-            if (selectedGenderInt == Gender.FEMALE_GENDER_INT) requireActivity().getColor(R.color.white) else requireActivity().getColor(
-                R.color.black
-            )
+            if (selectedGenderInt == Gender.FEMALE_GENDER_INT) requireActivity().getColor(R.color.white)
+            else requireActivity().getColor(R.color.black)
         )
         femaleGenderIcon.setColorFilter(
-            if (selectedGenderInt == Gender.FEMALE_GENDER_INT) requireActivity().getColor(R.color.white) else requireActivity().getColor(
-                R.color.primary
-            )
+            if (selectedGenderInt == Gender.FEMALE_GENDER_INT) requireActivity().getColor(R.color.white)
+            else requireActivity().getColor(R.color.primary)
         )
-        femaleGenderContainer.setBackgroundResource(if (selectedGenderInt == Gender.FEMALE_GENDER_INT) R.drawable.bg_rounded_primary else R.drawable.white_corner_background)
+        femaleGenderContainer.setBackgroundResource(
+            if (selectedGenderInt == Gender.FEMALE_GENDER_INT) R.drawable.bg_rounded_primary
+            else R.drawable.white_corner_background
+        )
 
         otherGenderText.setTextColor(
-            if (selectedGenderInt == Gender.OTHER_GENDER_INT) requireActivity().getColor(R.color.white) else requireActivity().getColor(
-                R.color.black
-            )
+            if (selectedGenderInt == Gender.OTHER_GENDER_INT) requireActivity().getColor(R.color.white)
+            else requireActivity().getColor(R.color.black)
         )
         otherGenderIcon.setColorFilter(
-            if (selectedGenderInt == Gender.OTHER_GENDER_INT) requireActivity().getColor(R.color.white) else requireActivity().getColor(
-                R.color.primary
-            )
+            if (selectedGenderInt == Gender.OTHER_GENDER_INT) requireActivity().getColor(R.color.white)
+            else requireActivity().getColor(R.color.primary)
         )
-        otherGenderContainer.setBackgroundResource(if (selectedGenderInt == Gender.OTHER_GENDER_INT) R.drawable.bg_rounded_primary else R.drawable.white_corner_background)
+        otherGenderContainer.setBackgroundResource(
+            if (selectedGenderInt == Gender.OTHER_GENDER_INT) R.drawable.bg_rounded_primary
+            else R.drawable.white_corner_background
+        )
 
     }
 
@@ -283,6 +293,7 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
         val state: Boolean = true,
         val action: (textView:TextView)->Unit,
     )
+
     private fun showAgePicker(textView: TextView) {
         val dialog = Dialog(requireContext(), R.style.Dialog)
         val window = dialog.window
@@ -293,7 +304,7 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
         dialog.setContentView(R.layout.dialog_box_age_picker)
         dialog.setCancelable(true)
         val agePicker = dialog.findViewById<NumberPicker>(R.id.age_picker)
-        val save_button = dialog.findViewById<Button>(R.id.save_button)
+        val saveButton = dialog.findViewById<Button>(R.id.save_button)
         agePicker.maxValue = 90
         agePicker.minValue = 23
         agePicker.setOnValueChangedListener { picker, oldVal, newVal ->
@@ -304,7 +315,7 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
         }
         agePicker.clearFocus()
         agePicker.value  =profileViewModel.getAgeFromSharePreference()
-        save_button.setOnClickListener {
+        saveButton.setOnClickListener {
             updateAge(textView)
             dialog.dismiss()
         }
@@ -374,13 +385,8 @@ showGenderPicker(profileViewModel.getGenderFromSharePreference(),it)
         }
 
         class ViewHolder(view: View) {
-            val label: TextView
-            val rootLayout: ConstraintLayout
-
-            init {
-                label = view.findViewById<TextView>(R.id.label)
-                rootLayout = view.findViewById<ConstraintLayout>(R.id.root_layout)
-            }
+            val label: TextView = view.findViewById(R.id.label)
+            val rootLayout: ConstraintLayout = view.findViewById(R.id.root_layout)
         }
 
     }

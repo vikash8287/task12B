@@ -12,55 +12,73 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.chamberly.chamberly.R
 
-class SettingSectionWithListAndSwitchButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+class SettingSectionWithListAndSwitchButton @JvmOverloads
+    constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
     ConstraintLayout(context, attrs, defStyleAttr) {
-private  var dataList:ArrayList<ListWithSwitchItem>? = null
- //   private var  listView: ListView? = null
+
+    private  var dataList:ArrayList<ListWithSwitchItem>? = null
+    //private var  listView: ListView? = null
     private  lateinit var linearLayout:LinearLayout
+
     init {
-init(attrs)
+        init(attrs)
     }
 
     private fun init(attrs: AttributeSet?){
         View.inflate(context, R.layout.setting_section_with_list_view_toggle_button,this)
         val title = findViewById<TextView>(R.id.title)
-   // listView  = findViewById<ListView>(R.id.list)
-linearLayout = findViewById<LinearLayout>(R.id.list)
-        val ta = context.obtainStyledAttributes(attrs,R.styleable.SettingSectionWithListAndSwitchButton)
-        try{
-val text = ta.getText(R.styleable.SettingSectionWithListAndSwitchButton_text)
-      title.text = text
+        // listView  = findViewById<ListView>(R.id.list)
+        linearLayout = findViewById(R.id.list)
+        val ta =
+            context.obtainStyledAttributes(attrs,R.styleable.SettingSectionWithListAndSwitchButton)
 
-        }finally {
-
+        try {
+            val text = ta.getText(R.styleable.SettingSectionWithListAndSwitchButton_text)
+            title.text = text
+        } finally {
             ta.recycle()
         }
-
     }
-      fun  setData(list:ArrayList<ListWithSwitchItem>){
+
+    fun setData(list:ArrayList<ListWithSwitchItem>){
         this.dataList = list
         //  listView!!.adapter = dataList?.let { ListWithSwitchAdapter( list = it, activity = context as Activity) }
-updateList()
-      }
+        updateList()
+    }
 
-    fun updateList(){
-    val inflater = LayoutInflater.from(context)
+    fun updateList() {
+        val inflater = LayoutInflater.from(context)
         val size = this.dataList!!.size
-        for((position,item) in this.dataList!!.withIndex()){
-            val view = inflater.inflate(R.layout.setting_list_item_layout_with_toggle,linearLayout,false)
-            val  label = view.findViewById<TextView>(R.id.label)
-            val  rootLayout = view.findViewById<ConstraintLayout>(R.id.root_layout)
-            val  subItem = view.findViewById<TextView>(R.id.subItem)
-            val  switch = view.findViewById<Switch>(R.id.state)
-            getView(position,linearLayout, item = item,size,label=label,rootLayout=rootLayout,subItem=subItem,switch=switch)
+        for((position,item) in this.dataList!!.withIndex()) {
+            val view = inflater.inflate(
+                R.layout.setting_list_item_layout_with_toggle,linearLayout,
+                false
+            )
+
+            val label = view.findViewById<TextView>(R.id.label)
+            val rootLayout = view.findViewById<ConstraintLayout>(R.id.root_layout)
+            val subItem = view.findViewById<TextView>(R.id.subItem)
+            val switch = view.findViewById<Switch>(R.id.state)
+            getView(
+                position,linearLayout,
+                item = item,size,
+                label = label,
+                rootLayout = rootLayout,
+                subItem = subItem,
+                switch = switch
+            )
 
             linearLayout.addView(view)
         }
-
     }
 
 
-    data class  ListWithSwitchItem(val label:String, val subItem:String ="", val state:Boolean=false, val switchStateListener:OnCheckedChangeListener?= null)
+    data class ListWithSwitchItem(
+        val label: String,
+        val subItem: String = "",
+        val state: Boolean = false,
+        val switchStateListener: OnCheckedChangeListener? = null
+    )
 //    class ListWithSwitchAdapter(val list: ArrayList<ListWithSwitchItem>, val activity: Activity):
 //        BaseAdapter(){
 //        override fun getCount(): Int {
@@ -75,7 +93,7 @@ updateList()
 //            return  list.size.toLong()
 //        }
 
-       private  fun getView(
+       private fun getView(
            position: Int,
            view: View,
            item: ListWithSwitchItem,
@@ -85,35 +103,29 @@ updateList()
            subItem: TextView,
            switch: Switch
        ): View {
-
-
-
-
             label.text = item.label
             val subItemText =item.subItem
             if(subItemText.isBlank()){
                 subItem.visibility = GONE
-            }else{
+            } else {
                 subItem.text = subItemText
-
             }
-            if(position==0 && size ==1){
-                rootLayout.background = AppCompatResources.getDrawable(context,R.drawable.setting_single_list_item_background)
+            if(position==0 && size ==1) {
+                rootLayout.background = AppCompatResources
+                    .getDrawable(context,R.drawable.setting_single_list_item_background)
+            } else if (position==0){
+                rootLayout.background = AppCompatResources
+                    .getDrawable(context,R.drawable.setting_top_list_item_background)
 
+            } else if(position == (size-1)) {
+                rootLayout.background = AppCompatResources
+                    .getDrawable(context,R.drawable.setting_bottom_list_item_background)
             }
-            else if (position==0){
-                rootLayout.background = AppCompatResources.getDrawable(context,R.drawable.setting_top_list_item_background)
-            }else if(position == (size-1)){
-                rootLayout.background = AppCompatResources.getDrawable(context,R.drawable.setting_bottom_list_item_background)
-
-            }
-            switch.setOnCheckedChangeListener(null);
+            switch.setOnCheckedChangeListener(null)
             switch.isChecked = item.state
-            if(item.switchStateListener != null) switch.setOnCheckedChangeListener(item.switchStateListener)
-            return  view
+            if(item.switchStateListener != null)
+                switch.setOnCheckedChangeListener(item.switchStateListener)
+
+            return view
         }
-
     }
-
-
-

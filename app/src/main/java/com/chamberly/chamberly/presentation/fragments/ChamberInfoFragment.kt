@@ -22,12 +22,9 @@ class ChamberInfoFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-val view = inflater.inflate(R.layout.fragment_chamber_info, container,false)
-
-
+        val view = inflater.inflate(R.layout.fragment_chamber_info, container,false)
         // Retrieve the map from the intent
         val chamberMetadata = arguments?.getSerializable("chamberInfo") as ActiveChatInfoModel
-
         val textView: TextView = view.findViewById(R.id.chamberName)
         textView.text = chamberMetadata.groupChatName
 
@@ -38,7 +35,6 @@ val view = inflater.inflate(R.layout.fragment_chamber_info, container,false)
 
         val backButton2: ImageButton = view.findViewById(R.id.back_to_chamber)
         backButton2.setOnClickListener {
-
             findNavController().popBackStack()
         }
 

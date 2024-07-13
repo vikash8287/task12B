@@ -15,8 +15,6 @@ class AuthenticationFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_authentication, container, false)
-//        val navHostFragment = childFragmentManager.findFragmentById(R.id.authNavHostFragment) as NavHostFragment
-//        val navController = navHostFragment.navController
         return view
     }
 }

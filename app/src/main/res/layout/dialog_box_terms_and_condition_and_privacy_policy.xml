@@ -11,15 +11,11 @@ android:showDividers="middle"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:text="Terms and privacy policy"
-android:textAlignment="center"
+    android:textAlignment="center"
     android:fontFamily="@font/sf_pro_display_bold"
     android:textSize="18sp"
-    android:textColor="@color/black"
-
-
-    />
+    android:textColor="@color/black" />
     <Button
-
         android:id="@+id/terms_and_condition"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

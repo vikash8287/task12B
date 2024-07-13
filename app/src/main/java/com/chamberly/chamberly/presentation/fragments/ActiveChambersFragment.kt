@@ -19,10 +19,6 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class ActiveChambersFragment : Fragment() {
-
-    private val auth = Firebase.auth
-    private val firestore = Firebase.firestore
-    private val database = Firebase.database
     private val userViewModel: UserViewModel by activityViewModels()
 
     private lateinit var emptyStateView: RelativeLayout
@@ -35,9 +31,9 @@ class ActiveChambersFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view =  inflater.inflate(R.layout.fragment_active_chambers, container, false)
-        emptyStateView = view.findViewById<RelativeLayout>(R.id.emptyStateView)
+        emptyStateView = view.findViewById(R.id.emptyStateView)
         val layoutManager = LinearLayoutManager(requireContext())
-        recyclerView = view.findViewById<RecyclerView>(R.id.rvChambers)
+        recyclerView = view.findViewById(R.id.rvChambers)
         adapter =
             ChambersRecyclerViewAdapter(userViewModel.userState.value!!.UID) { chamber ->
                 // Handle click, navigate to ChatActivity
@@ -47,9 +43,6 @@ class ActiveChambersFragment : Fragment() {
         recyclerView.layoutManager = layoutManager
         val dividerItemDecoration = DividerItemDecoration(requireContext(), layoutManager.orientation)
         recyclerView.addItemDecoration(dividerItemDecoration)
-//        userViewModel.getUserChambers { chambers ->
-//
-//        }
         userViewModel.myChambers.observe(viewLifecycleOwner) { chambers ->
             if (chambers.isEmpty()) {
                 recyclerView.visibility = View.GONE
@@ -62,56 +55,4 @@ class ActiveChambersFragment : Fragment() {
         }
         return view
     }
-
-//    private fun getLastMessage(lastMessage: Message?): String {
-//        return if(lastMessage == null) {
-//            "No messages"
-//        } else if(lastMessage.message_type == "text" || lastMessage.message_type == "system") {
-//            lastMessage.message_content
-//        } else {
-//            lastMessage.message_type
-//        }
-//    }
-//
-//    private fun fetchLastMessagesForChambers(chambers: List<Chamber>, callback: (List<Chamber>) -> Unit) {
-//        val lastMessageTasks = chambers.map { chamber ->
-//            fetchLastMessageForChamber(chamber)
-//        }
-//
-//        Tasks.whenAllSuccess<DataSnapshot>(lastMessageTasks)
-//            .addOnSuccessListener { lastMessages ->
-//                lastMessages.forEachIndexed { index, dataSnapshot ->
-//                    val lastMessage =
-//                        try { dataSnapshot.children.firstOrNull()?.getValue(Message::class.java) }
-//                        catch(_: Exception) { Message(message_content = "No messages") }
-//                    chambers[index].lastMessage = getLastMessage(lastMessage)
-//                }
-//                callback(chambers)
-//            }
-//    }
-//
-//    private fun fetchLastMessageForChamber(chamber: Chamber): Task<DataSnapshot> {
-//        return database.reference.child(chamber.groupChatId)
-//            .child("messages").orderByKey().limitToLast(1).get()
-//    }
-//
-//    private fun fetchChambers(callback: (List<Chamber>) -> Unit) {
-//        val userId = auth.currentUser?.uid
-//        if (userId != null) {
-//            firestore.collection("GroupChatIds")
-//                .whereArrayContains("members", userId)
-//                .limit(20)
-//                .get()
-//                .addOnSuccessListener { querySnapshot ->
-//                    val chambers = querySnapshot.documents.mapNotNull { it.toObject(Chamber::class.java) }
-//                    fetchLastMessagesForChambers(chambers, callback)
-//                }
-//                .addOnFailureListener { exception ->
-//                    Toast.makeText(requireContext(), "Error fetching chambers: ${exception.message}", Toast.LENGTH_SHORT).show()
-//                    callback(emptyList())
-//                }
-//        } else {
-//            callback(emptyList()) // No user logged in
-//        }
-//    }
 }

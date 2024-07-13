@@ -13,70 +13,75 @@ import androidx.core.app.NotificationCompat
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.presentation.activities.MainActivity
 
-class CheckUpNotification(): BroadcastReceiver() {
-    private lateinit var  notificationManager: NotificationManager
+class CheckUpNotification: BroadcastReceiver() {
+    private lateinit var notificationManager: NotificationManager
     private lateinit var sharedPreferences: SharedPreferences
 
-    val notificationID = 2
-    val maxNoOfDay = 45
-    val channelID = "com.company.chamberly.broadcast_receiver.checkup"
+    private val notificationID = 2
+    private val maxNoOfDay = 45
+    private val channelID = "com.company.chamberly.broadcast_receiver.checkup"
+
     override fun onReceive(context: Context, intent: Intent) {
-       notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-sharedPreferences =      context.getSharedPreferences("cache", Context.MODE_PRIVATE)
-        Log.d("test","hi")
-pushingNotification(context)
+        notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+                as NotificationManager
+        sharedPreferences = context.getSharedPreferences("cache", Context.MODE_PRIVATE)
+        pushingNotification(context)
     }
-    fun pushingNotification(context: Context) {
- var noOfDays = sharedPreferences.getInt("dayCount",0)
-        if(
-            noOfDays>maxNoOfDay
-        ){
+
+    private fun pushingNotification(context: Context) {
+        val noOfDays = sharedPreferences.getInt("dayCount",0)
+        if(noOfDays > maxNoOfDay) {
             with(sharedPreferences.edit()) {
                 putInt("dayCount", 0)
                 commit()
             }
-        }else {
+        } else {
             with(sharedPreferences.edit()) {
                 putInt("dayCount", noOfDays + 1)
                 commit()
             }
         }
-
-settingUpNotification(context,noOfDays)
-
+        settingUpNotification(context,noOfDays)
     }
-private fun settingUpNotification(context: Context, noOfDays: Int) {
-    val initialNotifications = listOf (
-        NotificationItem(dayOffset= 1, message= "How are you so far? 🥹"),
-    NotificationItem(dayOffset= 2, message= "Ready to vent today? ✨"),
-    NotificationItem(dayOffset= 3, message= "Connect and share your journey 🤝"),
-    )
 
-    val week2To4Notifications = listOf(
-        NotificationItem(dayOffset= 6, message= "How are you feeling today?"),
-    NotificationItem(dayOffset= 10, message= "You matter to us, feel like venting?"),
-    NotificationItem(dayOffset= 17, message= "Bored or sad lately? 🤔 Whatever it is, let's chat!"),
-    )
-
-    val week5AndBeyondNotifications = listOf(
-        NotificationItem(dayOffset= 24, message= "Want to find a new venting partner? 💬"),
-    NotificationItem(dayOffset= 38, message= "How have you been this week? 🤗"),
-    NotificationItem(dayOffset= 45, message= "Feel like venting about something? 🥹"),
-    )
-    val allNotifications = initialNotifications+week2To4Notifications+week5AndBeyondNotifications
-    for(notification in allNotifications){
-if (notification.dayOffset == noOfDays){
-
-    scheduleNotification(context = context,notificationItem = notification)
-}
-    }
-}
-    private fun scheduleNotification(context: Context,notificationItem: NotificationItem){
-        val notificationIntent = Intent(context, MainActivity::class.java) // Replace with your main activity class
-        val pendingIntent = PendingIntent.getActivity(context, 3, notificationIntent,if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+    private fun settingUpNotification(context: Context, noOfDays: Int) {
+        val initialNotifications = listOf(
+            NotificationItem(dayOffset= 1, message= "How are you so far? 🥹"),
+            NotificationItem(dayOffset= 2, message= "Ready to vent today? ✨"),
+            NotificationItem(dayOffset= 3, message= "Connect and share your journey 🤝"),
         )
 
+        val week2To4Notifications = listOf(
+            NotificationItem(dayOffset= 6, message= "How are you feeling today?"),
+            NotificationItem(dayOffset= 10, message= "You matter to us, feel like venting?"),
+            NotificationItem(dayOffset= 17, message= "Bored or sad lately? 🤔 Whatever it is, let's chat!"),
+        )
 
+        val week5AndBeyondNotifications = listOf(
+            NotificationItem(dayOffset= 24, message= "Want to find a new venting partner? 💬"),
+            NotificationItem(dayOffset= 38, message= "How have you been this week? 🤗"),
+            NotificationItem(dayOffset= 45, message= "Feel like venting about something? 🥹"),
+        )
+        val allNotifications =
+            initialNotifications + week2To4Notifications + week5AndBeyondNotifications
+
+        for(notification in allNotifications) {
+            if (notification.dayOffset == noOfDays) {
+                scheduleNotification(context = context,notificationItem = notification)
+            }
+        }
+    }
+    private fun scheduleNotification(context: Context,notificationItem: NotificationItem){
+        val notificationIntent = Intent(context, MainActivity::class.java)
+        val pendingIntent =
+            PendingIntent.getActivity(
+                context,
+                3,
+                notificationIntent,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                else PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
         val notification = NotificationCompat.Builder(context, channelID)
             .setSmallIcon(R.drawable.dp)
@@ -85,19 +90,17 @@ if (notification.dayOffset == noOfDays){
             .setContentIntent(pendingIntent)
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel =    NotificationChannel(
+            val notificationChannel = NotificationChannel(
                 channelID,
-              "Chamberly Checkup" ,
+                "Chamberly Checkup" ,
                 NotificationManager.IMPORTANCE_DEFAULT
             )
             manager.createNotificationChannel(notificationChannel)
         }
         manager.notify(notificationID, notification.build())
-
-
     }
-    private
-    data class NotificationItem(val dayOffset: Int, val message: String)
 
+    private data class NotificationItem(val dayOffset: Int, val message: String)
 }

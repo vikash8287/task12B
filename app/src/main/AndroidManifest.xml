@@ -29,14 +29,10 @@
         <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token"/>
         <receiver
             android:name=".notification.CheckUpNotification"
-            android:enabled="true"
-
-            />
-<receiver
-    android:name=".notification.ReminderNotification"
-    android:enabled="true"
-
-    />
+            android:enabled="true" />
+        <receiver
+            android:name=".notification.ReminderNotification"
+            android:enabled="true" />
         <service
             android:name="com.chamberly.chamberly.MyFirebaseMessagingService"
             android:exported="false">
@@ -45,13 +41,11 @@
             </intent-filter>
         </service>
         <service android:name=".notification.CollectCoinNotification" />
-
         <activity
             android:name="com.chamberly.chamberly.presentation.activities.UpdateActivity"
             android:exported="false"
             android:label="@string/title_activity_update"
             android:theme="@style/Theme.Chamberly" />
-
         <activity
             android:name="com.chamberly.chamberly.presentation.activities.MainActivity"
             android:exported="true"

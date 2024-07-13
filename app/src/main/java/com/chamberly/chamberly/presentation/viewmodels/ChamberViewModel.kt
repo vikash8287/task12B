@@ -26,6 +26,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldValue
@@ -93,7 +94,7 @@ private val storage = Firebase.storage
             .child(chamberID)
             .get()
             .addOnSuccessListener { chamberSnapshot ->
-                val data = chamberSnapshot.value as Map<String, Any>
+                val data = (chamberSnapshot.value as? Map<String, Any>) ?: return@addOnSuccessListener
                 val users = data["users"] as Map<String, Any>
                 val members = users["members"] as Map<String, Any>
                 _chamberState.value = ChamberState(
@@ -253,6 +254,13 @@ private val storage = Firebase.storage
                 successCallback()
                 updateChamberDataFields()
             }
+
+        if(message.message_type != "custom") {
+            realtimeDatabase
+                .reference
+                .child("${chamberState.value!!.chamberID}/messageCount")
+                .setValue(ServerValue.increment(1L))
+        }
 
         logEventToAnalytics(
             eventName = "message_sent",

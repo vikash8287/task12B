@@ -16,16 +16,22 @@ import com.chamberly.chamberly.presentation.activities.MainActivity
 const val notificationID = 1
 const val title = "Reminder"
 const val message = "Check up on your chamber?"
+
 class ReminderNotification: BroadcastReceiver(){
-val channelID = "com.company.chamberly.broadcast_receiver.reminder"
+
+    private val channelID = "com.company.chamberly.broadcast_receiver.reminder"
+
     override fun onReceive(context: Context, intent: Intent) {
-
-        val notificationIntent = Intent(context, MainActivity::class.java) // Replace with your main activity class
-        val pendingIntent = PendingIntent.getActivity(context, 2, notificationIntent,            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        Log.d("broadcast","works");
-
+        val notificationIntent = Intent(context, MainActivity::class.java)
+        val pendingIntent =
+            PendingIntent.getActivity(
+                context,
+                2,
+                notificationIntent,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                else PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
         val notification = NotificationCompat.Builder(context, channelID)
             .setSmallIcon(R.drawable.dp)
@@ -33,18 +39,17 @@ val channelID = "com.company.chamberly.broadcast_receiver.reminder"
             .setContentText(message)
             .setContentIntent(pendingIntent)
 
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+                as NotificationManager
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel =    NotificationChannel(
+            val notificationChannel = NotificationChannel(
                 channelID,
                 "Chamberly Reminders",
                 NotificationManager.IMPORTANCE_DEFAULT
             )
-manager.createNotificationChannel(notificationChannel)
+            manager.createNotificationChannel(notificationChannel)
         }
-        // Show the notification using the manager
         manager.notify(notificationID, notification.build())
-
-
     }
 }

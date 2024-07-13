@@ -82,6 +82,7 @@ class MainActivity : AppCompatActivity() {
         userViewModel.loginUser()
 
         userViewModel.userState.observe(this) {
+            Log.d("USERID", it.UID + ":" + navController.currentDestination?.route)
             if(it.UID.isBlank()) {
                 navController.popBackStack(R.id.main_fragment, true)
                 navController.navigate(
