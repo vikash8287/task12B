@@ -103,4 +103,13 @@
         android:text="Submit Feedback"
         android:textSize="16sp"
         android:textColor="#000"/>
+    <TextView
+        android:id="@+id/subscribe_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:visibility="gone"
+        android:text="Subscribe"
+        android:textSize="16sp"
+        android:textColor="#000"/>
 </LinearLayout>

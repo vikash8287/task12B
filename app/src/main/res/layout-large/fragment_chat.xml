@@ -27,31 +27,17 @@
                 android:src="@drawable/ic_back"
                 tools:ignore="TouchTargetSizeCheck" />
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/groupTitle"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:layout_weight="1"
-                android:orientation="vertical">
-                <TextView
-                    android:id="@+id/groupTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="@string/grouptitle"
-                    android:textAlignment="center"
-                    android:textColor="#2E2E5B"
-                    android:textStyle="bold"
-                    android:textSize="18sp" />
-                <TextView
-                    android:id="@+id/messagesCount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:textAlignment="center"
-                    android:textColor="#3F3F6C"
-                    android:textStyle="normal"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                android:text="@string/grouptitle"
+                android:textAlignment="center"
+                android:textColor="#2E2E5B"
+                android:textStyle="bold"
+                android:textSize="18sp" />
 
             <ImageButton
                 android:id="@+id/exitChatButton"
@@ -133,12 +119,7 @@
             android:gravity="center"
             android:orientation="horizontal"
             android:padding="8dp">
-            <Button
-                android:id="@+id/buttonAddImage"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_marginBottom="4dp"
-                android:background="@drawable/ic_instagram"/>
+
             <EditText
                 android:id="@+id/editTextMessage"
                 android:layout_width="0dp"

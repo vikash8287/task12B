@@ -112,7 +112,11 @@ class TopicSearchFragment : Fragment(), KolodaListener {
         }
 
         dismissButton.setOnClickListener { kolodaView.onClickLeft() }
-        joinButton.setOnClickListener { kolodaView.onClickRight() }
+        dismissButton.visibility = View.GONE
+        joinButton.visibility = View.GONE
+        joinButton.setOnClickListener {
+            kolodaView.onClickRight()
+        }
 
         backButton.setOnClickListener {  findNavController().popBackStack() }
 

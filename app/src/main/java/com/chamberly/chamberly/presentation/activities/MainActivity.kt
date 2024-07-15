@@ -1,17 +1,13 @@
 package com.chamberly.chamberly.presentation.activities
 
-import android.app.AlarmManager
 import android.app.Dialog
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -24,7 +20,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chamberly.chamberly.R
-import com.chamberly.chamberly.notification.CheckUpNotification
 import com.chamberly.chamberly.presentation.adapters.TopicRequestRecyclerViewAdapter
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
 import com.facebook.FacebookSdk
@@ -32,30 +27,27 @@ import com.facebook.FacebookSdk.setAutoLogAppEventsEnabled
 import com.facebook.LoggingBehavior
 import com.facebook.appevents.AppEventsLogger
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class MainActivity : AppCompatActivity() {
-    private val auth = Firebase.auth
     private val firestore = Firebase.firestore
     private var isShowingJoinDialog: Boolean = false
-    private lateinit var sharedPreferences: SharedPreferences
     private lateinit var firebaseAnalytics: FirebaseAnalytics
     private var isUserRestricted: Boolean = false
     private lateinit var appEventsLogger: AppEventsLogger
     private lateinit var userViewModel: UserViewModel
+//    private lateinit var chamberViewModel: ChamberViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setAutoLogAppEventsEnabled(false)
         userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
+//        chamberViewModel = ViewModelProvider(this)[ChamberViewModel::class.java]
         firebaseAnalytics = FirebaseAnalytics.getInstance(this)
-        sharedPreferences = getSharedPreferences("cache", Context.MODE_PRIVATE)
-        FacebookSdk.setIsDebugEnabled(true);
-        FacebookSdk.addLoggingBehavior(LoggingBehavior.APP_EVENTS);
+        FacebookSdk.setIsDebugEnabled(true)
+        FacebookSdk.addLoggingBehavior(LoggingBehavior.APP_EVENTS)
         appEventsLogger = AppEventsLogger.Companion.newLogger(this)
         appEventsLogger.logEvent("TestEvent")
 
@@ -82,7 +74,6 @@ class MainActivity : AppCompatActivity() {
         userViewModel.loginUser()
 
         userViewModel.userState.observe(this) {
-            Log.d("USERID", it.UID + ":" + navController.currentDestination?.route)
             if(it.UID.isBlank()) {
                 navController.popBackStack(R.id.main_fragment, true)
                 navController.navigate(
@@ -168,7 +159,6 @@ class MainActivity : AppCompatActivity() {
         if (!areNotificationsEnabled) {
             requestNotificationPermission()
         }
-    startCheckUpNotificationService(this)
     }
 
     private fun checkAndOpenChat(groupChatId: String) {
@@ -337,42 +327,4 @@ class MainActivity : AppCompatActivity() {
 //    private fun unbanUser(uid: String) {
 //
 //    }
-
-    private fun startCheckUpNotificationService(context: Context) {
-        val backgroundTaskState:Boolean = sharedPreferences.getBoolean("checkUpNotification",false)
-        if(backgroundTaskState) return
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        val intent = Intent(context, CheckUpNotification::class.java)
-        val pendingIntent =    PendingIntent.getBroadcast(
-            context,
-            0,
-            intent,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-
-
-        if(hasScheduleExactAlarmPermission(context)){
-            alarmManager.setInexactRepeating(
-                AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                AlarmManager.INTERVAL_DAY, pendingIntent)
-            Log.d("AlarmManagerPermission","Success")
-        }else{
-            Log.d("AlarmManagerPermission","Denied")
-
-        }
-        with(sharedPreferences.edit()){
-            putBoolean("checkUpNotification",true)
-            commit()
-        }
-    }
-    private fun hasScheduleExactAlarmPermission(context: Context): Boolean {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            alarmManager.canScheduleExactAlarms()
-        } else {
-            true
-        }
-    }
 }

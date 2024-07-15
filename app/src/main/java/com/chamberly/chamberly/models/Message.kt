@@ -8,9 +8,8 @@ data class Message @JvmOverloads constructor(
     var message_id: String = "",
     var game_content: String = "",
     var reactedWith: String = "",
-    var replyingTo: String = "",
-    var message_date:String = "",
-){
+    var replyingTo: String = ""
+) {
     override fun equals(other: Any?): Boolean {
         if (other == null || other !is Message) return false
         return message_id == other.message_id &&
@@ -38,9 +37,6 @@ fun Message.toMap(): Map<String, Any> {
     }
     if(replyingTo.isNotBlank()) {
         messageMap["replyingTo"] = this.replyingTo
-    }
-    if(message_date.isNotBlank()){
-        messageMap["message_date"] = this.message_date
     }
     return messageMap
 }

@@ -9,6 +9,7 @@ data class UserState(
     val notificationKey: String = "",
     val entitlement: Entitlement = Entitlement.REGULAR,
     val role: Role = Role.VENTOR,
+    var isRoleP: Boolean = false,
     val userRating: Float = 0.0f,
     val isRestricted: Boolean = false,
     val numRatings: Int = 0,

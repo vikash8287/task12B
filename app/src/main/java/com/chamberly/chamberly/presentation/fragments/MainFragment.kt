@@ -77,18 +77,6 @@ class MainFragment : Fragment() {
 
         profilePictureButton.setOnClickListener {
             showProfileOptionsPopup(it)
-//            requireParentFragment()
-//                .findNavController()
-//                .navigate(
-//                    R.id.profile_fragment,
-//                    null,
-//                    navOptions {
-//                        anim {
-//                            enter = R.anim.slide_in
-//                            exit = R.anim.slide_out
-//                        }
-//                    }
-//                )
         }
         return view
     }
@@ -186,6 +174,13 @@ class MainFragment : Fragment() {
         val confirmRoleChangeButton = profileOptionsPopUp.findViewById<TextView>(R.id.confirm_role_change_button)
         val ventorButton = profileOptionsPopUp.findViewById<RadioButton>(R.id.role_ventor)
         val listenerButton = profileOptionsPopUp.findViewById<RadioButton>(R.id.role_listener)
+        val subscribeButton = profileOptionsPopUp.findViewById<TextView>(R.id.subscribe_button)
+
+        userViewModel.appState.observe(viewLifecycleOwner) {
+            subscribeButton.visibility =
+                if (it.areExperimentalFeaturesEnabled) { View.VISIBLE }
+                else { View.GONE }
+        }
 
         var isListener = userViewModel.userState.value?.role == Role.LISTENER
 
@@ -227,6 +222,23 @@ class MainFragment : Fragment() {
             submitFeedback(profileOptionsPopUp)
         }
 
+        subscribeButton.setOnClickListener {
+            profileOptionsPopUp.dismiss()
+            findNavController()
+                .navigate(
+                    R.id.subscriptionFragment,
+                    null,
+                    navOptions {
+                        anim {
+                            enter = R.anim.slide_in
+                            exit = R.anim.slide_out
+                            popEnter = R.anim.slide_in
+                            popExit = R.anim.slide_out
+                        }
+                    }
+                )
+        }
+
         //TODO: Later, rectify positioning of the popup
         val params = WindowManager.LayoutParams()
         params.copyFrom(profileOptionsPopUp.window?.attributes)
@@ -236,7 +248,7 @@ class MainFragment : Fragment() {
         profileOptionsPopUp.window?.attributes = params
         profileOptionsPopUp.show()
     }
-// TODO: comment it
+
     private fun showAccountDeleteDialog() {
         val dialog = Dialog(requireActivity(), R.style.Dialog)
 

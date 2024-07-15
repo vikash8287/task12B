@@ -95,37 +95,5 @@
     <string name="welcome_to_chamberly">Welcome to Chamberly!</string>
     <string name="welcome_message">🌟 Chamberly is a supportive space for venting and listening, not for dating.\nSay Hi 👋</string>
     <string name="rate_user">Rate %1$s</string>
-    <string name="dd_mmm_yyyy_hh_mm_ss_z">dd MMM yyyy HH:mm:ss z</string>
-    <string name="message_photo">message_photo</string>
-    <string name="preview">preview</string>
-    <string name="photo">Photo</string>
-    <string name="confirm">Confirm</string>
-    <string name="image_preview">image_preview</string>
-    <string name="back_button">back button</string>
-    <string name="chamber_info">Chamber info</string>
-    <string name="memberEntry">User 1</string>
-    <string name="procrastion_cancel_success_title">Done!</string>
-    <string name="save">Save</string>
-    <string name="setting_button">setting_button</string>
-    <string name="setting">Setting</string>
-    <string name="sign_out">Sign Out</string>
-    <string name="edit_profile">Edit Profile</string>
-    <string name="notifications">Notifications</string>
-    <string name="what_other_can_see">What other can see</string>
-    <string name="terms_and_conditions">Terms and conditions</string>
-    <string name="privacy_policy">Privacy policy</string>
-    <string name="important">IMPORTANT!</string>
-    <string name="tell_us_how_to_improve">Tell us how to improve 😛</string>
-    <string name="i_don_t_like_the_users_here">I don\'t like the users here</string>
-    <string name="no_matches">No matches</string>
-    <string name="i_don_t_receive_notifications">I don\'t receive notifications</string>
-    <string name="app_problem_bugs">App problem/bugs</string>
-    <string name="app_doesn_t_have_what_i_want">App doesn\'t have what I want</string>
-    <string name="other">Other</string>
-
     <string name="welcome_text">Find others that relate to you and share your feelings anonymously!\n</string>
-    <string name="get_chamberly_plus">Get Chamberly Plus</string>
-    <string name="too_many_messages_body">Get Chamberly Plus to remove limit on messages in all chambers</string>
-    <string name="too_many_messages_heading">Message Limit Reached</string>
-    <string name="subscription_price">then 19kr/month</string>
 </resources>

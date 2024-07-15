@@ -1,17 +1,13 @@
 package com.chamberly.chamberly.presentation.fragments
 
-import android.app.AlarmManager
 import android.app.Dialog
-import android.app.PendingIntent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -20,39 +16,24 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat.getColor
 import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
-import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.fragment.findNavController
-import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chamberly.chamberly.R
-import com.chamberly.chamberly.presentation.adapters.MessageAdapter
-import com.chamberly.chamberly.models.ActiveChatInfoModel
 import com.chamberly.chamberly.models.Message
 import com.chamberly.chamberly.models.toMap
+import com.chamberly.chamberly.presentation.adapters.MessageAdapter
 import com.chamberly.chamberly.presentation.viewmodels.ChamberViewModel
 import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
-import com.chamberly.chamberly.notification.ReminderNotification
-
 import com.google.firebase.firestore.FieldValue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class ChatFragment : Fragment() {
 
@@ -64,12 +45,8 @@ class ChatFragment : Fragment() {
     private lateinit var emojiPickerView: EmojiPickerView
     private lateinit var cancelReplyButton: ImageButton
     private lateinit var replyContentView: TextView
-    private lateinit var addImageButton: Button
-    private lateinit var messagesCountView: TextView
 
-    private val pickMedia = registerActivityResultLauncher()
     private val replyingTo = MutableLiveData("")
-
     private val reactionEmojis: List<String> = listOf("👍", "💗", "😂", "😯", "😥", "😔", "+")
     private val chamberLeavingOptions: Map<String, String> = mapOf(
         "Done Venting" to "\"I am done venting, thank you so much 💗\"",
@@ -100,7 +77,6 @@ class ChatFragment : Fragment() {
             userViewModel.chamberID.value!!,
             userViewModel.userState.value!!.UID
         )
-        cancelNotificationAlarm(requireContext())
         chamberViewModel.setChamber(
             userViewModel.chamberID.value!!,
             userViewModel.userState.value!!.UID
@@ -113,21 +89,19 @@ class ChatFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_chat, container, false)
         val groupTitle = view.findViewById<TextView>(R.id.groupTitle)
-        messagesCountView = view.findViewById(R.id.messagesCount)
         val backButton = view.findViewById<ImageButton>(R.id.backButton)
         val exitChamberButton = view.findViewById<ImageButton>(R.id.exitChatButton)
         recyclerView = view.findViewById(R.id.recyclerViewMessages)
         val sendButton = view.findViewById<Button>(R.id.buttonSend)
         val messageBox = view.findViewById<EditText>(R.id.editTextMessage)
         val replyView = view.findViewById<LinearLayout>(R.id.replyingToView)
-        addImageButton = view.findViewById(R.id.buttonAddImage)
         emojiPickerView = view.findViewById(R.id.reaction_emoji_picker)
         replyContentView = view.findViewById(R.id.replyContentView)
         cancelReplyButton = view.findViewById(R.id.cancelReplyButton)
 
         replyingTo.observe(viewLifecycleOwner) {
             replyContentView.text = replyingTo.value
-            if (it.isNullOrBlank()) {
+            if(it.isNullOrBlank()) {
                 replyView.visibility = View.GONE
             } else {
                 replyView.visibility = View.VISIBLE
@@ -149,7 +123,7 @@ class ChatFragment : Fragment() {
         recyclerView.addOnLayoutChangeListener(recyclerViewLayoutChangeListener)
 
         messageAdapter.setOnMessageLongClickListener(
-            object : MessageAdapter.OnMessageLongClickListener {
+            object: MessageAdapter.OnMessageLongClickListener {
                 override fun onMessageLongClick(message: Message) {
                     showMessageDialog(message)
                 }
@@ -162,15 +136,11 @@ class ChatFragment : Fragment() {
 
         chamberViewModel.messages.observe(viewLifecycleOwner) { messages ->
             val chamberID = chamberViewModel.chamberState.value!!.chamberID
-
-            messagesCountView.text =
-                "${messages[chamberID]?.size ?: 0}/${chamberViewModel.messageLimitCount}"
-
-            if (chamberID.isBlank() || messages[chamberID] == null) {
+            if(chamberID.isBlank() ||
+                messages[chamberID] == null) {
                 return@observe
             }
-
-            if (messageAdapter.itemCount == 0) {
+            if(messageAdapter.itemCount == 0) {
                 messages?.let {
                     messageAdapter.setMessages(it[chamberID]!!)
                     recyclerView.scrollToPosition(it[chamberID]!!.size - 1)
@@ -179,10 +149,7 @@ class ChatFragment : Fragment() {
                 val newSize = messages[chamberID]!!.size
                 val oldSize = messageAdapter.itemCount
                 if (newSize == oldSize) {
-                    if (
-                        newSize == 40 &&
-                        messageAdapter.messageAt(0).message_id != messages[chamberID]!![0].message_id
-                    ) {
+                    if(newSize == 40 && messageAdapter.messageAt(0).message_id != messages[chamberID]!![0].message_id) {
                         // More than 40 messages & a new message received
                         messageAdapter.messageRemoved(messageAdapter.messageAt(0))
                         messageAdapter.addMessage(messages[chamberID]!![newSize - 1])
@@ -193,7 +160,7 @@ class ChatFragment : Fragment() {
                         // The message was edited
                         // Since there are only 40 message, we iterate over all and find the one
                         // that was modified.
-                        for (index in 0 until newSize) {
+                        for(index in 0 until newSize) {
                             if (messages[chamberID]!![index] != messageAdapter.messageAt(index)) {
                                 messageAdapter.messageChanged(
                                     messages[chamberID]!![index],
@@ -203,7 +170,7 @@ class ChatFragment : Fragment() {
                             }
                         }
                     }
-                } else if (newSize > oldSize) {
+                } else if(newSize > oldSize) {
                     // A new message was received
                     messageAdapter.addMessage(messages[chamberID]!![newSize - 1])
                     recyclerView.smoothScrollToPosition(newSize - 1)
@@ -213,19 +180,12 @@ class ChatFragment : Fragment() {
                     // messages
                 }
             }
+
         }
 
         sendButton.setOnClickListener {
-            val chamberID = chamberViewModel.chamberState.value!!.chamberID
-            // TODO: This check is to be done using messagesCount in RT-DB
-            if ((chamberViewModel.messages.value!![chamberID]?.size?.toLong()
-                    ?: 0L) >= chamberViewModel.messageLimitCount
-            ) {
-                showTooManyMessagesDialog()
-                return@setOnClickListener
-            }
             val text = messageBox.text.toString()
-            if (text.isBlank()) {
+            if(text.isBlank()) {
                 return@setOnClickListener
             }
             val message = Message(
@@ -257,7 +217,7 @@ class ChatFragment : Fragment() {
             userViewModel.closeChamber()
         }
 
-        val backPressHandler = object : OnBackPressedCallback(true) {
+        val backPressHandler = object: OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 chamberViewModel.clear(
                     userViewModel.userState.value!!.UID,
@@ -271,85 +231,7 @@ class ChatFragment : Fragment() {
         exitChamberButton.setOnClickListener {
             showChamberExitDialog()
         }
-        //val postImage = PostImage(activity= requireActivity(),storage = FirebaseStorage.getInstance(),auth = FirebaseAuth.getInstance(), database = FirebaseDatabase.getInstance(),groupChatId = groupChatId,senderName=senderName,messageAdapter = messageAdapter, recyclerView = recyclerView,messages = chamberViewModel.messages)
-
-        addImageButton.setOnClickListener {
-            launchPhotoPicker()
-        }
-//        groupTitle.setOnClickListener {
-//            chamberViewModel.getChamberMetadata {
-//                if (it.isNotEmpty()) {
-//                    val chamberInfo = ActiveChatInfoModel(
-//                        groupChatID = chamberViewModel.chamberState.value!!.chamberID,
-//                        groupChatName = groupTitle.text as String,
-//                        activeChatMemberLimit = 2,
-//                        memberInfoList = it
-//                    )
-//                    val args = Bundle()
-//                    args.putSerializable("chamberInfo", chamberInfo)
-//                    val navController = requireActivity().findNavController(R.id.navHostFragment)
-//                    Log.i("calledBefore", "is bbeing caLLED")
-//
-//                    navController.navigate(
-//                        R.id.chamber_info_fragment,
-//                        args = args,
-//                        navOptions {
-//                            anim {
-//                                enter = R.anim.slide_in
-//                                exit = R.anim.slide_out
-//                                popEnter = R.anim.slide_in
-//                                popExit = R.anim.slide_out
-//                            }
-//                        }
-//
-//                    )
-//                    Log.i("called", "is bbeing caLLED")
-//                } else {
-//                    Toast.makeText(context, "Chamber info not available", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//        }
-
         return view
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-    }
-
-    private fun showTooManyMessagesDialog() {
-        val dialog = Dialog(requireContext(), R.style.Dialog)
-        dialog.setContentView(R.layout.dialog_too_many_messages)
-
-        val getChamberlyPlusButton = dialog.findViewById<Button>(R.id.getChamberlyPlusButton)
-        val cancelButton = dialog.findViewById<Button>(R.id.cancelButton)
-
-        getChamberlyPlusButton.setOnClickListener {
-            dialog.dismiss()
-            openSubscriptionScreen()
-        }
-        cancelButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    }
-
-    private fun openSubscriptionScreen() {
-        findNavController()
-            .navigate(
-                R.id.subscriptionFragment,
-                null,
-                navOptions {
-                    anim {
-                        enter = R.anim.slide_in
-                        exit = R.anim.slide_out
-                        popEnter = R.anim.slide_in
-                        popExit = R.anim.slide_out
-                    }
-                }
-            )
     }
 
     private fun showMessageDialog(message: Message) {
@@ -375,7 +257,7 @@ class ChatFragment : Fragment() {
             emojiButton.textSize = 24.0f
             emojiButton.setPadding(8, 8, 8, 8)
             emojiButton.setOnClickListener {
-                if (emoji != "+") {
+                if(emoji != "+") {
                     react(message, emoji)
                 } else {
                     emojiPickerView.visibility = View.VISIBLE
@@ -419,8 +301,7 @@ class ChatFragment : Fragment() {
         blockButton.setOnClickListener {
             dialog.setContentView(R.layout.confirm_block)
             val blockDialogTitle = dialog.findViewById<TextView>(R.id.blockDialogTitle)
-            blockDialogTitle.text =
-                getString(R.string.block_user_dialog_title, message.sender_name)
+            blockDialogTitle.text = getString(R.string.block_user_dialog_title, message.sender_name)
             val confirmButton = dialog.findViewById<Button>(R.id.buttonConfirmBlock)
             val cancelButton = dialog.findViewById<Button>(R.id.buttonCancelBlock)
 
@@ -451,8 +332,7 @@ class ChatFragment : Fragment() {
     }
 
     private fun copyMessage(messageContent: String) {
-        val clipboard =
-            requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("Message", messageContent)
         clipboard.setPrimaryClip(clip)
     }
@@ -487,8 +367,7 @@ class ChatFragment : Fragment() {
         dialog.setCancelable(true)
         dialog.setCanceledOnTouchOutside(true)
 
-        val chamberExitOptionsLayout =
-            dialog.findViewById<LinearLayout>(R.id.leave_chamber_options)
+        val chamberExitOptionsLayout = dialog.findViewById<LinearLayout>(R.id.leave_chamber_options)
         val uid = userViewModel.userState.value!!.UID
         val displayName = userViewModel.userState.value!!.displayName
         var message = Message(
@@ -590,9 +469,9 @@ class ChatFragment : Fragment() {
         confirmButton.setOnClickListener {
             val stars = ratingBar.rating
             rateUser(userToRateUID, stars.toDouble())
-            if (stars == 5.0f) {
+            if(stars == 5.0f) {
                 askForPlayStoreReview(dialog, callback = callback)
-            } else if (stars <= 3.0f) {
+            } else if(stars <= 3.0f) {
                 blockUser(uid = userToRateUID)
                 showReportDialog(
                     dialog = dialog,
@@ -650,7 +529,7 @@ class ChatFragment : Fragment() {
                 userToRate = userToRate,
                 starRating = starRating,
                 UID = userViewModel.userState.value!!.UID
-            )
+        )
     }
 
     private fun reportUser(
@@ -661,7 +540,7 @@ class ChatFragment : Fragment() {
         val members = chamberViewModel.chamberState.value!!.members
         val uid =
             if (members.size == 1) ""
-            else if (members[0] == userViewModel.userState.value!!.UID) members[1]
+            else if(members[0] == userViewModel.userState.value!!.UID) members[1]
             else members[0]
         val report = hashMapOf(
             "against" to (against ?: uid),
@@ -682,7 +561,9 @@ class ChatFragment : Fragment() {
         chamberViewModel.reportUser(report = report)
     }
 
-    private fun blockUser(uid: String) {
+    private fun blockUser(
+        uid: String
+    ) {
         userViewModel.blockUser(uid)
     }
 
@@ -720,57 +601,6 @@ class ChatFragment : Fragment() {
         }
     }
 
-
-    private fun registerActivityResultLauncher(): ActivityResultLauncher<PickVisualMediaRequest> {
-        return registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            if (uri != null) {
-                showImageConfirmationDialogBox(imageUri = uri) {
-                    if (it) {
-                        chamberViewModel.postImage(
-                            uri = uri,
-                            UID = userViewModel.userState.value!!.UID,
-                            senderName = userViewModel.userState.value!!.displayName
-                        )
-                    } else {
-                        Log.d("ImagePickedConfirmation", "Failed")
-                    }
-                }
-            } else {
-                Log.d("PhotoPicker", "No media selected")
-            }
-        }
-    }
-
-    private fun launchPhotoPicker() {
-        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-    }
-
-    private fun showImageConfirmationDialogBox(
-        imageUri: Uri,
-        result: (v: Boolean) -> Unit
-    ) {
-        val dialog = Dialog(requireActivity(), R.style.Dialog)
-        dialog.setContentView(R.layout.dialog_box_upload_button)
-        dialog.setCancelable(true)
-        val confirm_button = dialog.findViewById<Button>(R.id.confirm_button)
-        val cancel_button = dialog.findViewById<Button>(R.id.cancel_button)
-        val previewImage = dialog.findViewById<ImageView>(R.id.previewImage)
-        confirm_button.setOnClickListener {
-            result(true)
-            dialog.dismiss()
-        }
-        cancel_button.setOnClickListener {
-            result(false)
-            dialog.dismiss()
-        }
-
-        CoroutineScope(Dispatchers.Main).launch {
-            chamberViewModel.compressThumbnail(imageUri, previewImage) {
-                dialog.show()
-            }
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         chamberViewModel.addNotificationKey(
@@ -778,66 +608,11 @@ class ChatFragment : Fragment() {
             userViewModel.userState.value!!.notificationKey
         )
     }
-
     override fun onPause() {
         super.onPause()
         chamberViewModel.addNotificationKey(
             userViewModel.userState.value!!.UID,
             userViewModel.userState.value!!.notificationKey
         )
-        scheduleNotification(requireContext())
-
-    }
-
-    private fun scheduleNotification(context: Context) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        val intent = Intent(context, ReminderNotification::class.java)
-        val pendingIntent =
-            PendingIntent.getBroadcast(
-                context,
-                1,
-                intent,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
-            )
-
-        val triggerAtMillis = System.currentTimeMillis() + 16 * 60 * 60 * 1000L
-        if (hasScheduleExactAlarmPermission(context)) {
-            Log.d("AlarmManagerPermission", "Success")
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerAtMillis,
-                pendingIntent
-            )
-
-        } else {
-            Log.d("AlarmManagerPermission", "Denied")
-        }
-    }
-
-    private fun hasScheduleExactAlarmPermission(context: Context): Boolean {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            alarmManager.canScheduleExactAlarms()
-        } else {
-            true
-        }
-    }
-
-    private fun cancelNotificationAlarm(context: Context) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        val intent = Intent(context, ReminderNotification::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            1,
-            intent,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-            else PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        alarmManager.cancel(pendingIntent)
     }
 }
-
-
