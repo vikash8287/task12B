@@ -28,6 +28,7 @@
         <action
             android:id="@+id/action_main_fragment_to_chamber_search_fragment"
             app:destination="@id/chamber_search_fragment"/>
+
     </fragment>
 
 

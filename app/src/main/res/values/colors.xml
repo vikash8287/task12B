@@ -24,4 +24,5 @@
     </color>
     <color name="lightTextColor">#2E2E5B</color>
     <color name="golden">#FFCA5F</color>
+    <color name="text_primary">#2E2E5B</color>
 </resources>

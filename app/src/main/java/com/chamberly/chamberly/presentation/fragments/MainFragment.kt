@@ -76,7 +76,9 @@ class MainFragment : Fragment() {
 //        }
 
         profilePictureButton.setOnClickListener {
-            showProfileOptionsPopup(it)
+           // showProfileOptionsPopup(it)
+            val homeNavController = homeNavHostFragment?.navController
+            homeNavController?.navigate(R.id.action_homeFragment_to_leaderboardFragment)
         }
         return view
     }

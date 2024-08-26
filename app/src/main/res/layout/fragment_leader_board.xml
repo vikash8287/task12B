@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/leaderboard_fragment"
+    tools:context=".presentation.fragments.LeaderBoardFragment"
+    android:background="#F2F2FF">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/ellipse_1"
+        android:layout_width="match_parent"
+        android:layout_height="265dp"
+        android:background="@drawable/leaderboard_topview_background"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/rankingChange"
+            android:layout_width="28dp"
+            android:layout_height="26dp"
+            android:layout_marginTop="12dp"
+            android:text="4"
+            android:textSize="20dp"
+            app:layout_constraintBottom_toBottomOf="@+id/upDownTextview"
+            app:layout_constraintEnd_toStartOf="@+id/upDownTextview"
+            app:layout_constraintHorizontal_bias="0.756"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <TextView
+            android:id="@+id/upDownTextview"
+            android:layout_width="52dp"
+            android:layout_height="27dp"
+            android:layout_marginStart="44dp"
+            android:text="up"
+            android:textSize="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/countdownTextView"
+            app:layout_constraintHorizontal_bias="0.093"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.07" />
+
+        <TextView
+            android:id="@+id/countdownTextView"
+            android:layout_width="76dp"
+            android:layout_height="39dp"
+            android:text="00:00"
+            android:textSize="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.901"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.061" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="115dp"
+            android:layout_height="160dp"
+            android:gravity="center_horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.152">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_marginBottom="44dp"
+                android:src="@drawable/top3star"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <FrameLayout
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="2dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:layout_width="29dp"
+                    android:layout_height="28dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/rankstar1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="1dp"
+                    android:fontFamily="@font/sf_pro_display_bold"
+                    android:text="1"
+                    android:textColor="@color/text_primary" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/top3name1"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:layout_marginBottom="32dp"
+                android:fontFamily="@font/sf_pro_display_bold"
+                android:gravity="center_horizontal"
+                android:text="Jessica J."
+                android:textColor="#FFFFFF"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintVertical_bias="0.746" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/coins"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.3"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintVertical_bias="1.0" />
+
+            <TextView
+                android:id="@+id/top3coins1"
+                android:layout_width="50dp"
+                android:layout_height="20dp"
+                android:text="XX"
+                android:textColor="#FFB800"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.2"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1.0" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="115dp"
+            android:layout_height="160dp"
+            android:gravity="center_horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.101"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.552">
+
+            <com.chamberly.chamberly.StarImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginBottom="44dp"
+                android:src="@drawable/top3star"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <FrameLayout
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="2dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:layout_width="29dp"
+                    android:layout_height="28dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/rankstar2" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="1dp"
+                    android:fontFamily="@font/sf_pro_display_bold"
+                    android:text="2"
+                    android:textColor="@color/text_primary" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/top3name2"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:layout_marginBottom="32dp"
+                android:fontFamily="@font/sf_pro_display_bold"
+                android:gravity="center_horizontal"
+                android:text="Jessica J."
+                android:textColor="#FFFFFF"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintVertical_bias="0.746" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/coins"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.3"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintVertical_bias="1.0" />
+
+            <TextView
+                android:id="@+id/top3coins2"
+                android:layout_width="50dp"
+                android:layout_height="20dp"
+                android:text="XX"
+                android:textColor="#FFB800"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.2"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1.0" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="115dp"
+            android:layout_height="160dp"
+            android:gravity="center_horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.885"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.552">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_marginBottom="44dp"
+                android:src="@drawable/top3star"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <FrameLayout
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="2dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:layout_width="29dp"
+                    android:layout_height="28dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/rankstar3" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="1dp"
+                    android:fontFamily="@font/sf_pro_display_bold"
+                    android:text="3"
+                    android:textColor="@color/text_primary" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/top3name3"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:layout_marginBottom="32dp"
+                android:fontFamily="@font/sf_pro_display_bold"
+                android:gravity="center_horizontal"
+                android:text="Jessica J."
+                android:textColor="#FFFFFF"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintVertical_bias="0.746" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/coins"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.3"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintVertical_bias="1.0" />
+
+            <TextView
+                android:id="@+id/top3coins3"
+                android:layout_width="50dp"
+                android:layout_height="20dp"
+                android:text="XX"
+                android:textColor="#FFB800"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.2"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1.0" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:layout_width="355dp"
+        android:layout_height="418dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="236dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/leaderboard_bottomview_background"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
+
+        <LinearLayout
+            android:layout_width="315dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="10.65dp"
+            android:background="@drawable/leaderboard_button_bg"
+            android:elevation="4.37dp"
+            android:gravity="center_vertical|center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.492"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btntoday"
+                android:layout_width="99dp"
+                android:layout_height="32dp"
+                android:background="@drawable/leaderboard_button_bg2"
+                android:fontFamily="@font/sf_pro_display_bold"
+                android:gravity="center"
+                android:textSize="12.48sp"
+                android:text="Today"
+                android:textColor="@color/text_primary" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnweek"
+                android:layout_width="99dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="3dp"
+                android:background="@drawable/leaderboard_button_bg2"
+                android:fontFamily="@font/sf_pro_display_bold"
+                android:gravity="center"
+                android:textSize="12.48sp"
+                android:text="This Week"
+                android:textColor="@color/text_primary" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnmonth"
+                android:layout_width="99dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="3dp"
+                android:background="@drawable/leaderboard_button_bg2"
+                android:fontFamily="@font/sf_pro_display_bold"
+                android:gravity="center"
+                android:textSize="12.48sp"
+                android:text="This Month"
+                android:textColor="@color/text_primary" />
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/leaderboard_recyclerView"
+            android:layout_width="315dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            tools:listitem="@layout/tempitem" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

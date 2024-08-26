@@ -7,10 +7,19 @@
     <fragment
         android:id="@+id/home_fragment"
         android:name="com.chamberly.chamberly.presentation.fragments.HomeFragment"
-        android:label="HomeFragment"/>
+        android:label="HomeFragment">
+        <action
+            android:id="@+id/action_homeFragment_to_leaderboardFragment"
+            app:destination="@id/leaderboard_fragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/active_chambers_fragment"
         android:name="com.chamberly.chamberly.presentation.fragments.ActiveChambersFragment"
         android:label="ActiveChambersFragment"/>
+    <fragment
+        android:id="@+id/leaderboard_fragment"
+        android:name="com.chamberly.chamberly.presentation.fragments.LeaderBoardFragment"
+        android:label="LeaderboardFragment" />
+
 </navigation>
