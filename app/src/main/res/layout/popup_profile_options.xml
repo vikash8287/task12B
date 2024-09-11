@@ -88,6 +88,14 @@
         android:paddingVertical="8dp"
         android:textColor="#000"/>
     <TextView
+        android:id="@+id/leaderboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="LeaderBoard"
+        android:textSize="16sp"
+        android:paddingVertical="8dp"
+        android:textColor="#000"/>
+    <TextView
         android:id="@+id/show_privacy_policy"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

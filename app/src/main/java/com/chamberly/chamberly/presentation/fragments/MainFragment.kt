@@ -76,9 +76,7 @@ class MainFragment : Fragment() {
 //        }
 
         profilePictureButton.setOnClickListener {
-           // showProfileOptionsPopup(it)
-            val homeNavController = homeNavHostFragment?.navController
-            homeNavController?.navigate(R.id.action_homeFragment_to_leaderboardFragment)
+            showProfileOptionsPopup(it)
         }
         return view
     }
@@ -168,6 +166,7 @@ class MainFragment : Fragment() {
         profileOptionsPopUp.setContentView(R.layout.popup_profile_options)
 
         val deleteAccountButton = profileOptionsPopUp.findViewById<TextView>(R.id.delete_account)
+        val leaderBoardButton= profileOptionsPopUp.findViewById<TextView>(R.id.leaderboard)
         val showPrivacyPolicyButton = profileOptionsPopUp.findViewById<TextView>(R.id.show_privacy_policy)
         val submitFeedbackButton = profileOptionsPopUp.findViewById<TextView>(R.id.submit_feedback)
 
@@ -213,6 +212,10 @@ class MainFragment : Fragment() {
         deleteAccountButton.setOnClickListener {
             profileOptionsPopUp.dismiss()
             showAccountDeleteDialog()
+        }
+        leaderBoardButton.setOnClickListener {
+            userViewModel.openLeaderboard()
+            profileOptionsPopUp.dismiss()
         }
 
         showPrivacyPolicyButton.setOnClickListener {

@@ -13,7 +13,10 @@ data class LeaderBoard(
     var earnedThisMonth: Int = 0,
     var todayRank:Int=0,
     var weekRank:Int=0,
-    var monthRank:Int=0
+    var monthRank:Int=0,
+    var todayChangeRank:Int=0,
+    var weekChangeRank:Int=0,
+    var monthChangeRank:Int=0
 )
 
 

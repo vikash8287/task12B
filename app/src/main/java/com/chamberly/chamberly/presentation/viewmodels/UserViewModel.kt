@@ -67,7 +67,14 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
         areExperimentalFeaturesEnabled = false
     ))
     val appState: LiveData<AppState> = _appState
-
+    var _isInLeaderboard= MutableLiveData<Boolean>(false)
+    var isInLeaderboard: LiveData<Boolean> = _isInLeaderboard
+    fun openLeaderboard(){
+        _isInLeaderboard.postValue(true)
+    }
+    fun closeLeaderboard(){
+        _isInLeaderboard.postValue(false)
+    }
     private val _chamberID = MutableLiveData<String>()
     val chamberID: LiveData<String> = _chamberID
 
@@ -206,6 +213,9 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             todayRank = -1,
             weekRank = -1,
             monthRank = -1,
+            todayChangeRank = 0,
+            weekChangeRank = 0,
+            monthChangeRank = 0
         )
 
         db.collection("LeaderBoard").document(uid)
