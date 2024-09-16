@@ -13,7 +13,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="3dp"
+        app:layout_constraintEnd_toStartOf="@+id/coins"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -23,10 +24,10 @@
             android:id="@+id/unranked_textview"
             android:layout_width="38dp"
             android:layout_height="wrap_content"
-            android:visibility="visible"
             android:fontFamily="@font/sf_pro_display_regular"
             android:textColor="#979797"
             android:textSize="9sp"
+            android:visibility="visible"
             tools:ignore="SmallSp" />
 
         <FrameLayout
@@ -47,8 +48,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginBottom="3dp"
                 android:layout_marginEnd="4dp"
+                android:layout_marginBottom="3dp"
                 android:fontFamily="@font/sf_pro_display_bold"
                 android:text="7"
                 android:textColor="#2E2E5B"
@@ -59,8 +60,8 @@
             android:id="@+id/leaderboard_user_image"
             android:layout_width="43dp"
             android:layout_height="43dp"
-            android:contentDescription="@string/todo"
             android:layout_marginStart="5dp"
+            android:contentDescription="@string/todo"
             android:src="@drawable/rankprofile" />
 
         <TextView
@@ -68,21 +69,21 @@
             android:layout_width="wrap_content"
             android:layout_height="20dp"
             android:layout_marginStart="10dp"
+            android:contentDescription="@string/todo"
             android:fontFamily="@font/sf_pro_display_bold"
             android:gravity="center_vertical"
-            android:contentDescription="@string/todo"
             android:text="vikash"
             android:textColor="@color/text_primary"
             tools:ignore="HardcodedText" />
 
-<!--        <ImageView-->
-<!--            android:id="@+id/upDownImageView"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:src="@drawable/up"-->
-<!--            android:contentDescription="@string/todo"-->
-<!--            android:layout_marginTop="2.5dp"-->
-<!--            android:layout_marginStart="5dp"/>-->
+        <ImageView
+            android:id="@+id/item_upDown_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="2.5dp"
+            android:contentDescription="@string/todo"
+            android:src="@drawable/up" />
 
     </LinearLayout>
 
@@ -95,6 +96,7 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <ImageView
+        android:id="@+id/coins"
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:contentDescription="@string/todo"
@@ -110,15 +112,15 @@
         android:id="@+id/leaderboard_user_coins"
         android:layout_width="wrap_content"
         android:layout_height="22dp"
+        android:contentDescription="@string/todo"
         android:fontFamily="@font/sf_pro_display_regular"
         android:gravity="center"
         android:text="343343"
-        android:textColor="#613FA0"
-        android:contentDescription="@string/todo"
+        android:textColor="@color/royal_purple"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.914"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="0.222"
+        app:layout_constraintStart_toEndOf="@id/coins"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.529"
         tools:ignore="HardcodedText" />

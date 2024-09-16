@@ -1,6 +1,7 @@
 package com.chamberly.chamberly.presentation.adapters
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
@@ -8,24 +9,22 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.models.LeaderBoard
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+
 
 class LeaderBoardAdapter(
-    private val leaderBoardList: List<LeaderBoard>
+    private val leaderBoardList: List<LeaderBoard>,private val context: Context
 ) : RecyclerView.Adapter<LeaderBoardAdapter.LeaderBoardViewHolder>() {
     private val displayedList: MutableList<LeaderBoard> = mutableListOf()
     private val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
-    //private var periodButton="today"
-    //val docRef = FirebaseFirestore.getInstance().collection("LeaderBoard").document(currentUserId!!)
-
+    var periodButton="today"
     @SuppressLint("NotifyDataSetChanged")
-    fun updateDisplayedList(period:String) {
+    fun updateDisplayedList() {
         displayedList.clear()
-        //periodButton=period
         var currentUserInTopTen = false
         val currentUserLeaderBoard: LeaderBoard?
 
@@ -62,52 +61,120 @@ class LeaderBoardAdapter(
         private val userName: TextView = view.findViewById(R.id.leaderboard_user_name)
         private val earnedCoins: TextView = view.findViewById(R.id.leaderboard_user_coins)
         private val rank: TextView = view.findViewById(R.id.rank)
-        //private val upDownImageView: ImageView = view.findViewById(R.id.upDownImageView)
+        private val itemUpDownImageView: ImageView = view.findViewById(R.id.item_upDown_image)
         private val frameLayout: FrameLayout = view.findViewById(R.id.rankframelayout)
         private val unrankedTextView: TextView = view.findViewById(R.id.unranked_textview)
         private val leaderboardUserImageView: ImageView = view.findViewById(R.id.leaderboard_user_image)
         @SuppressLint("SetTextI18n")
         fun bind(leaderBoard: LeaderBoard, position: Int) {
             userName.text = leaderBoard.name
-            earnedCoins.text = leaderBoard.auxiCoins.toString()
+            earnedCoins.text = when(periodButton){
+                "today"->leaderBoard.earnedToday.toString()
+                "thisWeek"->leaderBoard.earnedThisWeek.toString()
+                "thisMonth"->leaderBoard.earnedThisMonth.toString()
+                else -> ({}).toString()
+            }
             rank.text = (position + 1).toString()
             val imageName = leaderBoard.avatarName
             val imageFileName = "$imageName.png"
 
-//            if (leaderBoard.uid == currentUserId) {
-//                docRef.get()
-//                    .addOnSuccessListener { document ->
-//                        if (document != null && document.exists()) {
-//                            val change = when (periodButton) {
-//                                "today" -> document.getLong("todayChangeRank")?.toInt()
-//                                "thisWeek" -> document.getLong("weekChangeRank")?.toInt()
-//                                "thisMonth" -> document.getLong("monthChangeRank")?.toInt()
-//                                else -> 0
-//                            }
-//                            change?.let {
-//                                if (it < 0) {
-//                                    upDownImageView.setImageResource(R.drawable.down)
-//                                } else {
-//                                    upDownImageView.setImageResource(R.drawable.up)
-//                                }
-//                            }
-//                        }
-//                    }
-//            } else {
-//                upDownImageView.visibility = View.GONE
-//            }
+            val earnedValue = when(periodButton) {
+                "today" -> leaderBoard.earnedToday
+                "thisWeek" -> leaderBoard.earnedThisWeek
+                "thisMonth" -> leaderBoard.earnedThisMonth
+                else -> 0
+            }
 
-            if(leaderBoard.auxiCoins==0){
-                unrankedTextView.visibility=View.VISIBLE
-                unrankedTextView.text="Unranked"
-                unrankedTextView.paint.textSkewX=-0.30f
-                frameLayout.visibility=View.GONE
+            if(currentUserId==leaderBoard.uid){
+                itemUpDownImageView.visibility = View.VISIBLE
+                val currentTimestamp = System.currentTimeMillis()
+                when (periodButton) {
+                    "today" -> {
+                        val lastTodayUpdated = (leaderBoard.lastTodayUpdated as? Long) ?: 0L
+                        val change = leaderBoard.prevTodayRank - leaderBoard.todayRank
+                        val flag = (currentTimestamp - lastTodayUpdated) >= 43200000L
+
+                        if (flag) {
+                            if (change < 0) {
+                                itemUpDownImageView.setImageResource(R.drawable.nochangedown)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.gray))
+                            } else {
+                                itemUpDownImageView.setImageResource(R.drawable.nochangeup)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.gray))
+                            }
+                        } else {
+                            if (change < 0) {
+                                itemUpDownImageView.setImageResource(R.drawable.down)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.light_red))
+                            } else {
+                                itemUpDownImageView.setImageResource(R.drawable.up)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.light_grass_green))
+                            }
+                        }
+                    }
+
+                    "thisWeek" -> {
+                        val lastWeekUpdated = (leaderBoard.lastWeekUpdated as? Long) ?: 0L
+                        val change = leaderBoard.prevWeekRank - leaderBoard.weekRank
+                        val flag = (currentTimestamp - lastWeekUpdated) >= 302400000L
+
+                        if (flag) {
+                            if (change < 0) {
+                                itemUpDownImageView.setImageResource(R.drawable.nochangedown)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.gray))
+                            } else {
+                                itemUpDownImageView.setImageResource(R.drawable.nochangeup)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.gray))
+                            }
+                        } else {
+                            if (change < 0) {
+                                itemUpDownImageView.setImageResource(R.drawable.down)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.light_red))
+                            } else {
+                                itemUpDownImageView.setImageResource(R.drawable.up)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.light_grass_green))
+                            }
+                        }
+                    }
+
+                    "thisMonth" -> {
+                        val lastMonthUpdated = (leaderBoard.lastMonthUpdated as? Long) ?: 0L
+                        val change = leaderBoard.prevMonthRank - leaderBoard.monthRank
+                        val flag = (currentTimestamp - lastMonthUpdated) >= 1296000000L
+
+                        if (flag) {
+                            if (change < 0) {
+                                itemUpDownImageView.setImageResource(R.drawable.nochangedown)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.gray))
+                            } else {
+                                itemUpDownImageView.setImageResource(R.drawable.nochangeup)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.gray))
+                            }
+                        } else {
+                            if (change < 0) {
+                                itemUpDownImageView.setImageResource(R.drawable.down)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.light_red))
+                            } else {
+                                itemUpDownImageView.setImageResource(R.drawable.up)
+                                earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.light_grass_green))
+                            }
+                        }
+                    }
+                }
 
             }
-            else{
-                unrankedTextView.visibility=View.GONE
-                frameLayout.visibility=View.VISIBLE
+            else {itemUpDownImageView.visibility=View.GONE;earnedCoins.setTextColor(ContextCompat.getColor(context, R.color.royal_purple))}
+
+            if (earnedValue == 0) {
+                unrankedTextView.visibility = View.VISIBLE
+                unrankedTextView.text = "Unranked"
+                unrankedTextView.paint.textSkewX = -0.30f
+                frameLayout.visibility = View.GONE
+            } else {
+                unrankedTextView.visibility = View.GONE
+                frameLayout.visibility = View.VISIBLE
             }
+
             try{
                 if (imageName != "") {
                     val assetManager = itemView.context.assets

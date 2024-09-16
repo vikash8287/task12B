@@ -205,17 +205,18 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             name = displayName,
             uid = uid,
             avatarName = (1..500).random().toString(),
-            auxiCoins = 0,
-            lastUpdated = currentTimeMillis,
+            lastTodayUpdated = currentTimeMillis,
+            lastWeekUpdated= currentTimeMillis,
+            lastMonthUpdated= currentTimeMillis,
             earnedToday = 0,
             earnedThisWeek = 0,
             earnedThisMonth = 0,
             todayRank = -1,
             weekRank = -1,
             monthRank = -1,
-            todayChangeRank = 0,
-            weekChangeRank = 0,
-            monthChangeRank = 0
+            prevTodayRank = 0,
+            prevWeekRank = 0,
+            prevMonthRank = 0
         )
 
         db.collection("LeaderBoard").document(uid)

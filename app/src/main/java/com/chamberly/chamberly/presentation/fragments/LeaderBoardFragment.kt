@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -94,7 +95,7 @@ class LeaderBoardFragment : Fragment() {
         val leaderBoardRecyclerView= view.findViewById<RecyclerView>(R.id.leaderboard_recyclerView)
 
         leaderBoardRecyclerView.layoutManager = LinearLayoutManager(context)
-        leaderBoardAdapter = LeaderBoardAdapter(leaderBoardList)
+        leaderBoardAdapter = LeaderBoardAdapter(leaderBoardList,this.requireContext())
         leaderBoardRecyclerView.adapter = leaderBoardAdapter
 
         setButtonBackground(btnToday,btnThisWeek,btnThisMonth)
@@ -144,40 +145,57 @@ class LeaderBoardFragment : Fragment() {
         when(period){
             "today" -> {
                 leaderBoardList.addAll(todayCacheList)
+                leaderBoardAdapter.periodButton="today"
             }
             "thisWeek" -> {
                 leaderBoardList.addAll(weekCacheList)
+                leaderBoardAdapter.periodButton="thisWeek"
             }
             "thisMonth" -> {
                 leaderBoardList.addAll(monthCacheList)
+                leaderBoardAdapter.periodButton="thisMonth"
             }
         }
         for (i in 0 until minOf(3, leaderBoardList.size)) {
             when (i) {
                 0 -> {
                     name1.text = leaderBoardList[i].name
-                    coin1.text = leaderBoardList[i].auxiCoins.toString()
+                    coin1.text = when(period){
+                        "today"->leaderBoardList[i].earnedToday.toString()
+                        "thisWeek"->leaderBoardList[i].earnedThisWeek.toString()
+                        "thisMonth"->leaderBoardList[i].earnedThisMonth.toString()
+                        else -> ({}).toString()
+                    }
                     val imageName = leaderBoardList[i].avatarName
                     setProfilePic(imageName,1)
                 }
                 1 -> {
                     name2.text = leaderBoardList[i].name
-                    coin2.text = leaderBoardList[i].auxiCoins.toString()
+                    coin2.text = when(period){
+                        "today"->leaderBoardList[i].earnedToday.toString()
+                        "thisWeek"->leaderBoardList[i].earnedThisWeek.toString()
+                        "thisMonth"->leaderBoardList[i].earnedThisMonth.toString()
+                        else -> ({}).toString()
+                    }
                     val imageName = leaderBoardList[i].avatarName
                     setProfilePic(imageName,2)
                 }
                 2 -> {
                     name3.text = leaderBoardList[i].name
-                    coin3.text = leaderBoardList[i].auxiCoins.toString()
+                    coin3.text = when(period){
+                        "today"->leaderBoardList[i].earnedToday.toString()
+                        "thisWeek"->leaderBoardList[i].earnedThisWeek.toString()
+                        "thisMonth"->leaderBoardList[i].earnedThisMonth.toString()
+                        else -> ({}).toString()
+                    }
                     val imageName = leaderBoardList[i].avatarName
                     setProfilePic(imageName,3)
                 }
             }
         }
         updateRanking(leaderBoardList, period)
-        leaderBoardAdapter.updateDisplayedList(periodButton)
+        leaderBoardAdapter.updateDisplayedList()
         leaderBoardAdapter.notifyDataSetChanged()
-
     }
 
     override fun onDestroyView() {
@@ -223,7 +241,7 @@ class LeaderBoardFragment : Fragment() {
                 weekCacheList.clear()
                 monthCacheList.clear()
 
-                val currentTimestamp = System.currentTimeMillis()
+                val currentTimestamp = System.currentTimeMillis()//+86400000 ->1 day in millisecond
                 val startNextDayStamp = getStartOfNextDayInMillis()
                 val startNextWeekStamp = getStartOfNextWeekInMillis()
                 val startNextMonthStamp = getStartOfNextMonthInMillis()
@@ -273,19 +291,14 @@ class LeaderBoardFragment : Fragment() {
                             }
                     }
 
-                    // Create separate copies for each period
-                    val todayLeaderBoard = leaderBoard.copy(earnedToday = leaderBoard.earnedToday, auxiCoins = leaderBoard.earnedToday)
-                    val weekLeaderBoard = leaderBoard.copy(earnedThisWeek = leaderBoard.earnedThisWeek, auxiCoins = leaderBoard.earnedThisWeek)
-                    val monthLeaderBoard = leaderBoard.copy(earnedThisMonth = leaderBoard.earnedThisMonth, auxiCoins = leaderBoard.earnedThisMonth)
-
-                    todayCacheList.add(todayLeaderBoard)
-                    weekCacheList.add(weekLeaderBoard)
-                    monthCacheList.add(monthLeaderBoard)
+                    todayCacheList.add(leaderBoard)
+                    weekCacheList.add(leaderBoard)
+                    monthCacheList.add(leaderBoard)
                 }
 
-                todayCacheList.sortByDescending { it.auxiCoins }
-                weekCacheList.sortByDescending { it.auxiCoins }
-                monthCacheList.sortByDescending { it.auxiCoins }
+                todayCacheList.sortByDescending { it.earnedToday }
+                weekCacheList.sortByDescending { it.earnedThisWeek }
+                monthCacheList.sortByDescending { it.earnedThisMonth }
 
                 updateTop3withRecyclerView(period)
             }
@@ -309,66 +322,90 @@ class LeaderBoardFragment : Fragment() {
                 else -> continue
             }
 
-            if (oldRank != i + 1) {
-                val change = oldRank - (i + 1)
-                if (leaderBoard.uid == currentUserUid) {
-                    showRankingChange(change)
-                }
-
-                // Update the rank and save it to Firestore
+            if (oldRank != i + 1 && leaderBoard.uid == currentUserUid) {
                 when (period) {
                     "today" -> {
+                        leaderBoard.prevTodayRank=leaderBoard.todayRank
                         leaderBoard.todayRank = i + 1
                         docRef.update("todayRank", i + 1)
-                        docRef.update("todayChangeRank", change)
+                        docRef.update("prevTodayRank", leaderBoard.prevTodayRank)
+                        docRef.update("lastTodayUpdated",System.currentTimeMillis())
+                        showRankingChange(leaderBoard.prevTodayRank-leaderBoard.todayRank,false)
                     }
 
                     "thisWeek" -> {
+                        leaderBoard.prevWeekRank=leaderBoard.weekRank
                         leaderBoard.weekRank = i + 1
                         docRef.update("weekRank", i + 1)
-                        docRef.update("weekChangeRank", change)
+                        docRef.update("prevWeekRank", leaderBoard.prevWeekRank)
+                        docRef.update("lastWeekUpdated",System.currentTimeMillis())
+                        showRankingChange(leaderBoard.prevWeekRank-leaderBoard.weekRank,false)
                     }
 
                     "thisMonth" -> {
+                        leaderBoard.prevMonthRank=leaderBoard.monthRank
                         leaderBoard.monthRank = i + 1
                         docRef.update("monthRank", i + 1)
-                        docRef.update("monthChangeRank", change)
+                        docRef.update("prevMonthRank", leaderBoard.prevMonthRank)
+                        docRef.update("lastMonthUpdated",System.currentTimeMillis())
+                        showRankingChange(leaderBoard.prevMonthRank-leaderBoard.monthRank,false)
                     }
                 }
             }
-            else if(leaderBoard.uid==currentUserUid){
-                docRef.get()
-                    .addOnSuccessListener { document ->
-                        if (document != null && document.exists()) {
-                            val todayRankChange = document.getLong("todayChangeRank")?.toInt()
-                            val weekRankChange = document.getLong("weekChangeRank")?.toInt()
-                            val monthRankChange = document.getLong("monthChangeRank")?.toInt()
-
-                            if (todayRankChange != null && weekRankChange != null && monthRankChange != null) {
-                          when(period){
-                              "today"->showRankingChange(todayRankChange)
-                              "thisWeek"->showRankingChange(weekRankChange)
-                              "thisMonth"->showRankingChange(monthRankChange)
-                          }
-                          }
-                        }
+            else if(oldRank==i+1 && currentUserUid==leaderBoard.uid){
+                when (period) {
+                    "today" -> {
+                        val currentTimestamp = System.currentTimeMillis()
+                        val lastTodayUpdated = (leaderBoard.lastTodayUpdated as? Long) ?: 0L
+                        if ((currentTimestamp - lastTodayUpdated) >= 43200000L) showRankingChange(leaderBoard.prevTodayRank - leaderBoard.todayRank, true)
+                        else showRankingChange(leaderBoard.prevTodayRank - leaderBoard.todayRank, false)
                     }
+                    "thisWeek" -> {
+                        val currentTimestamp = System.currentTimeMillis()
+                        val lastWeekUpdated = (leaderBoard.lastWeekUpdated as? Long) ?: 0L
+                        if ((currentTimestamp - lastWeekUpdated) >= 302400000L) showRankingChange(leaderBoard.prevWeekRank - leaderBoard.weekRank, true)
+                        else showRankingChange(leaderBoard.prevWeekRank - leaderBoard.weekRank, false)
+                    }
+                    "thisMonth" -> {
+                        val currentTimestamp = System.currentTimeMillis()
+                        val lastMonthUpdated = (leaderBoard.lastMonthUpdated as? Long) ?: 0L
+                        if ((currentTimestamp - lastMonthUpdated) >= 1296000000L) showRankingChange(leaderBoard.prevMonthRank - leaderBoard.monthRank, true)
+                        else showRankingChange(leaderBoard.prevMonthRank - leaderBoard.monthRank, false)
+                    }
+                }
+
             }
         }
         }
 
-    private fun showRankingChange(change:Int){
-         if(change<0){
-            upDownImageView.setImageResource(R.drawable.down)
-            rankingChangeTextView.text=abs(change).toString()
-            rankingChangeTextView.setTextColor(resources.getColor(R.color.new_red))
-            changePlacesTextView.setTextColor(resources.getColor(R.color.new_red))
-         }
+    private fun showRankingChange(change:Int,flag:Boolean){
+        if(flag){
+            if(change<0){
+                upDownImageView.setImageResource(R.drawable.nochangedown)
+                rankingChangeTextView.text=abs(change).toString()
+                rankingChangeTextView.setTextColor(resources.getColor(R.color.gray))
+                changePlacesTextView.setTextColor(resources.getColor(R.color.gray))
+            }
+            else{
+                upDownImageView.setImageResource(R.drawable.nochangeup)
+                rankingChangeTextView.text=abs(change).toString()
+                rankingChangeTextView.setTextColor(resources.getColor(R.color.gray))
+                changePlacesTextView.setTextColor(resources.getColor(R.color.gray))
+            }
+        }
         else{
-             upDownImageView.setImageResource(R.drawable.up)
-             rankingChangeTextView.text=abs(change).toString()
-             rankingChangeTextView.setTextColor(resources.getColor(R.color.grass_green))
-             changePlacesTextView.setTextColor(resources.getColor(R.color.grass_green))
+            if(change<0){
+                upDownImageView.setImageResource(R.drawable.down)
+                rankingChangeTextView.text=abs(change).toString()
+                rankingChangeTextView.setTextColor(resources.getColor(R.color.light_red))
+                changePlacesTextView.setTextColor(resources.getColor(R.color.light_red))
+            }
+            else{
+                upDownImageView.setImageResource(R.drawable.up)
+                rankingChangeTextView.text=abs(change).toString()
+                rankingChangeTextView.setTextColor(resources.getColor(R.color.light_grass_green))
+                changePlacesTextView.setTextColor(resources.getColor(R.color.light_grass_green))
+            }
         }
     }
 

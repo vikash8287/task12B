@@ -8,8 +8,11 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="green">#00AA82</color>
-    <color name="grass_green">#93D870</color>
-    <color name="new_red">#F84950</color>
+    <color name="light_grass_green">#93D870</color>
+    <color name="light_red">#F84950</color>
+    <color name="royal_purple">#613FA0</color>
+    <color name="gray">#7A7A7A</color>
+
 
     <color name="primary">#FF7A7AFF</color>
     <!-- colors.xml -->
