@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -55,6 +56,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.util.Calendar
 
 class UserViewModel(application: Application): AndroidViewModel(application = application) {
 
@@ -196,7 +198,7 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
                 onComplete()
             }
     }
-    fun setUpLeaderBoard(displayName: String) {
+ private fun setUpLeaderBoard(displayName: String) {
         val uid = Firebase.auth.currentUser!!.uid
         val db = FirebaseFirestore.getInstance()
         val currentTimeMillis = System.currentTimeMillis()
@@ -224,9 +226,45 @@ class UserViewModel(application: Application): AndroidViewModel(application = ap
             .addOnFailureListener { e ->
                Toast.makeText(getApplication(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+
+     val editor = sharedPreferences.edit()
+     editor.putLong("upcomingDayReset", getStartOfNextDayInMillis())
+     editor.putLong("upcomingWeekReset", getStartOfNextWeekInMillis())
+     editor.putLong("upcomingMonthReset", getStartOfNextMonthInMillis())
+     editor.apply()
     }
 
+     fun getStartOfNextDayInMillis(): Long {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
+    }
 
+     fun getStartOfNextWeekInMillis(): Long {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
+        calendar.add(Calendar.WEEK_OF_YEAR, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
+    }
+
+   fun getStartOfNextMonthInMillis(): Long {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.MONTH, 1)
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
+    }
 
     private fun createDisplayNameDocument(
         displayName: String,
