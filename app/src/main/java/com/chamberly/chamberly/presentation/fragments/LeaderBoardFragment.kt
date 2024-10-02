@@ -1,12 +1,12 @@
 package com.chamberly.chamberly.presentation.fragments
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -16,12 +16,14 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chamberly.chamberly.R
 import com.chamberly.chamberly.models.LeaderBoard
 import com.chamberly.chamberly.presentation.adapters.LeaderBoardAdapter
+import com.chamberly.chamberly.presentation.viewmodels.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Calendar
@@ -32,34 +34,20 @@ class LeaderBoardFragment : Fragment() {
     private lateinit var leaderBoardAdapter: LeaderBoardAdapter
     private lateinit var leaderBoardList: MutableList<LeaderBoard>
     private lateinit var countdownTextView: TextView
+    private var countdownTimer: CountDownTimer? = null
     private lateinit var rankingChangeTextView: TextView
     private lateinit var upDownImageView: ImageView
     private lateinit var changePlacesTextView:TextView
     private lateinit var periodButton: String
-    private lateinit var name1:TextView
-    private lateinit var name2:TextView
-    private lateinit var name3:TextView
-    private lateinit var coin1:TextView
-    private lateinit var coin2:TextView
-    private lateinit var coin3:TextView
     private lateinit var firstPlaceProfilePic: ImageView
     private lateinit var secondPlaceProfilePic:ImageView
     private lateinit var thirdPlaceProfilePic:ImageView
     private lateinit var todayCacheList: MutableList<LeaderBoard>
     private lateinit var weekCacheList: MutableList<LeaderBoard>
     private lateinit var monthCacheList: MutableList<LeaderBoard>
+    private lateinit var sharedPreferences: SharedPreferences
+    private val userViewModel: UserViewModel by activityViewModels()
 
-    private val refreshInterval: Long = 60 * 1000
-
-    private val handler = Handler(Looper.getMainLooper())
-    private val countdownRunnable = object : Runnable {
-        override fun run() {
-            if(periodButton=="today")loadLeaderBoard("today")
-            else if(periodButton=="thisWeek")loadLeaderBoard("thisWeek")
-            else if(periodButton=="thisMonth")loadLeaderBoard("thisMonth")
-            handler.postDelayed(this, refreshInterval)
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -67,6 +55,7 @@ class LeaderBoardFragment : Fragment() {
     ): View? {
 
         val view = inflater.inflate(R.layout.fragment_leader_board, container, false)
+        sharedPreferences = requireContext().getSharedPreferences("cache", Context.MODE_PRIVATE)
         leaderBoardList = mutableListOf()
         todayCacheList= mutableListOf()
         weekCacheList= mutableListOf()
@@ -74,17 +63,12 @@ class LeaderBoardFragment : Fragment() {
 
         periodButton="today"
         loadLeaderBoard("today")
+        refreshTimer("today")
 
         countdownTextView = view.findViewById(R.id.countdownTextView)
         upDownImageView=view.findViewById(R.id.upDownImageView)
         rankingChangeTextView=view.findViewById(R.id.rankingChangeTextView)
         changePlacesTextView=view.findViewById(R.id.changePlacesTextView)
-        name1=view.findViewById(R.id.top3name1)
-        name2=view.findViewById(R.id.top3name2)
-        name3=view.findViewById(R.id.top3name3)
-        coin1=view.findViewById(R.id.top3coins1)
-        coin2=view.findViewById(R.id.top3coins2)
-        coin3=view.findViewById(R.id.top3coins3)
         firstPlaceProfilePic=view.findViewById(R.id.firstPlacePic)
         secondPlaceProfilePic=view.findViewById(R.id.secondPlacePic)
         thirdPlaceProfilePic=view.findViewById(R.id.thirdPlacePic)
@@ -103,18 +87,21 @@ class LeaderBoardFragment : Fragment() {
 
         btnToday.setOnClickListener {
             periodButton="today"
+            refreshTimer("today")
             if(todayCacheList.isEmpty())loadLeaderBoard("today")
             else updateTop3withRecyclerView("today")
             setButtonBackground(btnToday,btnThisWeek,btnThisMonth)
         }
         btnThisWeek.setOnClickListener {
             periodButton="thisWeek"
+            refreshTimer("thisWeek")
             if(weekCacheList.isEmpty())loadLeaderBoard("thisWeek")
             else updateTop3withRecyclerView("thisWeek")
             setButtonBackground(btnThisWeek,btnToday,btnThisMonth)
         }
         btnThisMonth.setOnClickListener {
             periodButton="thisMonth"
+            refreshTimer("thisMonth")
             if(monthCacheList.isEmpty())loadLeaderBoard("thisMonth")
             else updateTop3withRecyclerView("thisMonth")
             setButtonBackground(btnThisMonth,btnThisWeek,btnToday)
@@ -122,9 +109,6 @@ class LeaderBoardFragment : Fragment() {
         view.findViewById<ImageView>(R.id.leaderboard_back_btn).setOnClickListener {
             findNavController().navigateUp()
         }
-
-        startCountdownTimer()
-        handler.post(countdownRunnable)
 
         return view
     }
@@ -159,8 +143,8 @@ class LeaderBoardFragment : Fragment() {
         for (i in 0 until minOf(3, leaderBoardList.size)) {
             when (i) {
                 0 -> {
-                    name1.text = leaderBoardList[i].name
-                    coin1.text = when(period){
+                    view?.findViewById<TextView>(R.id.top3name1)?.text = leaderBoardList[i].name
+                    view?.findViewById<TextView>(R.id.top3coins1)?.text = when(period){
                         "today"->leaderBoardList[i].earnedToday.toString()
                         "thisWeek"->leaderBoardList[i].earnedThisWeek.toString()
                         "thisMonth"->leaderBoardList[i].earnedThisMonth.toString()
@@ -170,8 +154,8 @@ class LeaderBoardFragment : Fragment() {
                     setProfilePic(imageName,1)
                 }
                 1 -> {
-                    name2.text = leaderBoardList[i].name
-                    coin2.text = when(period){
+                    view?.findViewById<TextView>(R.id.top3name2)?.text = leaderBoardList[i].name
+                    view?.findViewById<TextView>(R.id.top3coins2)?.text = when(period){
                         "today"->leaderBoardList[i].earnedToday.toString()
                         "thisWeek"->leaderBoardList[i].earnedThisWeek.toString()
                         "thisMonth"->leaderBoardList[i].earnedThisMonth.toString()
@@ -181,8 +165,8 @@ class LeaderBoardFragment : Fragment() {
                     setProfilePic(imageName,2)
                 }
                 2 -> {
-                    name3.text = leaderBoardList[i].name
-                    coin3.text = when(period){
+                    view?.findViewById<TextView>(R.id.top3name3)?.text = leaderBoardList[i].name
+                    view?.findViewById<TextView>(R.id.top3coins3)?.text = when(period){
                         "today"->leaderBoardList[i].earnedToday.toString()
                         "thisWeek"->leaderBoardList[i].earnedThisWeek.toString()
                         "thisMonth"->leaderBoardList[i].earnedThisMonth.toString()
@@ -198,10 +182,6 @@ class LeaderBoardFragment : Fragment() {
         leaderBoardAdapter.notifyDataSetChanged()
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        handler.removeCallbacks(countdownRunnable)
-    }
     private fun setProfilePic(imageName:String,pos:Int){
         val profilePics = arrayListOf(firstPlaceProfilePic, secondPlaceProfilePic, thirdPlaceProfilePic)
         val imageFileName = "$imageName.png"
@@ -214,25 +194,53 @@ class LeaderBoardFragment : Fragment() {
         }
 
     }
-    private fun startCountdownTimer() {
-        val timer = object : CountDownTimer(refreshInterval, 1000) {
-            @SuppressLint("DefaultLocale")
+
+    private fun refreshTimer(periodButton: String) {
+        val currentTime = System.currentTimeMillis()
+        val refreshTimeInMillis: Long = when (periodButton) {
+            "today" -> userViewModel.getStartOfNextDayInMillis()
+            "thisWeek" -> userViewModel.getStartOfNextWeekInMillis()
+            "thisMonth" -> userViewModel.getStartOfNextMonthInMillis()
+            else -> return
+        }
+
+        val remainingTime = refreshTimeInMillis - currentTime
+         countdownTimer?.cancel()
+
+       countdownTimer= object : CountDownTimer(remainingTime, 1000) {
             override fun onTick(millisUntilFinished: Long) {
+
                 val seconds = (millisUntilFinished / 1000) % 60
                 val minutes = (millisUntilFinished / (1000 * 60)) % 60
-                countdownTextView.text = String.format("%02d:%02d", minutes, seconds)
+                val hours = (millisUntilFinished / (1000 * 60 * 60)) % 24
+                val days = (millisUntilFinished / (1000 * 60 * 60 * 24)) % 7
+                val weeks = millisUntilFinished / (1000 * 60 * 60 * 24 * 7)
+
+                val timeLeftString = when {
+                    weeks > 0 -> "${weeks}w:${days}d"
+                    days > 0 -> "${days}d:${hours}hr"
+                    hours > 0 -> "${hours}hr:${minutes}m"
+                    minutes > 0 -> "${minutes}m:${seconds}s"
+                    else -> "${seconds}s"
+                }
+              countdownTextView.text= timeLeftString
             }
 
             override fun onFinish() {
-                // Restart the countdown timer
-                startCountdownTimer()
+                refreshTimer(periodButton)
             }
-        }
-        timer.start()
+        }.start()
     }
-
+    
     private fun loadLeaderBoard(period: String) {
         val db = FirebaseFirestore.getInstance()
+        val currentTimestamp = System.currentTimeMillis()//+86400000 //->1 day in millisecond,604800000 ->1week,2592000000->1 month
+        val startNextDayStamp = userViewModel.getStartOfNextDayInMillis()
+        val startNextWeekStamp = userViewModel.getStartOfNextWeekInMillis()
+        val startNextMonthStamp = userViewModel.getStartOfNextMonthInMillis()
+        val upcomingDayReset = sharedPreferences.getLong("upcomingDayReset", 0L)
+        val upcomingWeekReset = sharedPreferences.getLong("upcomingWeekReset", 0L)
+        val upcomingMonthReset = sharedPreferences.getLong("upcomingMonthReset", 0L)
         db.collection("LeaderBoard")
             .get()
             .addOnSuccessListener { documents ->
@@ -241,11 +249,6 @@ class LeaderBoardFragment : Fragment() {
                 weekCacheList.clear()
                 monthCacheList.clear()
 
-                val currentTimestamp = System.currentTimeMillis()//+86400000 ->1 day in millisecond
-                val startNextDayStamp = getStartOfNextDayInMillis()
-                val startNextWeekStamp = getStartOfNextWeekInMillis()
-                val startNextMonthStamp = getStartOfNextMonthInMillis()
-
                 for (document in documents) {
                     val leaderBoard = document.toObject(LeaderBoard::class.java)
                     val docRef = db.collection("LeaderBoard").document(leaderBoard.uid)
@@ -253,17 +256,20 @@ class LeaderBoardFragment : Fragment() {
                     // Reset fields if current timestamp exceeds the start of the next period
                     val updates = mutableMapOf<String, Any>()
 
-                    if (currentTimestamp >= startNextDayStamp) {
+                    if (currentTimestamp >= upcomingDayReset) {
                         leaderBoard.earnedToday = 0
                         updates["earnedToday"] = 0
+                        sharedPreferences.edit().putLong("upcomingDayReset", startNextDayStamp).apply()
                     }
-                    if (currentTimestamp >= startNextWeekStamp) {
+                    if (currentTimestamp >= upcomingWeekReset) {
                         leaderBoard.earnedThisWeek = 0
                         updates["earnedThisWeek"] = 0
+                        sharedPreferences.edit().putLong("upcomingWeekReset", startNextWeekStamp).apply()
                     }
-                    if (currentTimestamp >= startNextMonthStamp) {
+                    if (currentTimestamp >= upcomingMonthReset) {
                         leaderBoard.earnedThisMonth = 0
                         updates["earnedThisMonth"] = 0
+                        sharedPreferences.edit().putLong("upcomingMonthReset", startNextMonthStamp).apply()
                     }
 
                     // Update the rank if it is -1
@@ -409,35 +415,4 @@ class LeaderBoardFragment : Fragment() {
         }
     }
 
-    private fun getStartOfNextDayInMillis(): Long {
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_YEAR, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
-    }
-
-    private fun getStartOfNextWeekInMillis(): Long {
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
-        calendar.add(Calendar.WEEK_OF_YEAR, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
-    }
-
-    private fun getStartOfNextMonthInMillis(): Long {
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.MONTH, 1)
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
-    }
 }
